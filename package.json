@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"*.{ts,mjs,json}\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"*.{ts,mjs,json}\""
   },
   "dependencies": {
     "lucide-react": "^1.16.0",
@@ -21,6 +23,7 @@
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.2.6",
+    "prettier": "^3.7.3",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3"
   },

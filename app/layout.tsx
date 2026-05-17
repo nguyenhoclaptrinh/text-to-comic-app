@@ -1,13 +1,18 @@
+/**
+ * @file layout.tsx
+ * @description Root layout and metadata for the Next.js app.
+ */
+
 import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ComicAI Studio",
-  description: "AI-assisted text-to-comic creation workspace"
+  description: "AI-assisted text-to-comic creation workspace",
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
