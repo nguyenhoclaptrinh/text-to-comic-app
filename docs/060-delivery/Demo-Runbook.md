@@ -72,3 +72,5 @@ npm audit --audit-level=moderate
 2. Add real image generation provider and storage upload.
 3. Replace localStorage repository with Supabase repository after schema setup.
 4. Add Playwright E2E test for the demo happy path.
+
+For the full remaining roadmap, see `docs/040-implementation/FinalProjectCompletionPlan.md`.
