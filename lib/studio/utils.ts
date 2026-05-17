@@ -8,7 +8,7 @@ import {
   BUBBLE_TEXT_MAX_LENGTH,
   STORY_EXCERPT_MAX_LENGTH,
 } from "@/lib/studio/constants";
-import type { Bubble, Panel } from "@/lib/studio/types";
+import type { Bubble, Character, Panel } from "@/lib/studio/types";
 
 export function sleep(ms: number) {
   return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
@@ -55,6 +55,14 @@ export function updatePanelBubble(
       bubble.id === bubbleId ? { ...bubble, ...patch } : bubble,
     ),
   };
+}
+
+export function updateCharacterProfile(
+  character: Character,
+  characterId: string,
+  patch: Partial<Character>,
+) {
+  return character.id === characterId ? { ...character, ...patch } : character;
 }
 
 export function createMockPanels(

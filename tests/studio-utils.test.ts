@@ -15,6 +15,7 @@ import {
   createMockPanels,
   dialogueToBubble,
   nextBubbleCoordinate,
+  updateCharacterProfile,
   updatePanelBubble,
 } from "@/lib/studio/utils";
 
@@ -70,5 +71,24 @@ describe("studio utils", () => {
       x: 64,
     });
     expect(updatePanelBubble(panel, "other-panel", "bubble-1", {})).toBe(panel);
+  });
+
+  it("should update only the requested character profile", () => {
+    const character = {
+      id: "character-1",
+      name: "Old Name",
+      role: "Hero",
+      description: "Old description",
+      color: "#ffffff",
+    };
+
+    expect(
+      updateCharacterProfile(character, "character-1", {
+        name: "New Name",
+      }),
+    ).toMatchObject({ name: "New Name" });
+    expect(updateCharacterProfile(character, "other", { name: "Other" })).toBe(
+      character,
+    );
   });
 });

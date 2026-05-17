@@ -3,8 +3,9 @@
  * @description Storyboard editing workspace with character casting and panel cards.
  */
 
-import { AlertTriangle, MessageCircle, Plus, Upload } from "lucide-react";
+import { AlertTriangle, MessageCircle } from "lucide-react";
 
+import { CharacterCastingPanel } from "@/components/studio/CharacterCastingPanel";
 import { StoryboardPanelCard } from "@/components/studio/StoryboardPanelCard";
 import type { Character, Panel } from "@/lib/studio/types";
 
@@ -14,6 +15,7 @@ export function StoryboardWorkspace({
   selectedPanelId,
   isGeneratingAll,
   onAddCharacter,
+  onUpdateCharacter,
   onSelectPanel,
   onUpdatePanel,
   onGeneratePanel,
@@ -24,6 +26,7 @@ export function StoryboardWorkspace({
   selectedPanelId: string;
   isGeneratingAll: boolean;
   onAddCharacter: () => void;
+  onUpdateCharacter: (characterId: string, patch: Partial<Character>) => void;
   onSelectPanel: (panelId: string) => void;
   onUpdatePanel: (panelId: string, patch: Partial<Panel>) => void;
   onGeneratePanel: (panelId: string) => void;
@@ -36,6 +39,7 @@ export function StoryboardWorkspace({
       <CharacterCastingPanel
         characters={characters}
         onAddCharacter={onAddCharacter}
+        onUpdateCharacter={onUpdateCharacter}
       />
       <section className="min-w-0 overflow-y-auto px-4 py-5 lg:px-6">
         {hasBackendError ? <ImageBackendAlert /> : null}
@@ -56,64 +60,6 @@ export function StoryboardWorkspace({
         </div>
       </section>
     </div>
-  );
-}
-
-function CharacterCastingPanel({
-  characters,
-  onAddCharacter,
-}: {
-  characters: Character[];
-  onAddCharacter: () => void;
-}) {
-  return (
-    <aside className="hidden border-r border-zinc-800 bg-[#111114] p-4 lg:block">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
-          Casting
-        </h2>
-        <button
-          type="button"
-          onClick={onAddCharacter}
-          aria-label="Add character"
-          className="flex size-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
-        >
-          <Plus size={16} />
-        </button>
-      </div>
-      <div className="space-y-3">
-        {characters.map((character) => (
-          <CharacterCard key={character.id} character={character} />
-        ))}
-      </div>
-    </aside>
-  );
-}
-
-function CharacterCard({ character }: { character: Character }) {
-  return (
-    <article className="rounded-lg border border-zinc-800 bg-[#18181b] p-3">
-      <div className="mb-3 flex items-center gap-3">
-        <div
-          className="flex size-10 items-center justify-center rounded-full text-sm font-semibold"
-          style={{ backgroundColor: character.color }}
-        >
-          {character.name.slice(0, 1)}
-        </div>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold">{character.name}</div>
-          <div className="truncate text-xs text-zinc-500">{character.role}</div>
-        </div>
-      </div>
-      <p className="text-xs leading-5 text-zinc-400">{character.description}</p>
-      <button
-        type="button"
-        className="mt-3 inline-flex h-8 items-center gap-2 rounded-md border border-zinc-700 px-2 text-xs text-zinc-300 hover:bg-zinc-900"
-      >
-        <Upload size={13} />
-        Reference
-      </button>
-    </article>
   );
 }
 

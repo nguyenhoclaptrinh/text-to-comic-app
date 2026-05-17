@@ -26,7 +26,11 @@ import {
   generatePanelImage,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
-import { nextBubbleCoordinate, updatePanelBubble } from "@/lib/studio/utils";
+import {
+  nextBubbleCoordinate,
+  updateCharacterProfile,
+  updatePanelBubble,
+} from "@/lib/studio/utils";
 import type {
   Bubble,
   Character,
@@ -169,6 +173,14 @@ export function useComicStudioState() {
     ]);
   }
 
+  function updateCharacter(characterId: string, patch: Partial<Character>) {
+    setCharacters((current) =>
+      current.map((character) =>
+        updateCharacterProfile(character, characterId, patch),
+      ),
+    );
+  }
+
   function addBubble(panelId: string) {
     const bubble = createDefaultBubble();
     setPanels((current) =>
@@ -270,6 +282,7 @@ export function useComicStudioState() {
       generatePanel,
       generateAll,
       addCharacter,
+      updateCharacter,
       addBubble,
       updateBubble,
       deleteBubble,

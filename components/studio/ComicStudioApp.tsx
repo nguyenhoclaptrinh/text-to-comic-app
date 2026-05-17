@@ -109,6 +109,7 @@ function ActiveView({
       onUpdatePanel={actions.updatePanel}
       onGeneratePanel={(panelId) => void actions.generatePanel(panelId)}
       onGoToComic={() => actions.setView("comic")}
+      onUpdateCharacter={actions.updateCharacter}
     />
   );
 }
