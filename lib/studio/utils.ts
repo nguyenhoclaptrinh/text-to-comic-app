@@ -4,10 +4,11 @@
  */
 
 import {
+  BUBBLE_BOUNDARY_PADDING,
   BUBBLE_TEXT_MAX_LENGTH,
   STORY_EXCERPT_MAX_LENGTH,
 } from "@/lib/studio/constants";
-import type { Panel } from "@/lib/studio/types";
+import type { Bubble, Panel } from "@/lib/studio/types";
 
 export function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -20,6 +21,40 @@ export function clamp(value: number, min: number, max: number) {
 export function dialogueToBubble(dialogue: string) {
   const [, text = dialogue] = dialogue.split(":");
   return text.trim().slice(0, BUBBLE_TEXT_MAX_LENGTH);
+}
+
+export function nextBubbleCoordinate(
+  pointer: number,
+  stageStart: number,
+  offset: number,
+  stageSize: number,
+  itemSize: number,
+) {
+  const max = Math.max(
+    stageSize - itemSize - BUBBLE_BOUNDARY_PADDING,
+    BUBBLE_BOUNDARY_PADDING,
+  );
+  return Math.round(
+    clamp(pointer - stageStart - offset, BUBBLE_BOUNDARY_PADDING, max),
+  );
+}
+
+export function updatePanelBubble(
+  panel: Panel,
+  panelId: string,
+  bubbleId: string,
+  patch: Partial<Bubble>,
+) {
+  if (panel.id !== panelId) {
+    return panel;
+  }
+
+  return {
+    ...panel,
+    bubbles: panel.bubbles.map((bubble) =>
+      bubble.id === bubbleId ? { ...bubble, ...patch } : bubble,
+    ),
+  };
 }
 
 export function createMockPanels(

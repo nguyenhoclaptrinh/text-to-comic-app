@@ -7,8 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"*.{ts,mjs,json}\"",
-    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"*.{ts,mjs,json}\""
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\""
   },
   "dependencies": {
     "lucide-react": "^1.16.0",
@@ -21,11 +23,13 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.6",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.2.6",
     "prettier": "^3.7.3",
     "tailwindcss": "^4.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
   },
   "overrides": {
     "postcss": "^8.5.14"

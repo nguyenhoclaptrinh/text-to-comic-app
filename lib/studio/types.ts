@@ -63,3 +63,15 @@ export type GenerationSummary = {
   errors: number;
   total: number;
 };
+
+export type StudioSnapshot = {
+  version: number;
+  projects: Project[];
+  activeProjectId: string;
+  characters: Character[];
+  panels: Panel[];
+  storyTitle: string;
+  storyText: string;
+  selectedPanelId: string;
+  selectedBubbleId: string;
+};

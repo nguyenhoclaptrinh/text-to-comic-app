@@ -20,6 +20,10 @@ export const GENERATED_BUBBLE_Y = 26;
 export const GENERATED_BUBBLE_WIDTH = 188;
 export const BUBBLE_TEXT_MAX_LENGTH = 72;
 export const STORY_EXCERPT_MAX_LENGTH = 84;
+export const STUDIO_STORAGE_KEY = "comic-ai-studio:snapshot";
+export const STUDIO_SNAPSHOT_VERSION = 1;
+export const INTERRUPTED_GENERATION_ERROR =
+  "Generation was interrupted by reload. Please retry this panel.";
 
 export const STATUS_COPY: Record<PanelStatus, string> = {
   draft: "Draft",

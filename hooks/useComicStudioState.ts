@@ -3,10 +3,10 @@
  * @description State and actions for the frontend-only comic studio prototype.
  */
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
+import { useStudioPersistence } from "@/hooks/useStudioPersistence";
 import {
-  BUBBLE_BOUNDARY_PADDING,
   DEFAULT_BUBBLE_HEIGHT,
   DEFAULT_BUBBLE_WIDTH,
   GENERATION_DELAY_MS,
@@ -23,13 +23,20 @@ import {
   PROJECTS_SEED,
   SAMPLE_STORY,
 } from "@/lib/studio/mock-data";
-import { clamp, createMockPanels, sleep } from "@/lib/studio/utils";
+import { createStudioSnapshot } from "@/lib/studio/persistence";
+import {
+  createMockPanels,
+  nextBubbleCoordinate,
+  sleep,
+  updatePanelBubble,
+} from "@/lib/studio/utils";
 import type {
   Bubble,
   Character,
   DragState,
   Panel,
   Project,
+  StudioSnapshot,
   View,
 } from "@/lib/studio/types";
 
@@ -66,6 +73,46 @@ export function useComicStudioState() {
     const errors = panels.filter((panel) => panel.status === "error").length;
     return { done, errors, total: panels.length };
   }, [panels]);
+
+  const snapshot = useMemo(
+    () =>
+      createStudioSnapshot({
+        projects,
+        activeProjectId,
+        characters,
+        panels,
+        storyTitle,
+        storyText,
+        selectedPanelId,
+        selectedBubbleId,
+      }),
+    [
+      activeProjectId,
+      characters,
+      panels,
+      projects,
+      selectedBubbleId,
+      selectedPanelId,
+      storyText,
+      storyTitle,
+    ],
+  );
+
+  const hydrateFromSnapshot = useCallback(
+    (persistedSnapshot: StudioSnapshot) => {
+      setProjects(persistedSnapshot.projects);
+      setActiveProjectId(persistedSnapshot.activeProjectId);
+      setCharacters(persistedSnapshot.characters);
+      setPanels(persistedSnapshot.panels);
+      setStoryTitle(persistedSnapshot.storyTitle);
+      setStoryText(persistedSnapshot.storyText);
+      setSelectedPanelId(persistedSnapshot.selectedPanelId);
+      setSelectedBubbleId(persistedSnapshot.selectedBubbleId);
+    },
+    [],
+  );
+
+  useStudioPersistence({ snapshot, onSnapshotLoaded: hydrateFromSnapshot });
 
   function selectProject(projectId: string) {
     setActiveProjectId(projectId);
@@ -240,38 +287,4 @@ export function useComicStudioState() {
       handleBubbleMove,
     },
   };
-}
-
-function updatePanelBubble(
-  panel: Panel,
-  panelId: string,
-  bubbleId: string,
-  patch: Partial<Bubble>,
-) {
-  if (panel.id !== panelId) {
-    return panel;
-  }
-
-  return {
-    ...panel,
-    bubbles: panel.bubbles.map((bubble) =>
-      bubble.id === bubbleId ? { ...bubble, ...patch } : bubble,
-    ),
-  };
-}
-
-function nextBubbleCoordinate(
-  pointer: number,
-  stageStart: number,
-  offset: number,
-  stageSize: number,
-  itemSize: number,
-) {
-  const max = Math.max(
-    stageSize - itemSize - BUBBLE_BOUNDARY_PADDING,
-    BUBBLE_BOUNDARY_PADDING,
-  );
-  return Math.round(
-    clamp(pointer - stageStart - offset, BUBBLE_BOUNDARY_PADDING, max),
-  );
 }

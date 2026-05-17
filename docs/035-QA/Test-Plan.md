@@ -1,0 +1,43 @@
+---
+id: QA-PLAN-001
+type: qa-plan
+status: draft
+created: 2026-05-17
+---
+
+# QA Test Plan: Text-to-Comic App
+
+## Source Requirements
+
+- PRD: storyboard must be saved before image generation, panel regeneration must affect only one panel, and speech bubbles must survive reload.
+- SDD: client-side sequential generation is used to avoid serverless timeout; speech bubbles are persisted per panel; PNG export warns when panels are missing images.
+- Implementation Plan: Definition of Done requires important data to be saved and reload-safe.
+
+## Current Automated Scope
+
+### Unit Tests
+
+| ID | Module | Coverage |
+| --- | --- | --- |
+| TC-UNIT-001 | `lib/studio/utils.ts` | Text-to-panel mock generation, dialogue extraction, coordinate clamping |
+| TC-UNIT-002 | `lib/studio/factories.ts` | Project, character, bubble, generated bubble creation |
+| TC-UNIT-003 | `lib/studio/persistence.ts` | Save/load/clear local snapshots, invalid JSON handling, version guard, interrupted generation recovery |
+
+### Manual Acceptance Checks
+
+| ID | Flow | Expected Result |
+| --- | --- | --- |
+| TC-UAT-001 | Create project -> edit panel -> reload | Project and panels remain available |
+| TC-UAT-002 | Add bubble -> drag -> reload | Bubble text and coordinates remain available |
+| TC-UAT-003 | Panel missing image -> export | Export modal shows warning and return-to-storyboard action |
+
+## Quality Gates
+
+```text
+npm run format:check
+npm run lint
+npm run test
+npm run test:coverage
+npm run build
+npm audit --audit-level=moderate
+```

@@ -8,7 +8,13 @@ import nextTypescript from "eslint-config-next/typescript";
 
 const eslintConfig = [
   {
-    ignores: [".next/**", "node_modules/**", "docs/**", "prototype/**"],
+    ignores: [
+      ".next/**",
+      "coverage/**",
+      "node_modules/**",
+      "docs/**",
+      "prototype/**",
+    ],
   },
   ...nextCoreWebVitals,
   ...nextTypescript,
