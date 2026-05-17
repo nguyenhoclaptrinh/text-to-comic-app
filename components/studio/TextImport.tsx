@@ -1,14 +1,17 @@
 /**
  * @file TextImport.tsx
- * @description Story text import form with mock storyboard JSON preview.
+ * @description Story text import form with storyboard JSON preview.
  */
 
-import { AlertTriangle, FileText, Sparkles } from "lucide-react";
+import { AlertTriangle, FileText, Loader2, Sparkles } from "lucide-react";
+
+import { StoryboardJsonPreview } from "@/components/studio/StoryboardJsonPreview";
 
 export function TextImport({
   title,
   storyText,
   error,
+  isAnalyzing,
   setTitle,
   setStoryText,
   onAnalyze,
@@ -16,6 +19,7 @@ export function TextImport({
   title: string;
   storyText: string;
   error: string;
+  isAnalyzing: boolean;
   setTitle: (value: string) => void;
   setStoryText: (value: string) => void;
   onAnalyze: () => void;
@@ -27,11 +31,12 @@ export function TextImport({
           title={title}
           storyText={storyText}
           error={error}
+          isAnalyzing={isAnalyzing}
           setTitle={setTitle}
           setStoryText={setStoryText}
           onAnalyze={onAnalyze}
         />
-        <JsonPreview />
+        <StoryboardJsonPreview />
       </div>
     </div>
   );
@@ -41,6 +46,7 @@ function StoryInputForm({
   title,
   storyText,
   error,
+  isAnalyzing,
   setTitle,
   setStoryText,
   onAnalyze,
@@ -48,6 +54,7 @@ function StoryInputForm({
   title: string;
   storyText: string;
   error: string;
+  isAnalyzing: boolean;
   setTitle: (value: string) => void;
   setStoryText: (value: string) => void;
   onAnalyze: () => void;
@@ -99,10 +106,15 @@ function StoryInputForm({
         <button
           type="button"
           onClick={onAnalyze}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400"
+          disabled={isAnalyzing}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Sparkles size={16} />
-          Analyze Story
+          {isAnalyzing ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <Sparkles size={16} />
+          )}
+          {isAnalyzing ? "Analyzing" : "Analyze Story"}
         </button>
       </div>
 
@@ -116,28 +128,5 @@ function StoryInputForm({
         </div>
       ) : null}
     </section>
-  );
-}
-
-function JsonPreview() {
-  return (
-    <aside className="rounded-xl border border-zinc-800 bg-[#18181b] p-5">
-      <h2 className="mb-4 text-base font-semibold">Storyboard JSON Preview</h2>
-      <div className="rounded-lg border border-zinc-700 bg-zinc-950 p-4 font-mono text-xs leading-6 text-zinc-300">
-        <div>{"{"}</div>
-        <div className="pl-4">{'"panels": ['}</div>
-        <div className="pl-8">{"{"}</div>
-        <div className="pl-12">{'"orderIndex": 1,'}</div>
-        <div className="pl-12">{'"scenePrompt": "...",'}</div>
-        <div className="pl-12">{'"characters": ["Xiao Se"],'}</div>
-        <div className="pl-12">{'"dialogue": "..."'}</div>
-        <div className="pl-8">{"}"}</div>
-        <div className="pl-4">{"]"}</div>
-        <div>{"}"}</div>
-      </div>
-      <div className="mt-4 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-sm text-amber-100">
-        Demo limit: keep source text short enough for one storyboard pass.
-      </div>
-    </aside>
   );
 }

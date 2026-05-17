@@ -23,6 +23,7 @@ created: 2026-05-17
 | TC-UNIT-002 | `lib/studio/factories.ts` | Project, character, bubble, generated bubble creation |
 | TC-UNIT-003 | `lib/studio/persistence.ts` | Save/load/clear local snapshots, invalid JSON handling, version guard, interrupted generation recovery |
 | TC-UNIT-004 | `lib/studio/export-plan.ts` | PNG filename, panel ordering, missing image count, empty export guard |
+| TC-UNIT-005 | `lib/studio/ai-services.ts` | Storyboard validation, mock panel generation, image backend error mapping |
 
 ### Manual Acceptance Checks
 

@@ -67,9 +67,10 @@ function ActiveView({
         title={state.storyTitle}
         storyText={state.storyText}
         error={state.importError}
+        isAnalyzing={state.isAnalyzingStory}
         setTitle={actions.setStoryTitle}
         setStoryText={actions.setStoryText}
-        onAnalyze={actions.analyzeStory}
+        onAnalyze={() => void actions.analyzeStory()}
       />
     );
   }

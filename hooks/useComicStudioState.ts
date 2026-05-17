@@ -3,18 +3,16 @@
  * @description State and actions for the frontend-only comic studio prototype.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { useStudioPersistence } from "@/hooks/useStudioPersistence";
+import { useComicStudioPersistence } from "@/hooks/useComicStudioPersistence";
 import {
   DEFAULT_BUBBLE_HEIGHT,
   DEFAULT_BUBBLE_WIDTH,
-  GENERATION_DELAY_MS,
 } from "@/lib/studio/constants";
 import {
   createCharacter,
   createDefaultBubble,
-  createGeneratedBubble,
   createProject,
 } from "@/lib/studio/factories";
 import {
@@ -23,20 +21,18 @@ import {
   PROJECTS_SEED,
   SAMPLE_STORY,
 } from "@/lib/studio/mock-data";
-import { createStudioSnapshot } from "@/lib/studio/persistence";
 import {
-  createMockPanels,
-  nextBubbleCoordinate,
-  sleep,
-  updatePanelBubble,
-} from "@/lib/studio/utils";
+  analyzeStoryToPanels,
+  generatePanelImage,
+  getStudioAiErrorMessage,
+} from "@/lib/studio/ai-services";
+import { nextBubbleCoordinate, updatePanelBubble } from "@/lib/studio/utils";
 import type {
   Bubble,
   Character,
   DragState,
   Panel,
   Project,
-  StudioSnapshot,
   View,
 } from "@/lib/studio/types";
 
@@ -49,6 +45,7 @@ export function useComicStudioState() {
   const [storyTitle, setStoryTitle] = useState("Snow Road Inn");
   const [storyText, setStoryText] = useState(SAMPLE_STORY);
   const [importError, setImportError] = useState("");
+  const [isAnalyzingStory, setIsAnalyzingStory] = useState(false);
   const [selectedPanelId, setSelectedPanelId] = useState(PANELS_SEED[0].id);
   const [selectedBubbleId, setSelectedBubbleId] = useState(
     PANELS_SEED[0].bubbles[0]?.id ?? "",
@@ -74,69 +71,59 @@ export function useComicStudioState() {
     return { done, errors, total: panels.length };
   }, [panels]);
 
-  const snapshot = useMemo(
-    () =>
-      createStudioSnapshot({
-        projects,
-        activeProjectId,
-        characters,
-        panels,
-        storyTitle,
-        storyText,
-        selectedPanelId,
-        selectedBubbleId,
-      }),
-    [
+  useComicStudioPersistence(
+    {
+      projects,
       activeProjectId,
       characters,
       panels,
-      projects,
-      selectedBubbleId,
-      selectedPanelId,
-      storyText,
       storyTitle,
-    ],
-  );
-
-  const hydrateFromSnapshot = useCallback(
-    (persistedSnapshot: StudioSnapshot) => {
-      setProjects(persistedSnapshot.projects);
-      setActiveProjectId(persistedSnapshot.activeProjectId);
-      setCharacters(persistedSnapshot.characters);
-      setPanels(persistedSnapshot.panels);
-      setStoryTitle(persistedSnapshot.storyTitle);
-      setStoryText(persistedSnapshot.storyText);
-      setSelectedPanelId(persistedSnapshot.selectedPanelId);
-      setSelectedBubbleId(persistedSnapshot.selectedBubbleId);
+      storyText,
+      selectedPanelId,
+      selectedBubbleId,
     },
-    [],
+    {
+      setProjects,
+      setActiveProjectId,
+      setCharacters,
+      setPanels,
+      setStoryTitle,
+      setStoryText,
+      setSelectedPanelId,
+      setSelectedBubbleId,
+    },
   );
-
-  useStudioPersistence({ snapshot, onSnapshotLoaded: hydrateFromSnapshot });
 
   function selectProject(projectId: string) {
     setActiveProjectId(projectId);
     setView("storyboard");
   }
 
-  function analyzeStory() {
-    if (!storyTitle.trim() || !storyText.trim()) {
-      setImportError("Title and story text are required.");
-      return;
-    }
+  async function analyzeStory() {
+    setIsAnalyzingStory(true);
 
-    const projectId = `project-${Date.now()}`;
-    const generatedPanels = createMockPanels(storyText);
-    setImportError("");
-    setProjects((current) => [
-      createProject(projectId, storyTitle),
-      ...current,
-    ]);
-    setActiveProjectId(projectId);
-    setPanels(generatedPanels);
-    setSelectedPanelId(generatedPanels[0].id);
-    setSelectedBubbleId(generatedPanels[0].bubbles[0]?.id ?? "");
-    setView("storyboard");
+    try {
+      const projectId = `project-${Date.now()}`;
+      const generatedPanels = await analyzeStoryToPanels({
+        storyTitle,
+        storyText,
+      });
+
+      setImportError("");
+      setProjects((current) => [
+        createProject(projectId, storyTitle),
+        ...current,
+      ]);
+      setActiveProjectId(projectId);
+      setPanels(generatedPanels);
+      setSelectedPanelId(generatedPanels[0].id);
+      setSelectedBubbleId(generatedPanels[0].bubbles[0]?.id ?? "");
+      setView("storyboard");
+    } catch (error) {
+      setImportError(getStudioAiErrorMessage(error));
+    } finally {
+      setIsAnalyzingStory(false);
+    }
   }
 
   function updatePanel(panelId: string, patch: Partial<Panel>) {
@@ -154,14 +141,15 @@ export function useComicStudioState() {
     }
 
     updatePanel(panelId, { status: "generating", errorMessage: undefined });
-    await sleep(GENERATION_DELAY_MS);
-    updatePanel(panelId, {
-      status: "success",
-      bubbles:
-        target.bubbles.length > 0
-          ? target.bubbles
-          : [createGeneratedBubble(target)],
-    });
+
+    try {
+      updatePanel(panelId, await generatePanelImage(target));
+    } catch (error) {
+      updatePanel(panelId, {
+        status: "error",
+        errorMessage: getStudioAiErrorMessage(error),
+      });
+    }
   }
 
   async function generateAll() {
@@ -258,6 +246,7 @@ export function useComicStudioState() {
       storyTitle,
       storyText,
       importError,
+      isAnalyzingStory,
       selectedPanelId,
       selectedBubbleId,
       selectedBubble,

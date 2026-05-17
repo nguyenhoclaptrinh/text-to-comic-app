@@ -11,7 +11,7 @@ import {
 import type { Bubble, Panel } from "@/lib/studio/types";
 
 export function sleep(ms: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
+  return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 }
 
 export function clamp(value: number, min: number, max: number) {
