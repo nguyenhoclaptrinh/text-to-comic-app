@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <style>
+      .bg { fill:#09090b; }
+      .surface { fill:#18181b; stroke:#27272a; stroke-width:1.5; }
+      .muted { fill:#27272a; }
+      .field { fill:#09090b; stroke:#3f3f46; stroke-width:1.2; }
+      .primary { fill:#8b5cf6; }
+      .success { fill:#10b981; }
+      .warning { fill:#f59e0b; }
+      .text { font: 700 28px Inter, Arial, sans-serif; fill:#f4f4f5; }
+      .h2 { font: 700 18px Inter, Arial, sans-serif; fill:#f4f4f5; }
+      .body { font: 500 14px Inter, Arial, sans-serif; fill:#a1a1aa; }
+      .small { font: 700 11px Inter, Arial, sans-serif; fill:#c4b5fd; }
+    </style>
+  </defs>
+  <rect class="bg" width="1440" height="900"/>
+  <rect class="surface" x="0" y="0" width="1440" height="72"/>
+  <circle cx="48" cy="36" r="18" fill="#8b5cf6"/>
+  <text class="h2" x="82" y="43">ComicAI Studio</text>
+  <rect class="primary" x="1210" y="20" width="160" height="34" rx="8"/>
+  <text class="small" x="1245" y="42">NEW PROJECT</text>
+
+  <text class="text" x="84" y="138">My Projects</text>
+  <text class="body" x="84" y="168">Continue drafts, review generated panels, or start a new comic from story text.</text>
+  <rect class="field" x="84" y="202" width="560" height="44" rx="8"/>
+  <text class="body" x="108" y="230">Search projects by title or status</text>
+
+  <g transform="translate(84 290)">
+    <rect class="surface" width="380" height="240" rx="12"/>
+    <rect class="muted" x="20" y="20" width="340" height="112" rx="10"/>
+    <rect fill="#111827" x="38" y="38" width="86" height="76" rx="8"/>
+    <rect fill="#1f2937" x="140" y="38" width="86" height="76" rx="8"/>
+    <rect fill="#374151" x="242" y="38" width="86" height="76" rx="8"/>
+    <text class="h2" x="20" y="166">Thieu Nien Ca Hanh - Ch.1</text>
+    <text class="body" x="20" y="194">12 panels - Storyboard ready</text>
+    <rect class="success" x="20" y="210" width="96" height="22" rx="11"/>
+    <text class="small" x="38" y="225" fill="#052e16">READY</text>
+  </g>
+
+  <g transform="translate(502 290)">
+    <rect class="surface" width="380" height="240" rx="12"/>
+    <rect class="muted" x="20" y="20" width="340" height="112" rx="10"/>
+    <rect fill="#3f3f46" x="38" y="38" width="290" height="16" rx="4"/>
+    <rect fill="#3f3f46" x="38" y="68" width="240" height="16" rx="4"/>
+    <rect fill="#3f3f46" x="38" y="98" width="310" height="16" rx="4"/>
+    <text class="h2" x="20" y="166">Cyber Alley Short</text>
+    <text class="body" x="20" y="194">5 panels - 2 images failed</text>
+    <rect class="warning" x="20" y="210" width="100" height="22" rx="11"/>
+    <text class="small" x="40" y="225" fill="#111827">RETRY</text>
+  </g>
+
+  <g transform="translate(920 290)">
+    <rect class="surface" width="380" height="240" rx="12"/>
+    <rect class="muted" x="20" y="20" width="340" height="112" rx="10"/>
+    <path d="M190 52 v48 M166 76 h48" stroke="#8b5cf6" stroke-width="8" stroke-linecap="round"/>
+    <text class="h2" x="20" y="166">Create a New Comic</text>
+    <text class="body" x="20" y="194">Paste story text and generate storyboard.</text>
+    <rect class="primary" x="20" y="210" width="118" height="22" rx="11"/>
+    <text class="small" x="40" y="225">START</text>
+  </g>
+
+  <rect class="surface" x="84" y="600" width="1236" height="160" rx="12"/>
+  <text class="h2" x="112" y="640">Product status</text>
+  <text class="body" x="112" y="676">MVP focus: text import, storyboard editor, panel generation, speech bubbles, PNG export.</text>
+  <rect class="field" x="112" y="704" width="260" height="30" rx="15"/>
+  <text class="small" x="138" y="724">AI TEXT READY</text>
+  <rect class="field" x="392" y="704" width="260" height="30" rx="15"/>
+  <text class="small" x="418" y="724">IMAGE BACKEND OPTIONAL</text>
+  <rect class="field" x="672" y="704" width="260" height="30" rx="15"/>
+  <text class="small" x="698" y="724">PNG EXPORT MVP</text>
+</svg>

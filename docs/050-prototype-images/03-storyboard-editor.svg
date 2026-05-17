@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <style>
+      .bg { fill:#09090b; }
+      .surface { fill:#18181b; stroke:#27272a; stroke-width:1.5; }
+      .field { fill:#0f0f12; stroke:#3f3f46; stroke-width:1.5; }
+      .muted { fill:#27272a; }
+      .primary { fill:#8b5cf6; }
+      .success { fill:#10b981; }
+      .error { fill:#ef4444; }
+      .text { font:700 18px Inter, Arial, sans-serif; fill:#f4f4f5; }
+      .body { font:500 13px Inter, Arial, sans-serif; fill:#a1a1aa; }
+      .small { font:700 10px Inter, Arial, sans-serif; fill:#c4b5fd; }
+      .mono { font:500 12px Consolas, monospace; fill:#d4d4d8; }
+    </style>
+  </defs>
+  <rect class="bg" width="1440" height="900"/>
+  <rect class="surface" x="0" y="0" width="1440" height="68"/>
+  <circle cx="42" cy="34" r="17" fill="#8b5cf6"/>
+  <text class="text" x="74" y="41">ComicAI Studio</text>
+  <text class="body" x="1040" y="41">Project: Thieu Nien Ca Hanh - Ch.1</text>
+  <rect class="success" x="1220" y="18" width="150" height="32" rx="8"/>
+  <text class="small" x="1260" y="38" fill="#052e16">GENERATE ALL</text>
+
+  <rect class="surface" x="0" y="68" width="288" height="832"/>
+  <text class="text" x="24" y="112">Character Casting</text>
+  <rect class="field" x="24" y="142" width="240" height="116" rx="10"/>
+  <circle cx="56" cy="174" r="20" fill="#8b5cf6"/>
+  <text class="text" x="88" y="174">Xiao Se</text>
+  <text class="body" x="88" y="196">White fur coat, calm face</text>
+  <rect class="muted" x="44" y="216" width="190" height="22" rx="6"/>
+  <rect class="field" x="24" y="278" width="240" height="116" rx="10"/>
+  <circle cx="56" cy="310" r="20" fill="#ef4444"/>
+  <text class="text" x="88" y="310">Lei Wujie</text>
+  <text class="body" x="88" y="332">Red robe, energetic</text>
+  <rect class="muted" x="44" y="352" width="190" height="22" rx="6"/>
+  <rect class="primary" x="24" y="422" width="240" height="36" rx="8"/>
+  <text class="small" x="94" y="445">ADD CHARACTER</text>
+
+  <g transform="translate(330 108)">
+    <rect class="surface" width="760" height="210" rx="14"/>
+    <rect class="field" x="22" y="22" width="356" height="166" rx="10"/>
+    <rect class="muted" x="402" y="22" width="336" height="166" rx="10"/>
+    <text class="small" x="42" y="48">PANEL 1 - SUCCESS</text>
+    <text class="body" x="42" y="78">Scene prompt</text>
+    <text class="mono" x="42" y="104">A lonely inn during heavy snow...</text>
+    <text class="body" x="42" y="138">Dialogue</text>
+    <text class="mono" x="42" y="164">Xiao Se: Weather like this...</text>
+    <rect fill="#111827" x="438" y="44" width="250" height="122" rx="8"/>
+    <rect fill="#ffffff" x="460" y="62" width="142" height="40" rx="18"/>
+    <rect class="primary" x="622" y="172" width="92" height="24" rx="12"/>
+    <text class="small" x="646" y="188">REGEN</text>
+  </g>
+
+  <g transform="translate(330 344)">
+    <rect class="surface" width="760" height="210" rx="14"/>
+    <rect class="field" x="22" y="22" width="356" height="166" rx="10"/>
+    <rect class="muted" x="402" y="22" width="336" height="166" rx="10"/>
+    <text class="small" x="42" y="48">PANEL 2 - GENERATING</text>
+    <text class="body" x="42" y="78">Scene prompt</text>
+    <text class="mono" x="42" y="104">The red-robed boy kicks the door...</text>
+    <text class="body" x="42" y="138">Dialogue</text>
+    <text class="mono" x="42" y="164">Lei Wujie: A hot bowl, please!</text>
+    <circle cx="570" cy="102" r="34" fill="none" stroke="#8b5cf6" stroke-width="8" stroke-dasharray="56 24"/>
+    <text class="body" x="502" y="158">Generating image 45%</text>
+  </g>
+
+  <g transform="translate(330 580)">
+    <rect class="surface" width="760" height="210" rx="14"/>
+    <rect class="field" x="22" y="22" width="356" height="166" rx="10"/>
+    <rect class="field" x="402" y="22" width="336" height="166" rx="10"/>
+    <text class="small" x="42" y="48">PANEL 3 - DRAFT</text>
+    <text class="body" x="42" y="78">Scene prompt</text>
+    <text class="mono" x="42" y="104">Xiao Se frowns at the broken door...</text>
+    <rect class="success" x="512" y="88" width="124" height="34" rx="8"/>
+    <text class="small" x="544" y="110" fill="#052e16">GENERATE</text>
+  </g>
+
+  <rect class="surface" x="1130" y="108" width="250" height="682" rx="14"/>
+  <text class="text" x="1156" y="150">Status Guide</text>
+  <rect class="field" x="1156" y="184" width="198" height="42" rx="8"/>
+  <text class="body" x="1176" y="210">Draft: editable before render</text>
+  <rect class="field" x="1156" y="246" width="198" height="42" rx="8"/>
+  <text class="body" x="1176" y="272">Generating: locked image</text>
+  <rect class="field" x="1156" y="308" width="198" height="42" rx="8"/>
+  <text class="body" x="1176" y="334">Error: retry this panel</text>
+  <rect class="error" x="1156" y="386" width="198" height="48" rx="8"/>
+  <text class="body" x="1176" y="414" fill="#ffffff">Image backend offline</text>
+</svg>

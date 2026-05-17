@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <style>
+      .bg { fill:#09090b; }
+      .overlay { fill:#000000; opacity:0.55; }
+      .surface { fill:#18181b; stroke:#27272a; stroke-width:1.5; }
+      .field { fill:#0f0f12; stroke:#3f3f46; stroke-width:1.5; }
+      .muted { fill:#27272a; }
+      .primary { fill:#8b5cf6; }
+      .success { fill:#10b981; }
+      .warning { fill:#f59e0b; }
+      .text { font:700 24px Inter, Arial, sans-serif; fill:#f4f4f5; }
+      .h2 { font:700 17px Inter, Arial, sans-serif; fill:#f4f4f5; }
+      .body { font:500 14px Inter, Arial, sans-serif; fill:#a1a1aa; }
+      .small { font:700 11px Inter, Arial, sans-serif; fill:#c4b5fd; }
+    </style>
+  </defs>
+  <rect class="bg" width="1440" height="900"/>
+  <rect class="surface" x="0" y="0" width="1440" height="68"/>
+  <circle cx="42" cy="34" r="17" fill="#8b5cf6"/>
+  <text class="h2" x="74" y="41">ComicAI Studio</text>
+
+  <rect class="surface" x="120" y="110" width="1200" height="680" rx="16"/>
+  <rect class="muted" x="170" y="160" width="280" height="560" rx="10"/>
+  <rect fill="#111827" x="204" y="196" width="212" height="132" rx="8"/>
+  <rect fill="#1f2937" x="204" y="352" width="212" height="132" rx="8"/>
+  <rect fill="#374151" x="204" y="508" width="212" height="132" rx="8"/>
+  <text class="body" x="514" y="184">Background editor is dimmed when export dialog opens.</text>
+  <rect class="overlay" width="1440" height="900"/>
+
+  <rect class="surface" x="450" y="180" width="540" height="540" rx="18"/>
+  <text class="text" x="492" y="236">Export Comic</text>
+  <text class="body" x="492" y="266">Create a vertical PNG webtoon from generated panels and speech bubbles.</text>
+
+  <rect class="field" x="492" y="306" width="456" height="64" rx="10"/>
+  <circle cx="524" cy="338" r="12" fill="#10b981"/>
+  <text class="h2" x="552" y="334">PNG vertical</text>
+  <text class="body" x="552" y="354">MVP format, recommended for demo</text>
+
+  <rect class="field" x="492" y="390" width="456" height="64" rx="10"/>
+  <circle cx="524" cy="422" r="12" fill="#3f3f46"/>
+  <text class="h2" x="552" y="418">PDF</text>
+  <text class="body" x="552" y="438">Optional, only if implemented</text>
+
+  <rect class="warning" x="492" y="478" width="456" height="58" rx="10"/>
+  <text class="body" x="520" y="504" fill="#111827">1 panel has no image. Export partial or return to generate?</text>
+  <text class="body" x="520" y="524" fill="#111827">Panel 3 will be shown as a placeholder.</text>
+
+  <text class="body" x="492" y="574">Export progress</text>
+  <rect class="field" x="492" y="592" width="456" height="18" rx="9"/>
+  <rect class="primary" x="492" y="592" width="296" height="18" rx="9"/>
+  <text class="body" x="492" y="636">Rendering panels, bubbles, and final canvas...</text>
+
+  <rect class="field" x="604" y="660" width="150" height="38" rx="9"/>
+  <text class="small" x="652" y="683">CANCEL</text>
+  <rect class="primary" x="770" y="660" width="178" height="38" rx="9"/>
+  <text class="small" x="816" y="683">EXPORT PNG</text>
+</svg>

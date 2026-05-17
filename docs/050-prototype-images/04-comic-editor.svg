@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <style>
+      .bg { fill:#09090b; }
+      .surface { fill:#18181b; stroke:#27272a; stroke-width:1.5; }
+      .field { fill:#0f0f12; stroke:#3f3f46; stroke-width:1.5; }
+      .muted { fill:#27272a; }
+      .primary { fill:#8b5cf6; }
+      .success { fill:#10b981; }
+      .text { font:700 18px Inter, Arial, sans-serif; fill:#f4f4f5; }
+      .body { font:500 13px Inter, Arial, sans-serif; fill:#a1a1aa; }
+      .small { font:700 10px Inter, Arial, sans-serif; fill:#c4b5fd; }
+      .comic { font:700 16px Arial, sans-serif; fill:#111827; }
+    </style>
+  </defs>
+  <rect class="bg" width="1440" height="900"/>
+  <rect class="surface" x="0" y="0" width="1440" height="68"/>
+  <circle cx="42" cy="34" r="17" fill="#8b5cf6"/>
+  <text class="text" x="74" y="41">ComicAI Studio</text>
+  <rect class="primary" x="1156" y="18" width="100" height="32" rx="8"/>
+  <text class="small" x="1186" y="38">SAVE</text>
+  <rect class="success" x="1270" y="18" width="112" height="32" rx="8"/>
+  <text class="small" x="1300" y="38" fill="#052e16">EXPORT</text>
+
+  <rect class="surface" x="0" y="68" width="260" height="832"/>
+  <text class="text" x="24" y="112">Bubble Tools</text>
+  <rect class="primary" x="24" y="144" width="212" height="38" rx="8"/>
+  <text class="small" x="88" y="168">ADD BUBBLE</text>
+  <rect class="field" x="24" y="206" width="212" height="110" rx="10"/>
+  <text class="body" x="44" y="238">Selected bubble</text>
+  <text class="body" x="44" y="268">x: 88, y: 62</text>
+  <text class="body" x="44" y="294">width: 180</text>
+  <rect class="field" x="24" y="342" width="212" height="136" rx="10"/>
+  <text class="body" x="44" y="374">Bubble text</text>
+  <rect fill="#09090b" x="44" y="392" width="172" height="58" rx="6"/>
+  <text class="body" x="58" y="426">Weather like this...</text>
+
+  <rect class="surface" x="314" y="96" width="812" height="760" rx="16"/>
+  <text class="text" x="350" y="138">Webtoon Preview</text>
+  <text class="body" x="350" y="164">Drag speech bubbles directly on generated panel images.</text>
+
+  <g transform="translate(452 198)">
+    <rect fill="#111827" stroke="#3f3f46" stroke-width="2" width="536" height="190" rx="10"/>
+    <rect fill="#1f2937" x="28" y="24" width="480" height="142" rx="8"/>
+    <rect fill="#ffffff" x="60" y="42" width="190" height="54" rx="25"/>
+    <path d="M92 92 L66 130 L126 101 Z" fill="#ffffff"/>
+    <text class="comic" x="88" y="75">Weather like this...</text>
+    <rect class="primary" fill-opacity="0.25" stroke="#8b5cf6" stroke-width="2" x="58" y="40" width="194" height="58" rx="26"/>
+  </g>
+
+  <g transform="translate(452 418)">
+    <rect fill="#111827" stroke="#3f3f46" stroke-width="2" width="536" height="190" rx="10"/>
+    <rect fill="#374151" x="28" y="24" width="480" height="142" rx="8"/>
+    <rect fill="#ffffff" x="292" y="52" width="170" height="52" rx="24"/>
+    <path d="M426 100 L464 134 L404 108 Z" fill="#ffffff"/>
+    <text class="comic" x="316" y="84">One hot bowl!</text>
+  </g>
+
+  <g transform="translate(452 638)">
+    <rect fill="#111827" stroke="#3f3f46" stroke-width="2" width="536" height="120" rx="10"/>
+    <rect fill="#4b5563" x="28" y="20" width="480" height="80" rx="8"/>
+    <text class="body" x="190" y="66">Panel 3 image missing</text>
+  </g>
+
+  <rect class="surface" x="1170" y="96" width="220" height="760" rx="14"/>
+  <text class="text" x="1196" y="138">Panel List</text>
+  <rect class="field" x="1196" y="174" width="168" height="44" rx="8"/>
+  <text class="body" x="1216" y="200">Panel 1 - done</text>
+  <rect class="field" x="1196" y="234" width="168" height="44" rx="8"/>
+  <text class="body" x="1216" y="260">Panel 2 - done</text>
+  <rect class="field" x="1196" y="294" width="168" height="44" rx="8"/>
+  <text class="body" x="1216" y="320">Panel 3 - missing</text>
+</svg>
