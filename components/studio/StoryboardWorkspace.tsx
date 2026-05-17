@@ -19,6 +19,7 @@ export function StoryboardWorkspace({
   onSelectPanel,
   onUpdatePanel,
   onGeneratePanel,
+  onDeletePanel,
   onGoToComic,
 }: {
   characters: Character[];
@@ -30,6 +31,7 @@ export function StoryboardWorkspace({
   onSelectPanel: (panelId: string) => void;
   onUpdatePanel: (panelId: string, patch: Partial<Panel>) => void;
   onGeneratePanel: (panelId: string) => void;
+  onDeletePanel: (panelId: string) => void;
   onGoToComic: () => void;
 }) {
   const hasBackendError = panels.some((panel) => panel.status === "error");
@@ -52,9 +54,11 @@ export function StoryboardWorkspace({
               characters={characters}
               selected={panel.id === selectedPanelId}
               disabled={isGeneratingAll}
+              canDelete={panels.length > 1}
               onSelect={() => onSelectPanel(panel.id)}
               onUpdate={(patch) => onUpdatePanel(panel.id, patch)}
               onGenerate={() => onGeneratePanel(panel.id)}
+              onDelete={() => onDeletePanel(panel.id)}
             />
           ))}
         </div>

@@ -16,17 +16,21 @@ export function StoryboardPanelCard({
   characters,
   selected,
   disabled,
+  canDelete,
   onSelect,
   onUpdate,
   onGenerate,
+  onDelete,
 }: {
   panel: Panel;
   characters: Character[];
   selected: boolean;
   disabled: boolean;
+  canDelete: boolean;
   onSelect: () => void;
   onUpdate: (patch: Partial<Panel>) => void;
   onGenerate: () => void;
+  onDelete: () => void;
 }) {
   return (
     <article
@@ -37,8 +41,10 @@ export function StoryboardPanelCard({
       <PanelTextEditor
         panel={panel}
         characters={characters}
+        canDelete={canDelete}
         onSelect={onSelect}
         onUpdate={onUpdate}
+        onDelete={onDelete}
       />
       <PanelImageControls
         panel={panel}
@@ -52,13 +58,17 @@ export function StoryboardPanelCard({
 function PanelTextEditor({
   panel,
   characters,
+  canDelete,
   onSelect,
   onUpdate,
+  onDelete,
 }: {
   panel: Panel;
   characters: Character[];
+  canDelete: boolean;
   onSelect: () => void;
   onUpdate: (patch: Partial<Panel>) => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="p-4">
@@ -75,8 +85,10 @@ function PanelTextEditor({
         </button>
         <button
           type="button"
+          onClick={onDelete}
+          disabled={!canDelete}
           aria-label={`Delete panel ${panel.orderIndex}`}
-          className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
+          className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Trash2 size={15} />
         </button>

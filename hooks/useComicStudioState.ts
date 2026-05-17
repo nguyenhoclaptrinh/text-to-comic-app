@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 
 import { useComicStudioPersistence } from "@/hooks/useComicStudioPersistence";
+import { usePanelActions } from "@/hooks/usePanelActions";
 import {
   DEFAULT_BUBBLE_HEIGHT,
   DEFAULT_BUBBLE_WIDTH,
@@ -23,7 +24,6 @@ import {
 } from "@/lib/studio/mock-data";
 import {
   analyzeStoryToPanels,
-  generatePanelImage,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
 import {
@@ -56,7 +56,6 @@ export function useComicStudioState() {
   );
   const [dragging, setDragging] = useState<DragState | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
-  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
   const activeProject =
     projects.find((project) => project.id === activeProjectId) ?? projects[0];
@@ -98,6 +97,16 @@ export function useComicStudioState() {
     },
   );
 
+  const panelActions = usePanelActions({
+    panels,
+    activeProjectId,
+    selectedPanelId,
+    setProjects,
+    setPanels,
+    setSelectedPanelId,
+    setSelectedBubbleId,
+  });
+
   function selectProject(projectId: string) {
     setActiveProjectId(projectId);
     setView("storyboard");
@@ -128,42 +137,6 @@ export function useComicStudioState() {
     } finally {
       setIsAnalyzingStory(false);
     }
-  }
-
-  function updatePanel(panelId: string, patch: Partial<Panel>) {
-    setPanels((current) =>
-      current.map((panel) =>
-        panel.id === panelId ? { ...panel, ...patch } : panel,
-      ),
-    );
-  }
-
-  async function generatePanel(panelId: string) {
-    const target = panels.find((panel) => panel.id === panelId);
-    if (!target || target.status === "generating") {
-      return;
-    }
-
-    updatePanel(panelId, { status: "generating", errorMessage: undefined });
-
-    try {
-      updatePanel(panelId, await generatePanelImage(target));
-    } catch (error) {
-      updatePanel(panelId, {
-        status: "error",
-        errorMessage: getStudioAiErrorMessage(error),
-      });
-    }
-  }
-
-  async function generateAll() {
-    setIsGeneratingAll(true);
-    for (const panelId of panels
-      .filter((panel) => panel.status !== "success")
-      .map((panel) => panel.id)) {
-      await generatePanel(panelId);
-    }
-    setIsGeneratingAll(false);
   }
 
   function addCharacter() {
@@ -264,7 +237,7 @@ export function useComicStudioState() {
       selectedBubble,
       dragging,
       exportOpen,
-      isGeneratingAll,
+      isGeneratingAll: panelActions.isGeneratingAll,
       missingImages,
       generationSummary,
     },
@@ -278,9 +251,10 @@ export function useComicStudioState() {
       setExportOpen,
       selectProject,
       analyzeStory,
-      updatePanel,
-      generatePanel,
-      generateAll,
+      updatePanel: panelActions.updatePanel,
+      deletePanel: panelActions.deletePanel,
+      generatePanel: panelActions.generatePanel,
+      generateAll: panelActions.generateAll,
       addCharacter,
       updateCharacter,
       addBubble,

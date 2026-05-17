@@ -32,6 +32,7 @@ created: 2026-05-17
 | TC-UAT-001 | Create project -> edit panel -> reload | Project and panels remain available |
 | TC-UAT-002 | Add bubble -> drag -> reload | Bubble text and coordinates remain available |
 | TC-UAT-003 | Panel missing image -> export | Export modal shows warning and return-to-storyboard action |
+| TC-UAT-004 | Delete a non-final storyboard panel | Panel is removed and project panel count updates |
 
 ## Quality Gates
 
