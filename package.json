@@ -9,8 +9,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\"",
-    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.tsx\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\""
+    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\""
   },
   "dependencies": {
     "lucide-react": "^1.16.0",

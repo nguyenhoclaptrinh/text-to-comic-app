@@ -22,6 +22,7 @@ created: 2026-05-17
 | TC-UNIT-001 | `lib/studio/utils.ts` | Text-to-panel mock generation, dialogue extraction, coordinate clamping |
 | TC-UNIT-002 | `lib/studio/factories.ts` | Project, character, bubble, generated bubble creation |
 | TC-UNIT-003 | `lib/studio/persistence.ts` | Save/load/clear local snapshots, invalid JSON handling, version guard, interrupted generation recovery |
+| TC-UNIT-004 | `lib/studio/export-plan.ts` | PNG filename, panel ordering, missing image count, empty export guard |
 
 ### Manual Acceptance Checks
 

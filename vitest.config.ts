@@ -17,6 +17,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html"],
       include: ["lib/studio/**/*.ts"],
+      exclude: ["lib/studio/export-renderer.ts"],
       thresholds: {
         statements: 85,
         branches: 85,

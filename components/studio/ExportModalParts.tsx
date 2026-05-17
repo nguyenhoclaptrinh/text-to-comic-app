@@ -3,7 +3,7 @@
  * @description Small presentational parts used by the export modal.
  */
 
-import { AlertTriangle, Download, Play } from "lucide-react";
+import { AlertTriangle, Download, Loader2, Play } from "lucide-react";
 
 export function MissingImagesWarning({
   count,
@@ -52,7 +52,19 @@ export function ExportProgress({ progress }: { progress: number }) {
   );
 }
 
-export function ExportActions({ onClose }: { onClose: () => void }) {
+export function ExportActions({
+  status,
+  canExport,
+  onClose,
+  onExportPng,
+}: {
+  status: "idle" | "rendering" | "done" | "error";
+  canExport: boolean;
+  onClose: () => void;
+  onExportPng: () => void;
+}) {
+  const isRendering = status === "rendering";
+
   return (
     <div className="mt-6 flex justify-end gap-3">
       <button
@@ -64,10 +76,16 @@ export function ExportActions({ onClose }: { onClose: () => void }) {
       </button>
       <button
         type="button"
-        className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white hover:bg-violet-400"
+        onClick={onExportPng}
+        disabled={!canExport || isRendering}
+        className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <Download size={16} />
-        Export PNG
+        {isRendering ? (
+          <Loader2 className="animate-spin" size={16} />
+        ) : (
+          <Download size={16} />
+        )}
+        {status === "done" ? "Exported" : "Export PNG"}
       </button>
     </div>
   );

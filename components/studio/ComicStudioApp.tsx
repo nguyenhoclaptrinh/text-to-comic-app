@@ -32,6 +32,8 @@ export function ComicStudioApp() {
       </section>
       {state.exportOpen ? (
         <ExportModal
+          panels={state.panels}
+          projectTitle={state.activeProject.title}
           missingImages={state.missingImages}
           onClose={() => actions.setExportOpen(false)}
           onGoToStoryboard={() => {

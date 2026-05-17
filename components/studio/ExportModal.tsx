@@ -1,44 +1,37 @@
 /**
  * @file ExportModal.tsx
- * @description Export dialog for the mock PNG/PDF export workflow.
+ * @description Export dialog for PNG/PDF export workflow.
  */
 
 import { CheckCircle2, FileText, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   ExportActions,
   ExportProgress,
   MissingImagesWarning,
 } from "@/components/studio/ExportModalParts";
-import {
-  EXPORT_PROGRESS_INTERVAL_MS,
-  EXPORT_PROGRESS_MAX,
-  EXPORT_PROGRESS_STEP,
-} from "@/lib/studio/constants";
+import { exportComicPng } from "@/lib/studio/export-renderer";
+import type { Panel } from "@/lib/studio/types";
+
+type ExportStatus = "idle" | "rendering" | "done" | "error";
 
 export function ExportModal({
+  panels,
+  projectTitle,
   missingImages,
   onClose,
   onGoToStoryboard,
 }: {
+  panels: Panel[];
+  projectTitle: string;
   missingImages: number;
   onClose: () => void;
   onGoToStoryboard: () => void;
 }) {
   const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setProgress((current) =>
-        current >= EXPORT_PROGRESS_MAX
-          ? current
-          : current + EXPORT_PROGRESS_STEP,
-      );
-    }, EXPORT_PROGRESS_INTERVAL_MS);
-
-    return () => window.clearInterval(timer);
-  }, []);
+  const [status, setStatus] = useState<ExportStatus>("idle");
+  const canExport = panels.some((panel) => panel.status === "success");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4">
@@ -54,10 +47,35 @@ export function ExportModal({
           onGoToStoryboard={onGoToStoryboard}
         />
         <ExportProgress progress={progress} />
-        <ExportActions onClose={onClose} />
+        <ExportActions
+          status={status}
+          canExport={canExport}
+          onClose={onClose}
+          onExportPng={handleExportPng}
+        />
       </section>
     </div>
   );
+
+  async function handleExportPng() {
+    setStatus("rendering");
+    setProgress(35);
+
+    try {
+      await waitForPaint();
+      setProgress(78);
+      await exportComicPng({
+        projectTitle,
+        panels,
+        includeMissingPanels: false,
+      });
+      setProgress(100);
+      setStatus("done");
+    } catch {
+      setProgress(0);
+      setStatus("error");
+    }
+  }
 }
 
 function ExportModalHeader({ onClose }: { onClose: () => void }) {
@@ -116,4 +134,10 @@ function ExportOptions({
       ) : null}
     </div>
   );
+}
+
+function waitForPaint() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
 }
