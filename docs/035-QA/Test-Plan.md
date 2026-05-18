@@ -35,6 +35,12 @@ created: 2026-05-17
 | TC-UAT-003 | Panel missing image -> export | Export modal shows warning and return-to-storyboard action |
 | TC-UAT-004 | Delete a non-final storyboard panel | Panel is removed and project panel count updates |
 
+### E2E Tests
+
+| ID | Module | Coverage |
+| --- | --- | --- |
+| TC-E2E-001 | Playwright demo happy path | Import story, analyze storyboard, edit panel, generate image fallback, add bubble, export PNG |
+
 ## Quality Gates
 
 ```text
@@ -42,6 +48,7 @@ npm run format:check
 npm run lint
 npm run test
 npm run test:coverage
+npm run test:e2e
 npm run build
 npm audit --audit-level=moderate
 ```

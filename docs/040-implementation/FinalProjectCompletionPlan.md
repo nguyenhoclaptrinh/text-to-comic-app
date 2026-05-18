@@ -30,7 +30,7 @@ Các phần chưa có thật:
 - Image generation đã có API route và cached fallback; cần backend thật nếu muốn generate ảnh ngoài fallback.
 - Supabase Auth/DB/Storage chưa triển khai.
 - Export đã hỗ trợ cached/generated panel image và bubble overlay.
-- Chưa có Playwright E2E test cho happy path.
+- Đã có Playwright E2E test cho happy path demo.
 
 ## 3. Completion Definition
 
@@ -353,7 +353,7 @@ Thứ tự ưu tiên không được đảo nếu chưa có lý do mạnh:
 - [x] API key không expose client.
 - [x] Error mapping rõ ràng.
 - [x] Fallback data có sẵn.
-- [ ] Build/test/lint/audit pass.
+- [x] Build/test/lint/audit pass.
 - [ ] Dev server chạy được bằng README.
 
 ### Delivery

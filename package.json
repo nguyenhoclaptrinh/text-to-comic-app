@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\"",
     "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.ts\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"*.{ts,mjs,json}\""
   },
@@ -20,6 +21,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.3.0",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",

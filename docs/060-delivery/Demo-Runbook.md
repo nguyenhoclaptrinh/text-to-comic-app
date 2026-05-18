@@ -31,6 +31,7 @@ npm run format:check
 npm run lint
 npm run test
 npm run test:coverage
+npm run test:e2e
 npm run build
 npm audit --audit-level=moderate
 ```

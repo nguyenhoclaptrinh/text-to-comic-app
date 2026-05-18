@@ -18,6 +18,7 @@ export function EditablePanelText({
         Scene prompt
       </label>
       <textarea
+        aria-label={`Scene prompt for panel ${panel.orderIndex}`}
         value={panel.scenePrompt}
         onChange={(event) => onUpdate({ scenePrompt: event.target.value })}
         className="mb-4 min-h-24 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-950 p-3 text-sm leading-6 text-zinc-100"
@@ -27,6 +28,7 @@ export function EditablePanelText({
         Dialogue
       </label>
       <textarea
+        aria-label={`Dialogue for panel ${panel.orderIndex}`}
         value={panel.dialogue}
         onChange={(event) => onUpdate({ dialogue: event.target.value })}
         className="mb-4 min-h-16 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-950 p-3 text-sm leading-6 text-zinc-100"
