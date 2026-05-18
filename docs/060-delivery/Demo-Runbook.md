@@ -19,6 +19,7 @@ Text import -> storyboard -> edit -> generate panels -> edit bubbles -> export P
 ## Pre-Demo Checklist
 
 - Run `npm install`.
+- Copy `.env.example` to `.env.local` if Gemini or an image backend will be used live.
 - Run `npm run dev`.
 - Open `http://localhost:3000`.
 - Keep one browser tab ready with the app loaded.
@@ -38,7 +39,7 @@ npm audit --audit-level=moderate
 
 1. Start from the Dashboard and open the existing project.
 2. Navigate to Text Import and create a new comic from a story paragraph.
-3. Explain that the storyboard service is currently a typed mock provider that can be replaced by Gemini.
+3. Explain that the storyboard service calls `/api/storyboard`, which uses Gemini when `GEMINI_API_KEY` is configured and fallback storyboard data otherwise.
 4. Edit one panel prompt and one dialogue line to demonstrate human-in-the-loop control.
 5. Edit one character name/role/visual description in Casting.
 6. Generate one panel, then use Generate All.
@@ -61,14 +62,15 @@ npm audit --audit-level=moderate
 
 ## Current Limitations
 
-- Gemini and real image generation are not wired to external credentials yet.
+- Gemini requires `GEMINI_API_KEY`; without it the storyboard API intentionally falls back to deterministic demo data.
+- Real image generation requires `IMAGE_BACKEND_URL`; without it the image API intentionally falls back to cached SVG panel artwork.
 - Supabase Auth/DB/Storage is documented as target architecture but not implemented in the prototype.
-- PNG export renders the current generated-style prototype artwork, not externally generated image files.
+- PNG export supports generated/cached panel images and bubble overlays.
 - Reference image upload is shown as a future control.
 
 ## Next Integration Tasks
 
-1. Add real text-to-storyboard provider behind `lib/studio/ai-services.ts`.
+1. Add a real `GEMINI_API_KEY` and smoke test live storyboard JSON.
 2. Add real image generation provider and storage upload.
 3. Replace localStorage repository with Supabase repository after schema setup.
 4. Add Playwright E2E test for the demo happy path.

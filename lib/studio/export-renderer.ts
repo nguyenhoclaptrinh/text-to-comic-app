@@ -43,14 +43,14 @@ export async function exportComicPng({
   context.fillStyle = "#09090b";
   context.fillRect(0, 0, plan.width, plan.height);
 
-  plan.panels.forEach((panel, index) => {
-    drawPanel(
+  for (const [index, panel] of plan.panels.entries()) {
+    await drawPanel(
       context,
       panel,
       EXPORT_CANVAS_PADDING,
       EXPORT_CANVAS_PADDING + index * (EXPORT_PANEL_HEIGHT + EXPORT_PANEL_GAP),
     );
-  });
+  }
 
   downloadCanvas(canvas, plan.filename);
 
@@ -61,17 +61,39 @@ export async function exportComicPng({
   };
 }
 
-function drawPanel(
+async function drawPanel(
   context: CanvasRenderingContext2D,
   panel: Panel,
   x: number,
   y: number,
 ) {
-  drawPanelBackground(context, panel, x, y);
-  drawPanelFigures(context, x, y);
+  const imageDrawn = await drawPanelImage(context, panel, x, y);
+  if (!imageDrawn) {
+    drawPanelBackground(context, panel, x, y);
+    drawPanelFigures(context, x, y);
+  }
   drawPanelLabel(context, panel, x, y);
   drawPanelMissingState(context, panel, x, y);
   panel.bubbles.forEach((bubble) => drawBubble(context, panel, bubble, x, y));
+}
+
+async function drawPanelImage(
+  context: CanvasRenderingContext2D,
+  panel: Panel,
+  x: number,
+  y: number,
+) {
+  if (!panel.imageUrl) {
+    return false;
+  }
+
+  try {
+    const image = await loadImage(panel.imageUrl);
+    context.drawImage(image, x, y, EXPORT_PANEL_WIDTH, EXPORT_PANEL_HEIGHT);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function drawPanelBackground(
@@ -241,4 +263,14 @@ function downloadCanvas(canvas: HTMLCanvasElement, filename: string) {
   document.body.appendChild(link);
   link.click();
   link.remove();
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
 }

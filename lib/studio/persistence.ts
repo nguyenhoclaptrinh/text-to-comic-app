@@ -164,8 +164,14 @@ function isPanel(value: unknown): value is Panel {
     Array.isArray(value.characterIds) &&
     typeof value.status === "string" &&
     typeof value.imageTone === "string" &&
+    optionalString(value.imageUrl) &&
+    optionalString(value.errorMessage) &&
     Array.isArray(value.bubbles)
   );
+}
+
+function optionalString(value: unknown) {
+  return value === undefined || typeof value === "string";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

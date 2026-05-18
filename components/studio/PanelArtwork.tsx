@@ -28,6 +28,17 @@ export function PanelPreview({
 }
 
 export function ComicPanelArt({ panel }: { panel: Panel }) {
+  if (panel.imageUrl) {
+    return (
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        role="img"
+        aria-label={`Generated artwork for panel ${panel.orderIndex}`}
+        style={{ backgroundImage: `url("${panel.imageUrl}")` }}
+      />
+    );
+  }
+
   return (
     <div className="absolute inset-0" aria-hidden="true">
       <div className="absolute left-[9%] top-[14%] h-[62%] w-[28%] rounded-full bg-white/10 blur-sm" />

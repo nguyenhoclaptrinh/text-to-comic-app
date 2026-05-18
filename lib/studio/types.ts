@@ -39,6 +39,7 @@ export type Panel = {
   characterIds: string[];
   status: PanelStatus;
   imageTone: string;
+  imageUrl?: string;
   errorMessage?: string;
   bubbles: Bubble[];
 };

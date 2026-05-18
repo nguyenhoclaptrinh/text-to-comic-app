@@ -99,6 +99,7 @@ export function useComicStudioState() {
 
   const panelActions = usePanelActions({
     panels,
+    characters,
     activeProjectId,
     selectedPanelId,
     setProjects,

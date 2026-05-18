@@ -26,10 +26,10 @@ Hiện tại ứng dụng đã có prototype frontend end-to-end:
 
 Các phần chưa có thật:
 
-- Gemini text-to-storyboard chưa được nối API thật.
-- Image generation chưa nối backend thật.
+- Gemini text-to-storyboard đã có API route và fallback; cần API key để smoke test live.
+- Image generation đã có API route và cached fallback; cần backend thật nếu muốn generate ảnh ngoài fallback.
 - Supabase Auth/DB/Storage chưa triển khai.
-- Export hiện render prototype artwork, chưa dùng ảnh AI thật từ storage.
+- Export đã hỗ trợ cached/generated panel image và bubble overlay.
 - Chưa có Playwright E2E test cho happy path.
 
 ## 3. Completion Definition
@@ -349,10 +349,10 @@ Thứ tự ưu tiên không được đảo nếu chưa có lý do mạnh:
 
 ### Engineering
 
-- [ ] AI contracts có schema validation.
-- [ ] API key không expose client.
-- [ ] Error mapping rõ ràng.
-- [ ] Fallback data có sẵn.
+- [x] AI contracts có schema validation.
+- [x] API key không expose client.
+- [x] Error mapping rõ ràng.
+- [x] Fallback data có sẵn.
 - [ ] Build/test/lint/audit pass.
 - [ ] Dev server chạy được bằng README.
 

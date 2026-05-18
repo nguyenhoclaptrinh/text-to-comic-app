@@ -9,10 +9,11 @@ import {
   generatePanelImage,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
-import type { Panel, Project } from "@/lib/studio/types";
+import type { Character, Panel, Project } from "@/lib/studio/types";
 
 export function usePanelActions({
   panels,
+  characters,
   activeProjectId,
   selectedPanelId,
   setProjects,
@@ -21,6 +22,7 @@ export function usePanelActions({
   setSelectedBubbleId,
 }: {
   panels: Panel[];
+  characters: Character[];
   activeProjectId: string;
   selectedPanelId: string;
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
@@ -69,7 +71,7 @@ export function usePanelActions({
     updatePanel(panelId, { status: "generating", errorMessage: undefined });
 
     try {
-      updatePanel(panelId, await generatePanelImage(target));
+      updatePanel(panelId, await generatePanelImage(target, characters));
     } catch (error) {
       updatePanel(panelId, {
         status: "error",

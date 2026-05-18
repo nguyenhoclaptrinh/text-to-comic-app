@@ -1,13 +1,14 @@
 # Text-to-Comic App
 
-Text-to-Comic App is a Next.js prototype for converting story text into an editable comic/webtoon workflow. The current project is optimized for final-project demonstration: create a project, analyze text into storyboard panels, generate/regenerate panel artwork through a typed mock AI service, edit characters and speech bubbles, persist progress locally, and export a vertical PNG.
+Text-to-Comic App is a Next.js prototype for converting story text into an editable comic/webtoon workflow. The current project is optimized for final-project demonstration: create a project, analyze text into storyboard panels, generate/regenerate panel artwork through typed AI service adapters, edit characters and speech bubbles, persist progress locally, and export a vertical PNG.
 
 ## Current MVP
 
 - Project dashboard and text import flow.
 - Storyboard editor with editable scene prompt, dialogue, panel status, and character chips.
 - Editable character casting sidebar for name, role, and visual description.
-- Mock AI service layer for storyboard analysis and panel image generation.
+- Gemini-ready storyboard API with deterministic fallback when no API key is configured.
+- Image generation API adapter with cached SVG fallback when no image backend is configured.
 - Per-panel generate/regenerate and Generate All.
 - Speech bubble add/edit/delete/drag.
 - Local snapshot persistence through `localStorage`.
@@ -31,6 +32,18 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+## Environment
+
+Create `.env.local` from `.env.example` when using real external services:
+
+```env
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
+IMAGE_BACKEND_URL=
+```
+
+Without these values, the app still runs through deterministic fallback data so the final-project demo remains available offline.
 
 ## Quality Gates
 
@@ -56,4 +69,4 @@ npm audit --audit-level=moderate
 
 ## Known Scope Boundary
 
-The AI layer is currently a typed mock provider. It is structured so Gemini/storyboard and image backend providers can replace the mock service without rewriting the editor flow. Supabase Auth/DB/Storage and real external AI credentials are the next integration step.
+The AI layer has server API contracts and fallback behavior. Gemini can be enabled by setting `GEMINI_API_KEY`; real image generation can be enabled by setting `IMAGE_BACKEND_URL`. Supabase Auth/DB/Storage is still a target architecture item, not part of the current local persistence baseline.
