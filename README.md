@@ -71,3 +71,10 @@ npm audit --audit-level=moderate
 ## Known Scope Boundary
 
 The AI layer has server API contracts and fallback behavior. Gemini can be enabled by setting `GEMINI_API_KEY`; real image generation can be enabled by setting `IMAGE_BACKEND_URL`. Supabase Auth/DB/Storage is still a target architecture item, not part of the current local persistence baseline.
+
+## Delivery Docs
+
+- `docs/060-delivery/Demo-Runbook.md`
+- `docs/060-delivery/Supabase-Setup.md`
+- `docs/070-report/FinalReport.md`
+- `docs/070-report/PresentationOutline.md`
