@@ -42,6 +42,7 @@ export type Panel = {
   imageUrl?: string;
   errorMessage?: string;
   bubbles: Bubble[];
+  seed: number;
 };
 
 export type Project = {

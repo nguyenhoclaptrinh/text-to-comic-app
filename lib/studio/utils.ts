@@ -6,7 +6,6 @@
 import {
   BUBBLE_BOUNDARY_PADDING,
   BUBBLE_TEXT_MAX_LENGTH,
-  STORY_EXCERPT_MAX_LENGTH,
 } from "@/lib/studio/constants";
 import type { Bubble, Character, Panel } from "@/lib/studio/types";
 
@@ -28,14 +27,16 @@ export function nextBubbleCoordinate(
   stageStart: number,
   offset: number,
   stageSize: number,
-  itemSize: number,
+  itemSizePercent: number,
 ) {
+  const pixelPos = pointer - stageStart - offset;
+  const percent = (pixelPos / stageSize) * 100;
   const max = Math.max(
-    stageSize - itemSize - BUBBLE_BOUNDARY_PADDING,
+    100 - itemSizePercent - BUBBLE_BOUNDARY_PADDING,
     BUBBLE_BOUNDARY_PADDING,
   );
   return Math.round(
-    clamp(pointer - stageStart - offset, BUBBLE_BOUNDARY_PADDING, max),
+    clamp(percent, BUBBLE_BOUNDARY_PADDING, max),
   );
 }
 
@@ -69,40 +70,66 @@ export function createMockPanels(
   storyText: string,
   timestamp = Date.now(),
 ): Panel[] {
-  const excerpt = storyText.trim().slice(0, STORY_EXCERPT_MAX_LENGTH);
+  const cleanText = storyText.trim();
+  const sentences = cleanText
+    .split(/(?<=[.?!])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 5);
 
-  return [
-    {
-      id: `panel-${timestamp}-1`,
-      orderIndex: 1,
-      scenePrompt: `${excerpt}... Establish the location, mood, and first character.`,
-      dialogue: "Narrator: The story begins under a cold sky.",
-      characterIds: ["xiao-se"],
-      status: "draft",
-      imageTone: "from-slate-900 via-zinc-800 to-indigo-950",
-      bubbles: [],
-    },
-    {
-      id: `panel-${timestamp}-2`,
-      orderIndex: 2,
-      scenePrompt:
-        "A second character enters the scene and changes the rhythm of the moment.",
-      dialogue: "New arrival: I finally found this place.",
-      characterIds: ["lei-wujie"],
-      status: "draft",
-      imageTone: "from-red-950 via-zinc-800 to-amber-950",
-      bubbles: [],
-    },
-    {
-      id: `panel-${timestamp}-3`,
-      orderIndex: 3,
-      scenePrompt:
-        "The two characters react to each other, setting up the next scene.",
-      dialogue: "Xiao Se: This will cost you.",
-      characterIds: ["xiao-se", "lei-wujie"],
-      status: "draft",
-      imageTone: "from-zinc-900 via-stone-800 to-slate-900",
-      bubbles: [],
-    },
+  const panelCount = 3;
+  const chunks: string[][] = [[], [], []];
+
+  if (sentences.length >= panelCount) {
+    const chunkSize = Math.ceil(sentences.length / panelCount);
+    for (let i = 0; i < panelCount; i++) {
+      chunks[i] = sentences.slice(i * chunkSize, (i + 1) * chunkSize);
+    }
+  } else {
+    for (let i = 0; i < panelCount; i++) {
+      const idx = Math.min(i, sentences.length - 1);
+      chunks[i] = [sentences[idx] || "A quiet scene unfolds."];
+    }
+  }
+
+  const defaultTones = [
+    "from-slate-900 via-zinc-800 to-indigo-950",
+    "from-red-950 via-zinc-800 to-amber-950",
+    "from-zinc-900 via-stone-800 to-slate-900",
   ];
+
+  return chunks.map((chunkSentences, index) => {
+    const textFragment = chunkSentences.join(" ");
+    let dialogue = `Narrator: ${textFragment.slice(0, 60)}`;
+    let characterIds = ["protagonist"];
+
+    const colonMatch = textFragment.match(/^([A-Za-z\s]+):\s*(.+)$/);
+    if (colonMatch) {
+      dialogue = `${colonMatch[1].trim()}: ${colonMatch[2].trim()}`;
+      characterIds = [colonMatch[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")];
+    } else {
+      const quoteMatch = textFragment.match(/["“]([^"”]+)["”]/);
+      if (quoteMatch) {
+        dialogue = `Speaker: ${quoteMatch[1].trim()}`;
+        characterIds = ["speaker"];
+      }
+    }
+
+    if (dialogue.length > BUBBLE_TEXT_MAX_LENGTH) {
+      dialogue = dialogue.slice(0, BUBBLE_TEXT_MAX_LENGTH - 3) + "...";
+    }
+
+    const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 200)}. Highly detailed, comic book style.`;
+
+    return {
+      id: `panel-${timestamp}-${index + 1}`,
+      orderIndex: index + 1,
+      scenePrompt,
+      dialogue,
+      characterIds,
+      status: "draft",
+      imageTone: defaultTones[index % defaultTones.length],
+      bubbles: [],
+      seed: Math.floor(Math.random() * 1000000),
+    };
+  });
 }

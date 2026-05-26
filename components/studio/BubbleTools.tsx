@@ -74,13 +74,13 @@ function SelectedBubbleForm({
         className="mb-3 min-h-24 w-full resize-none rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm text-zinc-100"
       />
       <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400">
-        <div className="rounded-md bg-zinc-950 p-2">x: {selectedBubble.x}</div>
-        <div className="rounded-md bg-zinc-950 p-2">y: {selectedBubble.y}</div>
+        <div className="rounded-md bg-zinc-950 p-2">x: {selectedBubble.x}%</div>
+        <div className="rounded-md bg-zinc-950 p-2">y: {selectedBubble.y}%</div>
         <div className="rounded-md bg-zinc-950 p-2">
-          w: {selectedBubble.width}
+          w: {selectedBubble.width}%
         </div>
         <div className="rounded-md bg-zinc-950 p-2">
-          h: {selectedBubble.height}
+          h: {selectedBubble.height}%
         </div>
       </div>
       <button

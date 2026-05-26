@@ -39,12 +39,13 @@ export const PANELS_SEED: Panel[] = [
       {
         id: "bubble-1",
         text: "Weather like this...",
-        x: 28,
-        y: 24,
-        width: 176,
-        height: 58,
+        x: 5, // %
+        y: 8, // %
+        width: 28, // %
+        height: 18, // %
       },
     ],
+    seed: 42,
   },
   {
     id: "panel-2",
@@ -56,6 +57,7 @@ export const PANELS_SEED: Panel[] = [
     status: "draft",
     imageTone: "from-red-950 via-zinc-800 to-amber-950",
     bubbles: [],
+    seed: 43,
   },
   {
     id: "panel-3",
@@ -69,6 +71,7 @@ export const PANELS_SEED: Panel[] = [
     errorMessage:
       "Image backend offline. Restart Colab or retry with cached images.",
     bubbles: [],
+    seed: 44,
   },
 ];
 

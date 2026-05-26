@@ -6,6 +6,7 @@
 import { useEffect, useRef } from "react";
 
 import { LocalStorageStudioRepository } from "@/lib/studio/persistence";
+import { SupabaseStudioRepository } from "@/lib/studio/supabase-repository";
 import type { StudioSnapshot } from "@/lib/studio/types";
 
 type UseStudioPersistenceParams = {
@@ -31,10 +32,40 @@ export function useStudioPersistence({
     const repository = createBrowserRepository();
     const persistedSnapshot = repository?.loadSnapshot();
     if (persistedSnapshot) {
-      onSnapshotLoaded(persistedSnapshot);
+      resolveIndexedDbImages(persistedSnapshot).then((resolved) => {
+        onSnapshotLoaded(resolved);
+      });
     }
     isHydratedRef.current = true;
   }, [onSnapshotLoaded]);
+}
+
+async function resolveIndexedDbImages(snapshot: StudioSnapshot): Promise<StudioSnapshot> {
+  const { readImage } = await import("@/lib/studio/indexeddb-storage");
+  const resolvedPanels = await Promise.all(
+    snapshot.panels.map(async (panel) => {
+      if (panel.imageUrl && panel.imageUrl.startsWith("indexeddb://")) {
+        const key = panel.imageUrl.replace("indexeddb://", "");
+        try {
+          const base64 = await readImage(key);
+          if (base64) {
+            return {
+              ...panel,
+              imageUrl: base64,
+            };
+          }
+        } catch (err) {
+          console.warn("[IndexedDB] Error resolving image:", err);
+        }
+      }
+      return panel;
+    })
+  );
+
+  return {
+    ...snapshot,
+    panels: resolvedPanels,
+  };
 }
 
 function createBrowserRepository() {
@@ -42,5 +73,6 @@ function createBrowserRepository() {
     return null;
   }
 
-  return new LocalStorageStudioRepository(window.localStorage);
+  const localRepo = new LocalStorageStudioRepository(window.localStorage);
+  return new SupabaseStudioRepository(localRepo);
 }

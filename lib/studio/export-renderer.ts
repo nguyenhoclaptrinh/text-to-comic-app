@@ -12,8 +12,6 @@ import {
 } from "@/lib/studio/export-plan";
 import type { Bubble, Panel } from "@/lib/studio/types";
 
-const EXPORT_REFERENCE_STAGE_WIDTH = 640;
-const EXPORT_REFERENCE_STAGE_HEIGHT = 320;
 
 export async function exportComicPng({
   projectTitle,
@@ -181,13 +179,10 @@ function drawBubble(
   panelX: number,
   panelY: number,
 ) {
-  const bounds = getBubbleCoordinateBounds(panel);
-  const scaleX = EXPORT_PANEL_WIDTH / bounds.width;
-  const scaleY = EXPORT_PANEL_HEIGHT / bounds.height;
-  const x = panelX + bubble.x * scaleX;
-  const y = panelY + bubble.y * scaleY;
-  const width = bubble.width * scaleX;
-  const height = Math.max(bubble.height * scaleY, 76);
+  const x = panelX + (bubble.x / 100) * EXPORT_PANEL_WIDTH;
+  const y = panelY + (bubble.y / 100) * EXPORT_PANEL_HEIGHT;
+  const width = (bubble.width / 100) * EXPORT_PANEL_WIDTH;
+  const height = Math.max((bubble.height / 100) * EXPORT_PANEL_HEIGHT, 76);
 
   context.fillStyle = "#ffffff";
   context.strokeStyle = "#09090b";
@@ -229,19 +224,6 @@ function drawWrappedText(
   if (line) {
     context.fillText(line, x, lineY);
   }
-}
-
-function getBubbleCoordinateBounds(panel: Panel) {
-  const width = Math.max(
-    EXPORT_REFERENCE_STAGE_WIDTH,
-    ...panel.bubbles.map((bubble) => bubble.x + bubble.width + 24),
-  );
-  const height = Math.max(
-    EXPORT_REFERENCE_STAGE_HEIGHT,
-    ...panel.bubbles.map((bubble) => bubble.y + bubble.height + 24),
-  );
-
-  return { width, height };
 }
 
 function getPanelPalette(panel: Panel) {

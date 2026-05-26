@@ -12,6 +12,23 @@ import type {
 export async function generatePanelImageFromProvider(
   input: GeneratePanelRequest,
 ): Promise<GeneratePanelResponse> {
+  const response = await generateRawPanelImage(input);
+  const cloudUrl = await uploadToSupabaseStorage(
+    input.panel.id,
+    input.panel.seed,
+    response.imageUrl,
+  );
+
+  return {
+    ...response,
+    imageUrl: cloudUrl,
+    source: cloudUrl.startsWith("http") && !cloudUrl.startsWith("data:") ? "image-backend" : response.source,
+  };
+}
+
+async function generateRawPanelImage(
+  input: GeneratePanelRequest,
+): Promise<GeneratePanelResponse> {
   if (input.panel.scenePrompt.toLowerCase().includes("[offline]")) {
     throw new Error("Image backend is offline.");
   }
@@ -89,6 +106,7 @@ function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
     `Scene: ${panel.scenePrompt}`,
     `Dialogue context: ${panel.dialogue}`,
     characterContext ? `Characters:\n${characterContext}` : "",
+    `Seed: ${panel.seed}`,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -100,4 +118,62 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isDefined<T>(value: T | undefined): value is T {
   return value !== undefined;
+}
+
+async function uploadToSupabaseStorage(
+  panelId: string,
+  seed: number,
+  imageUrl: string,
+): Promise<string> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !serviceKey) {
+    return imageUrl;
+  }
+
+  try {
+    let body: ArrayBuffer;
+    let contentType = "image/png";
+
+    if (imageUrl.startsWith("data:")) {
+      const match = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) {
+        return imageUrl;
+      }
+      contentType = match[1];
+      body = new Uint8Array(Buffer.from(match[2], "base64")).buffer;
+    } else {
+      const res = await fetch(imageUrl);
+      if (!res.ok) {
+        return imageUrl;
+      }
+      body = await res.arrayBuffer();
+      contentType = res.headers.get("content-type") || "image/png";
+    }
+
+    const filename = `${panelId}-${seed}.png`;
+    const uploadUrl = `${url}/storage/v1/object/comic-panels/${filename}`;
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "apikey": serviceKey,
+        "Authorization": `Bearer ${serviceKey}`,
+        "Content-Type": contentType,
+        "x-upsert": "true",
+      },
+      body,
+    });
+
+    if (!uploadRes.ok) {
+      console.warn("[Supabase Storage] Upload failed:", uploadRes.statusText);
+      return imageUrl;
+    }
+
+    return `${url}/storage/v1/object/public/comic-panels/${filename}`;
+  } catch (error) {
+    console.warn("[Supabase Storage] Error uploading image:", error);
+    return imageUrl;
+  }
 }

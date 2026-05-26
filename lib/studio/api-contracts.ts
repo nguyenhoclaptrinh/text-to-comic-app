@@ -57,6 +57,7 @@ export const PanelSchema = z.object({
   imageUrl: z.string().optional(),
   errorMessage: z.string().optional(),
   bubbles: z.array(BubbleSchema),
+  seed: z.number(),
 });
 
 export const StoryboardResponseSchema = z.object({

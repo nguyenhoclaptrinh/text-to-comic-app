@@ -72,10 +72,10 @@ export function ComicPanelCanvas({
               selectedBubbleId === bubble.id ? "ring-2 ring-violet-400" : ""
             }`}
             style={{
-              left: bubble.x,
-              top: bubble.y,
-              width: bubble.width,
-              minHeight: bubble.height,
+              left: `${bubble.x}%`,
+              top: `${bubble.y}%`,
+              width: `${bubble.width}%`,
+              minHeight: `${bubble.height}%`,
             }}
           >
             {bubble.text}

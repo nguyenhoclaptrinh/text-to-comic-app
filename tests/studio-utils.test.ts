@@ -52,10 +52,10 @@ describe("studio utils", () => {
   });
 
   it("should keep moved bubbles inside the visible panel boundary", () => {
-    expect(nextBubbleCoordinate(-100, 0, 0, 320, 180)).toBe(
+    expect(nextBubbleCoordinate(-100, 0, 0, 320, 35)).toBe(
       BUBBLE_BOUNDARY_PADDING,
     );
-    expect(nextBubbleCoordinate(1000, 0, 0, 320, 180)).toBe(130);
+    expect(nextBubbleCoordinate(1000, 0, 0, 320, 35)).toBe(63); // 100% - 35% - 2%
   });
 
   it("should update only the requested bubble on the requested panel", () => {

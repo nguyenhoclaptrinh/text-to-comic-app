@@ -43,6 +43,7 @@ export function normalizeStoryboardAiResponse(
       status: "draft",
       imageTone: PANEL_IMAGE_TONES[index % PANEL_IMAGE_TONES.length],
       bubbles: [],
+      seed: Math.floor(Math.random() * 1000000),
     }));
 }
 

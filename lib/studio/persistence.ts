@@ -64,7 +64,8 @@ export class LocalStorageStudioRepository implements StudioRepository {
 
   saveSnapshot(snapshot: StudioSnapshot) {
     try {
-      this.storage.setItem(this.key, JSON.stringify(snapshot));
+      const cleanSnapshot = extractAndSaveBase64Images(snapshot);
+      this.storage.setItem(this.key, JSON.stringify(cleanSnapshot));
     } catch (error) {
       warnPersistenceIssue(
         StudioPersistenceErrorCode.STORAGE_UNAVAILABLE,
@@ -183,4 +184,32 @@ function warnPersistenceIssue(
   originalError: unknown,
 ) {
   console.warn("[StudioPersistence]", code, originalError);
+}
+
+function extractAndSaveBase64Images(snapshot: StudioSnapshot): StudioSnapshot {
+  if (typeof window === "undefined") {
+    return snapshot;
+  }
+
+  const cleanPanels = snapshot.panels.map((panel) => {
+    if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
+      const key = `panel-image-${panel.id}`;
+      import("@/lib/studio/indexeddb-storage").then(({ writeImage }) => {
+        writeImage(key, panel.imageUrl!).catch((err) => {
+          console.warn("[IndexedDB] Error saving image:", err);
+        });
+      });
+
+      return {
+        ...panel,
+        imageUrl: `indexeddb://${key}`,
+      };
+    }
+    return panel;
+  });
+
+  return {
+    ...snapshot,
+    panels: cleanPanels,
+  };
 }
