@@ -57,7 +57,7 @@ export async function generateMultiPageStoryboard(
   const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 
   const pages: Page[] = [];
-  let source: "gemini" | "fallback" = apiKey ? "gemini" : "fallback";
+  const source: "gemini" | "fallback" = apiKey ? "gemini" : "fallback";
 
   for (const [index, chunk] of chunks.entries()) {
     const pageId = `page-${Date.now()}-${index + 1}`;

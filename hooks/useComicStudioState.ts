@@ -36,7 +36,6 @@ import type {
   Character,
   DragState,
   Page,
-  Panel,
   Project,
   View,
 } from "@/lib/studio/types";
