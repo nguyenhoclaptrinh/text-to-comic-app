@@ -19,10 +19,20 @@ const PANEL_IMAGE_TONES = [
 
 export function createFallbackStoryboardResponse(
   storyText: string,
+  projectId = `project-${Date.now()}`,
   warning = "Gemini is not configured. Using deterministic fallback storyboard.",
 ): StoryboardResponse {
+  const panels = createMockPanels(storyText);
   return {
-    panels: createMockPanels(storyText),
+    pages: [
+      {
+        id: `page-${Date.now()}-1`,
+        projectId,
+        orderIndex: 1,
+        title: "Page 1",
+        panels,
+      },
+    ],
     source: "fallback",
     warning,
   };

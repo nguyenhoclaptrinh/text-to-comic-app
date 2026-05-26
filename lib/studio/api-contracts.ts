@@ -60,8 +60,16 @@ export const PanelSchema = z.object({
   seed: z.number(),
 });
 
+export const PageSchema = z.object({
+  id: z.string().min(1),
+  projectId: z.string().min(1),
+  orderIndex: z.number().int().positive(),
+  title: z.string().min(1),
+  panels: z.array(PanelSchema),
+});
+
 export const StoryboardResponseSchema = z.object({
-  panels: z.array(PanelSchema).min(1).max(8),
+  pages: z.array(PageSchema).min(1).max(24),
   source: z.enum(["gemini", "fallback"]),
   warning: z.string().optional(),
 });

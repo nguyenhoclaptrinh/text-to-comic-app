@@ -1,21 +1,27 @@
 /**
  * @file StoryboardWorkspace.tsx
- * @description Storyboard editing workspace with character casting and panel cards.
+ * @description Storyboard editing workspace with page selection, character casting and panel cards.
  */
 
 import { AlertTriangle, MessageCircle } from "lucide-react";
 
 import { CharacterCastingPanel } from "@/components/studio/CharacterCastingPanel";
 import { StoryboardPanelCard } from "@/components/studio/StoryboardPanelCard";
-import type { Character, Panel } from "@/lib/studio/types";
+import { PageSelector } from "@/components/studio/PageSelector";
+import type { Character, Page, Panel } from "@/lib/studio/types";
 
 export function StoryboardWorkspace({
   characters,
+  pages,
+  activePageId,
   panels,
   selectedPanelId,
   isGeneratingAll,
   onAddCharacter,
   onUpdateCharacter,
+  onSelectPage,
+  onAddPage,
+  onDeletePage,
   onSelectPanel,
   onUpdatePanel,
   onGeneratePanel,
@@ -23,11 +29,16 @@ export function StoryboardWorkspace({
   onGoToComic,
 }: {
   characters: Character[];
+  pages: Page[];
+  activePageId: string;
   panels: Panel[];
   selectedPanelId: string;
   isGeneratingAll: boolean;
   onAddCharacter: () => void;
   onUpdateCharacter: (characterId: string, patch: Partial<Character>) => void;
+  onSelectPage: (pageId: string) => void;
+  onAddPage: () => void;
+  onDeletePage: (pageId: string) => void;
   onSelectPanel: (panelId: string) => void;
   onUpdatePanel: (panelId: string, patch: Partial<Panel>) => void;
   onGeneratePanel: (panelId: string) => void;
@@ -46,6 +57,15 @@ export function StoryboardWorkspace({
       <section className="min-w-0 overflow-y-auto px-4 py-5 lg:px-6">
         {hasBackendError ? <ImageBackendAlert /> : null}
         <StoryboardHeader onGoToComic={onGoToComic} />
+        
+        <PageSelector
+          pages={pages}
+          activePageId={activePageId}
+          onSelectPage={onSelectPage}
+          onAddPage={onAddPage}
+          onDeletePage={onDeletePage}
+        />
+
         <div className="space-y-4 pb-8">
           {panels.map((panel) => (
             <StoryboardPanelCard
@@ -97,7 +117,7 @@ function StoryboardHeader({ onGoToComic }: { onGoToComic: () => void }) {
       <button
         type="button"
         onClick={onGoToComic}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium hover:bg-zinc-800"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium hover:bg-zinc-800 transition-colors"
       >
         <MessageCircle size={16} />
         Open Comic Editor

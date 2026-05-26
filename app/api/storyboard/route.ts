@@ -5,15 +5,12 @@
 
 import { NextResponse } from "next/server";
 
-import { generateStoryboardWithGemini } from "@/lib/server/gemini-storyboard";
+import { generateMultiPageStoryboard } from "@/lib/server/gemini-storyboard";
 import {
   StoryboardRequestSchema,
   StoryboardResponseSchema,
 } from "@/lib/studio/api-contracts";
-import {
-  createFallbackStoryboardResponse,
-  normalizeStoryboardAiResponse,
-} from "@/lib/studio/storyboard";
+import { createFallbackStoryboardResponse } from "@/lib/studio/storyboard";
 
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null);
@@ -29,33 +26,22 @@ export async function POST(request: Request) {
     );
   }
 
+  const projectId = `project-${Date.now()}`;
   try {
-    const geminiResponse = await generateStoryboardWithGemini(
-      parsedRequest.data,
-    );
-
-    if (!geminiResponse) {
-      return NextResponse.json(
-        StoryboardResponseSchema.parse(
-          createFallbackStoryboardResponse(parsedRequest.data.storyText),
-        ),
-      );
-    }
+    const result = await generateMultiPageStoryboard(parsedRequest.data, projectId);
 
     return NextResponse.json(
       StoryboardResponseSchema.parse({
-        panels: normalizeStoryboardAiResponse(geminiResponse),
-        source: "gemini",
+        pages: result.pages,
+        source: result.source,
       }),
     );
   } catch {
-    return NextResponse.json(
-      StoryboardResponseSchema.parse(
-        createFallbackStoryboardResponse(
-          parsedRequest.data.storyText,
-          "Gemini failed or returned invalid JSON. Using fallback storyboard.",
-        ),
-      ),
+    const fallback = createFallbackStoryboardResponse(
+      parsedRequest.data.storyText,
+      projectId,
+      "Gemini failed or returned invalid JSON. Using fallback storyboard.",
     );
+    return NextResponse.json(StoryboardResponseSchema.parse(fallback));
   }
 }

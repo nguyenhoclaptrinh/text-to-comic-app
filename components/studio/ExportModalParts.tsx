@@ -85,7 +85,7 @@ export function ExportActions({
         ) : (
           <Download size={16} />
         )}
-        {status === "done" ? "Exported" : "Export PNG"}
+        {status === "done" ? "Exported" : "Publish & Download"}
       </button>
     </div>
   );

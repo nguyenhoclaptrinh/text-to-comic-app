@@ -8,6 +8,10 @@ import {
   type StoryboardAiResponse,
   type StoryboardRequest,
 } from "@/lib/studio/api-contracts";
+import { chunkStoryText } from "@/lib/server/chunking-engine";
+import { normalizeStoryboardAiResponse } from "@/lib/studio/storyboard";
+import { createMockPanels } from "@/lib/studio/utils";
+import type { Page, Panel } from "@/lib/studio/types";
 
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
@@ -43,6 +47,54 @@ const GEMINI_RESPONSE_SCHEMA = {
   required: ["panels"],
   propertyOrdering: ["panels"],
 };
+
+export async function generateMultiPageStoryboard(
+  input: StoryboardRequest,
+  projectId = `project-${Date.now()}`,
+): Promise<{ pages: Page[]; source: "gemini" | "fallback" }> {
+  const chunks = chunkStoryText(input.storyText, 4500);
+  const apiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+
+  const pages: Page[] = [];
+  let source: "gemini" | "fallback" = apiKey ? "gemini" : "fallback";
+
+  for (const [index, chunk] of chunks.entries()) {
+    const pageId = `page-${Date.now()}-${index + 1}`;
+    const pageTitle = `Page ${index + 1}`;
+    let panels: Panel[] = [];
+
+    if (apiKey) {
+      try {
+        const geminiResponse = await generateStoryboardWithGemini(
+          { storyTitle: input.storyTitle, storyText: chunk },
+          apiKey,
+          model,
+        );
+
+        if (geminiResponse) {
+          panels = normalizeStoryboardAiResponse(geminiResponse, Date.now() + index);
+        }
+      } catch (err) {
+        console.warn(`[Gemini Sync] Error on page ${index + 1}:`, err);
+      }
+    }
+
+    if (panels.length === 0) {
+      panels = createMockPanels(chunk, Date.now() + index);
+    }
+
+    pages.push({
+      id: pageId,
+      projectId,
+      orderIndex: index + 1,
+      title: pageTitle,
+      panels,
+    });
+  }
+
+  return { pages, source };
+}
 
 export async function generateStoryboardWithGemini(
   input: StoryboardRequest,

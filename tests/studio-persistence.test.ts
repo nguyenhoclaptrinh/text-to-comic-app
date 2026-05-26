@@ -110,16 +110,26 @@ describe("LocalStorageStudioRepository", () => {
       new MemoryStorage(),
       "test-key",
     );
+    const activeProjectId = PROJECTS_SEED[0].id;
+    const activePageId = `page-${activeProjectId}-default`;
     const snapshot = createTestSnapshot({
-      panels: [
-        { ...PANELS_SEED[0], status: "generating" },
-        ...PANELS_SEED.slice(1),
+      pages: [
+        {
+          id: activePageId,
+          projectId: activeProjectId,
+          orderIndex: 1,
+          title: "Page 1",
+          panels: [
+            { ...PANELS_SEED[0], status: "generating" },
+            ...PANELS_SEED.slice(1),
+          ],
+        },
       ],
     });
 
     repository.saveSnapshot(snapshot);
 
-    expect(repository.loadSnapshot()?.panels[0]).toMatchObject({
+    expect(repository.loadSnapshot()?.pages[0].panels[0]).toMatchObject({
       status: "error",
       errorMessage: INTERRUPTED_GENERATION_ERROR,
     });
@@ -129,11 +139,22 @@ describe("LocalStorageStudioRepository", () => {
 function createTestSnapshot(
   overrides: Partial<ReturnType<typeof createStudioSnapshot>> = {},
 ) {
+  const activeProjectId = PROJECTS_SEED[0].id;
+  const activePageId = `page-${activeProjectId}-default`;
   return createStudioSnapshot({
     projects: PROJECTS_SEED,
-    activeProjectId: PROJECTS_SEED[0].id,
+    activeProjectId,
+    activePageId,
     characters: CHARACTERS_SEED,
-    panels: PANELS_SEED,
+    pages: [
+      {
+        id: activePageId,
+        projectId: activeProjectId,
+        orderIndex: 1,
+        title: "Page 1",
+        panels: PANELS_SEED,
+      },
+    ],
     storyTitle: "Snow Road Inn",
     storyText: SAMPLE_STORY,
     selectedPanelId: PANELS_SEED[0].id,

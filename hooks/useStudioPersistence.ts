@@ -42,28 +42,60 @@ export function useStudioPersistence({
 
 async function resolveIndexedDbImages(snapshot: StudioSnapshot): Promise<StudioSnapshot> {
   const { readImage } = await import("@/lib/studio/indexeddb-storage");
-  const resolvedPanels = await Promise.all(
-    snapshot.panels.map(async (panel) => {
-      if (panel.imageUrl && panel.imageUrl.startsWith("indexeddb://")) {
-        const key = panel.imageUrl.replace("indexeddb://", "");
-        try {
-          const base64 = await readImage(key);
-          if (base64) {
-            return {
-              ...panel,
-              imageUrl: base64,
-            };
+  
+  const resolvedPages = await Promise.all(
+    snapshot.pages.map(async (page) => {
+      const resolvedPanels = await Promise.all(
+        page.panels.map(async (panel) => {
+          if (panel.imageUrl && panel.imageUrl.startsWith("indexeddb://")) {
+            const key = panel.imageUrl.replace("indexeddb://", "");
+            try {
+              const base64 = await readImage(key);
+              if (base64) {
+                return {
+                  ...panel,
+                  imageUrl: base64,
+                };
+              }
+            } catch (err) {
+              console.warn("[IndexedDB] Error resolving image:", err);
+            }
           }
-        } catch (err) {
-          console.warn("[IndexedDB] Error resolving image:", err);
-        }
-      }
-      return panel;
+          return panel;
+        })
+      );
+      return {
+        ...page,
+        panels: resolvedPanels,
+      };
     })
   );
 
+  const resolvedPanels = snapshot.panels
+    ? await Promise.all(
+        snapshot.panels.map(async (panel) => {
+          if (panel.imageUrl && panel.imageUrl.startsWith("indexeddb://")) {
+            const key = panel.imageUrl.replace("indexeddb://", "");
+            try {
+              const base64 = await readImage(key);
+              if (base64) {
+                return {
+                  ...panel,
+                  imageUrl: base64,
+                };
+              }
+            } catch (err) {
+              console.warn("[IndexedDB] Error resolving image:", err);
+            }
+          }
+          return panel;
+        })
+      )
+    : undefined;
+
   return {
     ...snapshot,
+    pages: resolvedPages,
     panels: resolvedPanels,
   };
 }

@@ -31,6 +31,14 @@ export type Bubble = {
   height: number;
 };
 
+export type Page = {
+  id: string;
+  projectId: string;
+  orderIndex: number;
+  title: string;
+  panels: Panel[];
+};
+
 export type Panel = {
   id: string;
   orderIndex: number;
@@ -70,8 +78,10 @@ export type StudioSnapshot = {
   version: number;
   projects: Project[];
   activeProjectId: string;
+  activePageId: string;
   characters: Character[];
-  panels: Panel[];
+  pages: Page[];
+  panels?: Panel[]; // Tương thích ngược với định dạng cũ
   storyTitle: string;
   storyText: string;
   selectedPanelId: string;

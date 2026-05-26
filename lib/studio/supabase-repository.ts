@@ -52,8 +52,8 @@ export class SupabaseStudioRepository implements StudioRepository {
 
   private async syncFromSupabase(): Promise<void> {
     try {
-      // Gọi PostgREST endpoint lấy project mới nhất của user
-      const response = await fetch(`${this.url}/rest/v1/projects?select=*,panels(*),characters(*)&order=updated_at.desc&limit=1`, {
+      // Gọi PostgREST endpoint lấy project mới nhất của user kèm pages và panels lồng nhau
+      const response = await fetch(`${this.url}/rest/v1/projects?select=*,pages(*,panels(*)),characters(*)&order=updated_at.desc&limit=1`, {
         headers: this.getHeaders(),
       });
 
@@ -123,10 +123,72 @@ export class SupabaseStudioRepository implements StudioRepository {
         });
       }
 
-      // 3. Sync Panels (Bulk Upsert)
-      if (snapshot.panels.length > 0) {
-        const panelsPayload = snapshot.panels.map((panel: Panel) => ({
+      // 3. Sync Pages (Bulk Delete removed pages, then Upsert current ones)
+      const pageIds = snapshot.pages.map((page) => page.id);
+      if (pageIds.length > 0) {
+        await fetch(
+          `${this.url}/rest/v1/pages?project_id=eq.${snapshot.activeProjectId}&id=not.in.(${pageIds.join(",")})`,
+          {
+            method: "DELETE",
+            headers,
+          }
+        );
+      } else {
+        await fetch(`${this.url}/rest/v1/pages?project_id=eq.${snapshot.activeProjectId}`, {
+          method: "DELETE",
+          headers,
+        });
+      }
+
+      if (snapshot.pages.length > 0) {
+        const pagesPayload = snapshot.pages.map((page) => ({
+          id: page.id,
           project_id: snapshot.activeProjectId,
+          order_index: page.orderIndex,
+          title: page.title,
+        }));
+
+        await fetch(`${this.url}/rest/v1/pages`, {
+          method: "POST",
+          headers: {
+            ...headers,
+            "Prefer": "resolution=merge-duplicates,return=minimal",
+          },
+          body: JSON.stringify(pagesPayload),
+        });
+      }
+
+      // 4. Sync Panels (Bulk Delete removed panels, then Upsert current ones)
+      const allPanels: Panel[] = [];
+      const panelsWithPage: Array<Panel & { pageId: string }> = [];
+      snapshot.pages.forEach((page) => {
+        page.panels.forEach((panel) => {
+          allPanels.push(panel);
+          panelsWithPage.push({ ...panel, pageId: page.id });
+        });
+      });
+
+      const panelIds = allPanels.map((panel) => panel.id);
+      if (panelIds.length > 0) {
+        await fetch(
+          `${this.url}/rest/v1/panels?project_id=eq.${snapshot.activeProjectId}&id=not.in.(${panelIds.join(",")})`,
+          {
+            method: "DELETE",
+            headers,
+          }
+        );
+      } else {
+        await fetch(`${this.url}/rest/v1/panels?project_id=eq.${snapshot.activeProjectId}`, {
+          method: "DELETE",
+          headers,
+        });
+      }
+
+      if (panelsWithPage.length > 0) {
+        const panelsPayload = panelsWithPage.map((panel) => ({
+          id: panel.id,
+          project_id: snapshot.activeProjectId,
+          page_id: panel.pageId,
           order_index: panel.orderIndex,
           scene_prompt: panel.scenePrompt,
           dialogue: panel.dialogue,

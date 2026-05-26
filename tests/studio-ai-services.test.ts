@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-  analyzeStoryToPanels,
+  analyzeStoryToPages,
   generatePanelImage,
   getStudioAiErrorMessage,
   StudioAiError,
@@ -21,27 +21,29 @@ describe("studio AI services", () => {
 
   it("should reject empty storyboard input with a typed validation error", async () => {
     await expect(
-      analyzeStoryToPanels({ storyTitle: "", storyText: "" }),
+      analyzeStoryToPages({ storyTitle: "", storyText: "" }),
     ).rejects.toMatchObject({
       code: StudioAiErrorCode.VALIDATION_ERROR,
       message: "Title and story text are required.",
     });
   });
 
-  it("should create mock storyboard panels from valid story text", async () => {
+  it("should create mock storyboard pages from valid story text", async () => {
     vi.useFakeTimers();
-    const promise = analyzeStoryToPanels({
+    const promise = analyzeStoryToPages({
       storyTitle: "Snow Road Inn",
       storyText: SAMPLE_STORY,
     });
 
     await vi.runAllTimersAsync();
 
-    await expect(promise).resolves.toHaveLength(3);
+    const pages = await promise;
+    expect(pages).toHaveLength(1);
+    expect(pages[0].panels).toHaveLength(3);
     vi.useRealTimers();
   });
 
-  it("should load storyboard panels through the browser API adapter", async () => {
+  it("should load storyboard pages through the browser API adapter", async () => {
     vi.stubGlobal("window", {});
     vi.stubGlobal(
       "fetch",
@@ -49,17 +51,25 @@ describe("studio AI services", () => {
         ok: true,
         json: async () => ({
           source: "gemini",
-          panels: PANELS_SEED.map((panel) => ({ ...panel, status: "draft" })),
+          pages: [
+            {
+              id: "page-1",
+              projectId: "project-1",
+              orderIndex: 1,
+              title: "Page 1",
+              panels: PANELS_SEED.map((panel) => ({ ...panel, status: "draft" })),
+            }
+          ],
         }),
       }),
     );
 
-    await expect(
-      analyzeStoryToPanels({
-        storyTitle: "Snow Road Inn",
-        storyText: SAMPLE_STORY,
-      }),
-    ).resolves.toHaveLength(3);
+    const pages = await analyzeStoryToPages({
+      storyTitle: "Snow Road Inn",
+      storyText: SAMPLE_STORY,
+    });
+    expect(pages).toHaveLength(1);
+    expect(pages[0].panels).toHaveLength(3);
   });
 
   it("should fall back when the browser storyboard API returns an invalid body", async () => {
@@ -72,13 +82,14 @@ describe("studio AI services", () => {
       }),
     );
 
-    const panels = await analyzeStoryToPanels({
+    const pages = await analyzeStoryToPages({
       storyTitle: "Snow Road Inn",
       storyText: SAMPLE_STORY,
     });
 
-    expect(panels).toHaveLength(3);
-    expect(panels[0].id).toMatch(/^panel-/);
+    expect(pages).toHaveLength(1);
+    expect(pages[0].panels).toHaveLength(3);
+    expect(pages[0].panels[0].id).toMatch(/^panel-/);
   });
 
   it("should map browser storyboard API failures to typed errors", async () => {
@@ -92,7 +103,7 @@ describe("studio AI services", () => {
     );
 
     await expect(
-      analyzeStoryToPanels({
+      analyzeStoryToPages({
         storyTitle: "Snow Road Inn",
         storyText: SAMPLE_STORY,
       }),

@@ -12,7 +12,7 @@ import {
   StoryboardResponseSchema,
 } from "@/lib/studio/api-contracts";
 import { createMockPanels, sleep } from "@/lib/studio/utils";
-import type { Character, Panel } from "@/lib/studio/types";
+import type { Character, Page, Panel } from "@/lib/studio/types";
 
 export enum StudioAiErrorCode {
   VALIDATION_ERROR = "VALIDATION_ERROR",
@@ -30,13 +30,13 @@ export class StudioAiError extends Error {
   }
 }
 
-export async function analyzeStoryToPanels({
+export async function analyzeStoryToPages({
   storyTitle,
   storyText,
 }: {
   storyTitle: string;
   storyText: string;
-}) {
+}): Promise<Page[]> {
   const parsedRequest = StoryboardRequestSchema.safeParse({
     storyTitle,
     storyText,
@@ -66,15 +66,24 @@ export async function analyzeStoryToPanels({
 
     const parsedResponse = StoryboardResponseSchema.safeParse(body);
     if (parsedResponse.success) {
-      return parsedResponse.data.panels;
+      return parsedResponse.data.pages;
     }
 
     return createFallbackStoryboardResponse(parsedRequest.data.storyText)
-      .panels;
+      .pages;
   }
 
   await sleep(420);
-  return createMockPanels(parsedRequest.data.storyText);
+  const panels = createMockPanels(parsedRequest.data.storyText);
+  return [
+    {
+      id: `page-${Date.now()}-1`,
+      projectId: `project-${Date.now()}`,
+      orderIndex: 1,
+      title: "Page 1",
+      panels,
+    },
+  ];
 }
 
 export async function generatePanelImage(

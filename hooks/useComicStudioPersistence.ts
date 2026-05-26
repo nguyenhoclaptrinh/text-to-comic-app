@@ -1,6 +1,6 @@
 /**
  * @file useComicStudioPersistence.ts
- * @description Adapts comic studio state setters to snapshot persistence.
+ * @description Adapts comic studio state setters to snapshot persistence with multi-page support.
  */
 
 import { useCallback, useMemo } from "react";
@@ -9,7 +9,7 @@ import { useStudioPersistence } from "@/hooks/useStudioPersistence";
 import { createStudioSnapshot } from "@/lib/studio/persistence";
 import type {
   Character,
-  Panel,
+  Page,
   Project,
   StudioSnapshot,
 } from "@/lib/studio/types";
@@ -20,7 +20,8 @@ type StudioHydrationSetters = {
   setProjects: (projects: Project[]) => void;
   setActiveProjectId: (projectId: string) => void;
   setCharacters: (characters: Character[]) => void;
-  setPanels: (panels: Panel[]) => void;
+  setPages: (pages: Page[]) => void;
+  setActivePageId: (activePageId: string) => void;
   setStoryTitle: (title: string) => void;
   setStoryText: (text: string) => void;
   setSelectedPanelId: (panelId: string) => void;
@@ -35,7 +36,8 @@ export function useComicStudioPersistence(
     projects,
     activeProjectId,
     characters,
-    panels,
+    pages,
+    activePageId,
     storyTitle,
     storyText,
     selectedPanelId,
@@ -45,7 +47,8 @@ export function useComicStudioPersistence(
     setProjects,
     setActiveProjectId,
     setCharacters,
-    setPanels,
+    setPages,
+    setActivePageId,
     setStoryTitle,
     setStoryText,
     setSelectedPanelId,
@@ -58,7 +61,8 @@ export function useComicStudioPersistence(
         projects,
         activeProjectId,
         characters,
-        panels,
+        pages,
+        activePageId,
         storyTitle,
         storyText,
         selectedPanelId,
@@ -67,7 +71,8 @@ export function useComicStudioPersistence(
     [
       activeProjectId,
       characters,
-      panels,
+      pages,
+      activePageId,
       projects,
       selectedBubbleId,
       selectedPanelId,
@@ -81,7 +86,8 @@ export function useComicStudioPersistence(
       setProjects(persistedSnapshot.projects);
       setActiveProjectId(persistedSnapshot.activeProjectId);
       setCharacters(persistedSnapshot.characters);
-      setPanels(persistedSnapshot.panels);
+      setPages(persistedSnapshot.pages);
+      setActivePageId(persistedSnapshot.activePageId);
       setStoryTitle(persistedSnapshot.storyTitle);
       setStoryText(persistedSnapshot.storyText);
       setSelectedPanelId(persistedSnapshot.selectedPanelId);
@@ -90,7 +96,8 @@ export function useComicStudioPersistence(
     [
       setActiveProjectId,
       setCharacters,
-      setPanels,
+      setPages,
+      setActivePageId,
       setProjects,
       setSelectedBubbleId,
       setSelectedPanelId,

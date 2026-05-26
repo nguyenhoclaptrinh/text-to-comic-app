@@ -26,9 +26,20 @@ create table if not exists public.characters (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.pages (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  order_index integer not null,
+  title text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (project_id, order_index)
+);
+
 create table if not exists public.panels (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
+  page_id uuid references public.pages(id) on delete cascade,
   order_index integer not null,
   scene_prompt text not null,
   dialogue text not null,
@@ -41,13 +52,15 @@ create table if not exists public.panels (
   speech_bubbles jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (project_id, order_index)
+  unique (page_id, order_index)
 );
 
 create index if not exists projects_user_id_idx on public.projects(user_id);
 create index if not exists characters_project_id_idx on public.characters(project_id);
+create index if not exists pages_project_id_idx on public.pages(project_id);
 create index if not exists panels_project_id_idx on public.panels(project_id);
-create index if not exists panels_project_order_idx on public.panels(project_id, order_index);
+create index if not exists panels_page_id_idx on public.panels(page_id);
+create index if not exists panels_page_order_idx on public.panels(page_id, order_index);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -74,7 +87,13 @@ create trigger panels_set_updated_at
 before update on public.panels
 for each row execute function public.set_updated_at();
 
+drop trigger if exists pages_set_updated_at on public.pages;
+create trigger pages_set_updated_at
+before update on public.pages
+for each row execute function public.set_updated_at();
+
 alter table public.projects enable row level security;
+alter table public.pages enable row level security;
 alter table public.characters enable row level security;
 alter table public.panels enable row level security;
 
@@ -119,6 +138,25 @@ with check (
   exists (
     select 1 from public.projects
     where projects.id = panels.project_id
+      and projects.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "Users can manage pages through project ownership" on public.pages;
+create policy "Users can manage pages through project ownership"
+on public.pages
+for all
+using (
+  exists (
+    select 1 from public.projects
+    where projects.id = pages.project_id
+      and projects.user_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1 from public.projects
+    where projects.id = pages.project_id
       and projects.user_id = auth.uid()
   )
 );

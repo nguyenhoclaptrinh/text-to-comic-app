@@ -10,6 +10,7 @@ import {
 } from "@/lib/studio/constants";
 import type {
   Character,
+  Page,
   Panel,
   Project,
   StudioSnapshot,
@@ -89,17 +90,39 @@ export function createStudioSnapshot(
 }
 
 export function normalizeSnapshot(snapshot: StudioSnapshot): StudioSnapshot {
-  return {
-    ...snapshot,
-    panels: snapshot.panels.map((panel) =>
+  let pages = snapshot.pages;
+  let activePageId = snapshot.activePageId;
+
+  if ((!pages || pages.length === 0) && snapshot.panels) {
+    activePageId = `page-${snapshot.activeProjectId}-default`;
+    pages = [
+      {
+        id: activePageId,
+        projectId: snapshot.activeProjectId,
+        orderIndex: 1,
+        title: "Page 1",
+        panels: snapshot.panels,
+      },
+    ];
+  }
+
+  const normalizedPages = (pages || []).map((page) => ({
+    ...page,
+    panels: page.panels.map((panel) =>
       panel.status === "generating"
         ? {
             ...panel,
-            status: "error",
+            status: "error" as const,
             errorMessage: INTERRUPTED_GENERATION_ERROR,
           }
         : panel,
     ),
+  }));
+
+  return {
+    ...snapshot,
+    activePageId: activePageId || `page-${snapshot.activeProjectId}-default`,
+    pages: normalizedPages,
   };
 }
 
@@ -113,7 +136,7 @@ function isStudioSnapshot(value: unknown): value is StudioSnapshot {
     isProjectArray(value.projects) &&
     typeof value.activeProjectId === "string" &&
     isCharacterArray(value.characters) &&
-    isPanelArray(value.panels) &&
+    (isPageArray(value.pages) || isPanelArray(value.panels)) &&
     typeof value.storyTitle === "string" &&
     typeof value.storyText === "string" &&
     typeof value.selectedPanelId === "string" &&
@@ -127,6 +150,22 @@ function isProjectArray(value: unknown): value is Project[] {
 
 function isCharacterArray(value: unknown): value is Character[] {
   return Array.isArray(value) && value.every(isCharacter);
+}
+
+function isPageArray(value: unknown): value is Page[] {
+  return Array.isArray(value) && value.length > 0 && value.every(isPage);
+}
+
+function isPage(value: unknown): value is Page {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.projectId === "string" &&
+    typeof value.orderIndex === "number" &&
+    typeof value.title === "string" &&
+    Array.isArray(value.panels) &&
+    value.panels.every(isPanel)
+  );
 }
 
 function isPanelArray(value: unknown): value is Panel[] {
@@ -191,25 +230,52 @@ function extractAndSaveBase64Images(snapshot: StudioSnapshot): StudioSnapshot {
     return snapshot;
   }
 
-  const cleanPanels = snapshot.panels.map((panel) => {
-    if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
-      const key = `panel-image-${panel.id}`;
-      import("@/lib/studio/indexeddb-storage").then(({ writeImage }) => {
-        writeImage(key, panel.imageUrl!).catch((err) => {
-          console.warn("[IndexedDB] Error saving image:", err);
+  const cleanPages = snapshot.pages.map((page) => {
+    const cleanPanels = page.panels.map((panel) => {
+      if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
+        const key = `panel-image-${panel.id}`;
+        import("@/lib/studio/indexeddb-storage").then(({ writeImage }) => {
+          writeImage(key, panel.imageUrl!).catch((err) => {
+            console.warn("[IndexedDB] Error saving image:", err);
+          });
         });
-      });
 
-      return {
-        ...panel,
-        imageUrl: `indexeddb://${key}`,
-      };
-    }
-    return panel;
+        return {
+          ...panel,
+          imageUrl: `indexeddb://${key}`,
+        };
+      }
+      return panel;
+    });
+
+    return {
+      ...page,
+      panels: cleanPanels,
+    };
   });
+
+  const cleanPanels = snapshot.panels
+    ? snapshot.panels.map((panel) => {
+        if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
+          const key = `panel-image-${panel.id}`;
+          import("@/lib/studio/indexeddb-storage").then(({ writeImage }) => {
+            writeImage(key, panel.imageUrl!).catch((err) => {
+              console.warn("[IndexedDB] Error saving image:", err);
+            });
+          });
+
+          return {
+            ...panel,
+            imageUrl: `indexeddb://${key}`,
+          };
+        }
+        return panel;
+      })
+    : undefined;
 
   return {
     ...snapshot,
+    pages: cleanPages,
     panels: cleanPanels,
   };
 }

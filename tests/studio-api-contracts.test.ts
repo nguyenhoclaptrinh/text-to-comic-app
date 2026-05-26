@@ -86,7 +86,8 @@ describe("studio API contracts", () => {
     const response = createFallbackStoryboardResponse("A quiet road.");
 
     expect(response.source).toBe("fallback");
-    expect(response.panels).toHaveLength(3);
+    expect(response.pages).toHaveLength(1);
+    expect(response.pages[0].panels).toHaveLength(3);
     expect(slugifyCharacterName("  Lei Wujie!! ")).toBe("lei-wujie");
   });
 

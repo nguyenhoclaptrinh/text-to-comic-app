@@ -1,6 +1,6 @@
 /**
  * @file ComicStudioApp.tsx
- * @description Client-side shell that composes the comic studio screens.
+ * @description Client-side shell that composes the multi-page comic studio screens.
  */
 
 "use client";
@@ -18,7 +18,7 @@ export function ComicStudioApp() {
   const { state, actions } = useComicStudioState();
 
   return (
-    <main className="flex h-screen min-h-[720px] bg-[#09090b] text-zinc-100">
+    <main className="flex h-screen min-h-[720px] bg-[#09090b] text-zinc-100 font-sans">
       <SideNavigation currentView={state.view} setView={actions.setView} />
       <section className="flex min-w-0 flex-1 flex-col">
         <TopBar
@@ -32,7 +32,7 @@ export function ComicStudioApp() {
       </section>
       {state.exportOpen ? (
         <ExportModal
-          panels={state.panels}
+          panels={state.allPanels}
           projectTitle={state.activeProject.title}
           missingImages={state.missingImages}
           onClose={() => actions.setExportOpen(false)}
@@ -78,11 +78,16 @@ function ActiveView({
   if (state.view === "comic") {
     return (
       <ComicEditor
+        pages={state.pages}
+        activePageId={state.activePageId}
         panels={state.panels}
         selectedPanelId={state.selectedPanelId}
         selectedBubbleId={state.selectedBubbleId}
         selectedBubble={state.selectedBubble}
         dragging={state.dragging}
+        onSelectPage={actions.setActivePageId}
+        onAddPage={actions.addPage}
+        onDeletePage={actions.deletePage}
         onSelectPanel={actions.setSelectedPanelId}
         onSelectBubble={actions.setSelectedBubbleId}
         onAddBubble={actions.addBubble}
@@ -98,10 +103,15 @@ function ActiveView({
   return (
     <StoryboardWorkspace
       characters={state.characters}
+      pages={state.pages}
+      activePageId={state.activePageId}
       panels={state.panels}
       selectedPanelId={state.selectedPanelId}
       isGeneratingAll={state.isGeneratingAll}
       onAddCharacter={actions.addCharacter}
+      onSelectPage={actions.setActivePageId}
+      onAddPage={actions.addPage}
+      onDeletePage={actions.deletePage}
       onSelectPanel={(panelId) => {
         actions.setSelectedPanelId(panelId);
         actions.setSelectedBubbleId("");

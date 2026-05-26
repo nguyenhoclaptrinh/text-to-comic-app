@@ -3,7 +3,7 @@
  * @description Mock project, character, and panel data for the frontend-only prototype.
  */
 
-import type { Character, Panel, Project } from "@/lib/studio/types";
+import type { Character, Page, Panel, Project } from "@/lib/studio/types";
 
 export const SAMPLE_STORY =
   "Outside the inn, snow covered the mountain road. A young man in a white fur coat sat by the window, counting the empty tables. Suddenly, the wooden door flew open and a red-robed teenager rushed inside with a bright grin.";
@@ -89,5 +89,15 @@ export const PROJECTS_SEED: Project[] = [
     status: "error",
     updatedAt: "Yesterday",
     panelCount: 5,
+  },
+];
+
+export const PAGES_SEED: Page[] = [
+  {
+    id: "page-project-1-default",
+    projectId: "project-1",
+    orderIndex: 1,
+    title: "Page 1",
+    panels: PANELS_SEED,
   },
 ];
