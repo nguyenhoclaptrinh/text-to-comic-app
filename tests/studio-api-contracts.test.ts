@@ -68,13 +68,12 @@ describe("studio API contracts", () => {
           },
         ],
       },
-      123,
     );
 
-    expect(panels.map((panel) => panel.id)).toEqual([
-      "panel-123-1",
-      "panel-123-2",
-    ]);
+    expect(panels).toHaveLength(2);
+    panels.forEach((panel) => {
+      expect(panel.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    });
     expect(panels[0]).toMatchObject({
       orderIndex: 1,
       status: "draft",

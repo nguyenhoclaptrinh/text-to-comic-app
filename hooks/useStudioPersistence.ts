@@ -30,10 +30,13 @@ export function useStudioPersistence({
 
   useEffect(() => {
     const repository = createBrowserRepository();
-    const persistedSnapshot = repository?.loadSnapshot();
-    if (persistedSnapshot) {
-      resolveIndexedDbImages(persistedSnapshot).then((resolved) => {
-        onSnapshotLoaded(resolved);
+    if (repository) {
+      Promise.resolve(repository.loadSnapshot()).then((persistedSnapshot) => {
+        if (persistedSnapshot) {
+          resolveIndexedDbImages(persistedSnapshot).then((resolved) => {
+            onSnapshotLoaded(resolved);
+          });
+        }
       });
     }
     isHydratedRef.current = true;

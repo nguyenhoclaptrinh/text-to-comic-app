@@ -3,7 +3,7 @@
  * @description Unit tests for studio entity factories.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   DEFAULT_BUBBLE_HEIGHT,
@@ -36,35 +36,28 @@ describe("studio factories", () => {
   });
 
   it("should create a character with predictable display copy", () => {
-    vi.spyOn(Date, "now").mockReturnValue(500);
-
-    expect(createCharacter(4)).toMatchObject({
-      id: "character-500",
+    const character = createCharacter(4);
+    expect(character).toMatchObject({
       name: "Character 4",
       role: "Supporting role",
       color: "#06b6d4",
     });
-
-    vi.restoreAllMocks();
+    expect(character.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   });
 
   it("should create a default bubble using centralized dimensions", () => {
-    vi.spyOn(Date, "now").mockReturnValue(700);
-
-    expect(createDefaultBubble()).toEqual({
-      id: "bubble-700",
+    const bubble = createDefaultBubble();
+    expect(bubble).toMatchObject({
       text: "New speech bubble",
       x: DEFAULT_BUBBLE_X,
       y: DEFAULT_BUBBLE_Y,
       width: DEFAULT_BUBBLE_WIDTH,
       height: DEFAULT_BUBBLE_HEIGHT,
     });
-
-    vi.restoreAllMocks();
+    expect(bubble.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   });
 
   it("should create a generated bubble from panel dialogue", () => {
-    vi.spyOn(Date, "now").mockReturnValue(900);
     const panel: Panel = {
       id: "panel-1",
       orderIndex: 1,
@@ -74,17 +67,17 @@ describe("studio factories", () => {
       status: "success",
       imageTone: "from-zinc-900 to-zinc-800",
       bubbles: [],
+      seed: 42,
     };
 
-    expect(createGeneratedBubble(panel)).toEqual({
-      id: "bubble-panel-1-900",
+    const bubble = createGeneratedBubble(panel);
+    expect(bubble).toMatchObject({
       text: "This will cost you.",
       x: GENERATED_BUBBLE_X,
       y: GENERATED_BUBBLE_Y,
       width: GENERATED_BUBBLE_WIDTH,
       height: DEFAULT_BUBBLE_HEIGHT,
     });
-
-    vi.restoreAllMocks();
+    expect(bubble.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   });
 });

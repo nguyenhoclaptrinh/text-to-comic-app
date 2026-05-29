@@ -17,7 +17,7 @@ import type { Bubble, Character, Panel, Project } from "@/lib/studio/types";
 
 export function createProject(projectId: string, storyTitle: string): Project {
   return {
-    id: projectId,
+    id: projectId || crypto.randomUUID(),
     title: storyTitle.trim(),
     status: "storyboard",
     updatedAt: "Just now",
@@ -27,7 +27,7 @@ export function createProject(projectId: string, storyTitle: string): Project {
 
 export function createCharacter(nextIndex: number): Character {
   return {
-    id: `character-${Date.now()}`,
+    id: crypto.randomUUID(),
     name: `Character ${nextIndex}`,
     role: "Supporting role",
     description: "Add a short visual description before image generation.",
@@ -37,7 +37,7 @@ export function createCharacter(nextIndex: number): Character {
 
 export function createDefaultBubble(): Bubble {
   return {
-    id: `bubble-${Date.now()}`,
+    id: crypto.randomUUID(),
     text: "New speech bubble",
     x: DEFAULT_BUBBLE_X,
     y: DEFAULT_BUBBLE_Y,
@@ -48,7 +48,7 @@ export function createDefaultBubble(): Bubble {
 
 export function createGeneratedBubble(panel: Panel): Bubble {
   return {
-    id: `bubble-${panel.id}-${Date.now()}`,
+    id: crypto.randomUUID(),
     text: dialogueToBubble(panel.dialogue),
     x: GENERATED_BUBBLE_X,
     y: GENERATED_BUBBLE_Y,

@@ -50,7 +50,7 @@ const GEMINI_RESPONSE_SCHEMA = {
 
 export async function generateMultiPageStoryboard(
   input: StoryboardRequest,
-  projectId = `project-${Date.now()}`,
+  projectId = crypto.randomUUID(),
 ): Promise<{ pages: Page[]; source: "gemini" | "fallback" }> {
   const chunks = chunkStoryText(input.storyText, 4500);
   const apiKey = process.env.GEMINI_API_KEY;
@@ -60,7 +60,7 @@ export async function generateMultiPageStoryboard(
   const source: "gemini" | "fallback" = apiKey ? "gemini" : "fallback";
 
   for (const [index, chunk] of chunks.entries()) {
-    const pageId = `page-${Date.now()}-${index + 1}`;
+    const pageId = crypto.randomUUID();
     const pageTitle = `Page ${index + 1}`;
     let panels: Panel[] = [];
 
@@ -73,7 +73,7 @@ export async function generateMultiPageStoryboard(
         );
 
         if (geminiResponse) {
-          panels = normalizeStoryboardAiResponse(geminiResponse, Date.now() + index);
+          panels = normalizeStoryboardAiResponse(geminiResponse);
         }
       } catch (err) {
         console.warn(`[Gemini Sync] Error on page ${index + 1}:`, err);
@@ -81,7 +81,7 @@ export async function generateMultiPageStoryboard(
     }
 
     if (panels.length === 0) {
-      panels = createMockPanels(chunk, Date.now() + index);
+      panels = createMockPanels(chunk);
     }
 
     pages.push({

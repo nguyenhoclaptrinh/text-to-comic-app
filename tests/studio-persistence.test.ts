@@ -46,31 +46,31 @@ describe("LocalStorageStudioRepository", () => {
     expect(createTestSnapshot().version).toBe(STUDIO_SNAPSHOT_VERSION);
   });
 
-  it("should save and load a valid studio snapshot", () => {
+  it("should save and load a valid studio snapshot", async () => {
     const repository = new LocalStorageStudioRepository(
       new MemoryStorage(),
       "test-key",
     );
     const snapshot = createTestSnapshot();
 
-    repository.saveSnapshot(snapshot);
+    await repository.saveSnapshot(snapshot);
 
-    expect(repository.loadSnapshot()).toEqual(snapshot);
+    expect(await repository.loadSnapshot()).toEqual(snapshot);
   });
 
-  it("should clear a saved snapshot", () => {
+  it("should clear a saved snapshot", async () => {
     const repository = new LocalStorageStudioRepository(
       new MemoryStorage(),
       "test-key",
     );
 
-    repository.saveSnapshot(createTestSnapshot());
+    await repository.saveSnapshot(createTestSnapshot());
     repository.clearSnapshot();
 
-    expect(repository.loadSnapshot()).toBeNull();
+    expect(await repository.loadSnapshot()).toBeNull();
   });
 
-  it("should return null and warn when stored JSON is invalid", () => {
+  it("should return null and warn when stored JSON is invalid", async () => {
     const storage = new MemoryStorage();
     const repository = new LocalStorageStudioRepository(storage, "test-key");
     const warnSpy = vi
@@ -78,7 +78,7 @@ describe("LocalStorageStudioRepository", () => {
       .mockImplementation(() => undefined);
     storage.setItem("test-key", "{not-json");
 
-    expect(repository.loadSnapshot()).toBeNull();
+    expect(await repository.loadSnapshot()).toBeNull();
     expect(warnSpy).toHaveBeenCalledWith(
       "[StudioPersistence]",
       "INVALID_JSON",
@@ -86,7 +86,7 @@ describe("LocalStorageStudioRepository", () => {
     );
   });
 
-  it("should reject snapshots from an unsupported version", () => {
+  it("should reject snapshots from an unsupported version", async () => {
     const storage = new MemoryStorage();
     const repository = new LocalStorageStudioRepository(storage, "test-key");
     const warnSpy = vi
@@ -97,7 +97,7 @@ describe("LocalStorageStudioRepository", () => {
       JSON.stringify({ ...createTestSnapshot(), version: 999 }),
     );
 
-    expect(repository.loadSnapshot()).toBeNull();
+    expect(await repository.loadSnapshot()).toBeNull();
     expect(warnSpy).toHaveBeenCalledWith(
       "[StudioPersistence]",
       "INVALID_SNAPSHOT",
@@ -105,7 +105,7 @@ describe("LocalStorageStudioRepository", () => {
     );
   });
 
-  it("should convert interrupted generation states into retryable errors", () => {
+  it("should convert interrupted generation states into retryable errors", async () => {
     const repository = new LocalStorageStudioRepository(
       new MemoryStorage(),
       "test-key",
@@ -127,9 +127,10 @@ describe("LocalStorageStudioRepository", () => {
       ],
     });
 
-    repository.saveSnapshot(snapshot);
+    await repository.saveSnapshot(snapshot);
 
-    expect(repository.loadSnapshot()?.pages[0].panels[0]).toMatchObject({
+    const loaded = await repository.loadSnapshot();
+    expect(loaded?.pages[0].panels[0]).toMatchObject({
       status: "error",
       errorMessage: INTERRUPTED_GENERATION_ERROR,
     });

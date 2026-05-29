@@ -1,18 +1,16 @@
 /**
  * @file useComicStudioState.ts
- * @description State and actions for the multi-page comic studio.
+ * @description Refactored high-level Orchestrator hook managing multi-page studio states.
  */
 
 import { useMemo, useState } from "react";
 
 import { useComicStudioPersistence } from "@/hooks/useComicStudioPersistence";
 import { usePanelActions } from "@/hooks/usePanelActions";
+import { useStudioNavigation } from "@/hooks/useStudioNavigation";
+import { useCastingState } from "@/hooks/useCastingState";
+import { useBubbleDragState } from "@/hooks/useBubbleDragState";
 import {
-  DEFAULT_BUBBLE_HEIGHT,
-  DEFAULT_BUBBLE_WIDTH,
-} from "@/lib/studio/constants";
-import {
-  createCharacter,
   createDefaultBubble,
   createProject,
 } from "@/lib/studio/factories";
@@ -27,45 +25,39 @@ import {
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
 import {
-  nextBubbleCoordinate,
-  updateCharacterProfile,
   updatePanelBubble,
 } from "@/lib/studio/utils";
 import type {
   Bubble,
-  Character,
-  DragState,
   Page,
   Project,
-  View,
 } from "@/lib/studio/types";
 
 export function useComicStudioState() {
-  const [view, setView] = useState<View>("storyboard");
   const [projects, setProjects] = useState<Project[]>(PROJECTS_SEED);
-  const [activeProjectId, setActiveProjectId] = useState(PROJECTS_SEED[0].id);
-  const [characters, setCharacters] = useState<Character[]>(CHARACTERS_SEED);
   const [pages, setPages] = useState<Page[]>(PAGES_SEED);
-  const [activePageId, setActivePageId] = useState(PAGES_SEED[0].id);
   const [storyTitle, setStoryTitle] = useState("Snow Road Inn");
   const [storyText, setStoryText] = useState(SAMPLE_STORY);
   const [importError, setImportError] = useState("");
   const [isAnalyzingStory, setIsAnalyzingStory] = useState(false);
-  
+
+  // 1. Phân rã Trạng thái Điều hướng & Lựa chọn
+  const nav = useStudioNavigation(PROJECTS_SEED[0].id, PAGES_SEED[0].id);
+
+  // 2. Phân rã Trạng thái Nhân vật & Casting
+  const casting = useCastingState(CHARACTERS_SEED);
+
   const activeProject =
-    projects.find((project) => project.id === activeProjectId) ?? projects[0];
+    projects.find((project) => project.id === nav.activeProjectId) ?? projects[0];
 
   const activePage =
-    pages.find((page) => page.id === activePageId) ?? pages[0];
+    pages.find((page) => page.id === nav.activePageId) ?? pages[0];
 
   const panels = activePage?.panels ?? [];
 
-  const [selectedPanelId, setSelectedPanelId] = useState(panels[0]?.id ?? "");
-  const [selectedBubbleId, setSelectedBubbleId] = useState(
-    panels[0]?.bubbles[0]?.id ?? "",
-  );
-  const [dragging, setDragging] = useState<DragState | null>(null);
-  const [exportOpen, setExportOpen] = useState(false);
+  // Tương thích ngược/Duy trì các trạng thái mặc định
+  const selectedPanelId = nav.selectedPanelId || (panels[0]?.id ?? "");
+  const selectedBubbleId = nav.selectedBubbleId || (panels[0]?.bubbles[0]?.id ?? "");
 
   const selectedPanel =
     panels.find((panel) => panel.id === selectedPanelId) ?? panels[0];
@@ -96,13 +88,14 @@ export function useComicStudioState() {
     return { done, errors, total };
   }, [pages]);
 
+  // 3. Đồng bộ hóa Local & Cloud Persistence
   useComicStudioPersistence(
     {
       projects,
-      activeProjectId,
-      characters,
+      activeProjectId: nav.activeProjectId,
+      characters: casting.characters,
       pages,
-      activePageId,
+      activePageId: nav.activePageId,
       storyTitle,
       storyText,
       selectedPanelId,
@@ -110,47 +103,47 @@ export function useComicStudioState() {
     },
     {
       setProjects,
-      setActiveProjectId,
-      setCharacters,
+      setActiveProjectId: nav.setActiveProjectId,
+      setCharacters: casting.setCharacters,
       setPages,
-      setActivePageId,
+      setActivePageId: nav.setActivePageId,
       setStoryTitle,
       setStoryText,
-      setSelectedPanelId,
-      setSelectedBubbleId,
+      setSelectedPanelId: nav.setSelectedPanelId,
+      setSelectedBubbleId: nav.setSelectedBubbleId,
     },
   );
 
+  // 4. Lớp Actions điều hành Panel
   const panelActions = usePanelActions({
     pages,
-    characters,
-    activeProjectId,
+    characters: casting.characters,
+    activeProjectId: nav.activeProjectId,
     selectedPanelId,
     setProjects,
     setPages,
-    setSelectedPanelId,
-    setSelectedBubbleId,
+    setSelectedPanelId: nav.setSelectedPanelId,
+    setSelectedBubbleId: nav.setSelectedBubbleId,
   });
 
   function selectProject(projectId: string) {
-    setActiveProjectId(projectId);
+    nav.setActiveProjectId(projectId);
     
-    // Tải danh sách trang thuộc project này
     const projectPages = pages.filter((page) => page.projectId === projectId);
     if (projectPages.length > 0) {
-      setActivePageId(projectPages[0].id);
-      setSelectedPanelId(projectPages[0].panels[0]?.id ?? "");
-      setSelectedBubbleId(projectPages[0].panels[0]?.bubbles[0]?.id ?? "");
+      nav.setActivePageId(projectPages[0].id);
+      nav.setSelectedPanelId(projectPages[0].panels[0]?.id ?? "");
+      nav.setSelectedBubbleId(projectPages[0].panels[0]?.bubbles[0]?.id ?? "");
     }
     
-    setView("storyboard");
+    nav.setView("storyboard");
   }
 
   async function analyzeStory() {
     setIsAnalyzingStory(true);
 
     try {
-      const projectId = `project-${Date.now()}`;
+      const projectId = crypto.randomUUID();
       const generatedPages = await analyzeStoryToPages({
         storyTitle,
         storyText,
@@ -161,14 +154,14 @@ export function useComicStudioState() {
         createProject(projectId, storyTitle),
         ...current,
       ]);
-      setActiveProjectId(projectId);
+      nav.setActiveProjectId(projectId);
       setPages(generatedPages);
       
       const firstPage = generatedPages[0];
-      setActivePageId(firstPage.id);
-      setSelectedPanelId(firstPage.panels[0].id);
-      setSelectedBubbleId(firstPage.panels[0].bubbles[0]?.id ?? "");
-      setView("storyboard");
+      nav.setActivePageId(firstPage.id);
+      nav.setSelectedPanelId(firstPage.panels[0].id);
+      nav.setSelectedBubbleId(firstPage.panels[0].bubbles[0]?.id ?? "");
+      nav.setView("storyboard");
     } catch (error) {
       setImportError(getStudioAiErrorMessage(error));
     } finally {
@@ -176,31 +169,16 @@ export function useComicStudioState() {
     }
   }
 
-  function addCharacter() {
-    setCharacters((current) => [
-      ...current,
-      createCharacter(current.length + 1),
-    ]);
-  }
-
-  function updateCharacter(characterId: string, patch: Partial<Character>) {
-    setCharacters((current) =>
-      current.map((character) =>
-        updateCharacterProfile(character, characterId, patch),
-      ),
-    );
-  }
-
   function addPage() {
-    const newPageId = `page-${activeProjectId}-${Date.now()}`;
+    const newPageId = crypto.randomUUID();
     const newPage = {
       id: newPageId,
-      projectId: activeProjectId,
+      projectId: nav.activeProjectId,
       orderIndex: pages.length + 1,
       title: `Page ${pages.length + 1}`,
       panels: [
         {
-          id: `panel-${Date.now()}-1`,
+          id: crypto.randomUUID(),
           orderIndex: 1,
           scenePrompt: "Blank panel. Double click to edit scene description...",
           dialogue: "Character: Dialogue...",
@@ -214,9 +192,9 @@ export function useComicStudioState() {
     };
 
     setPages((current) => [...current, newPage]);
-    setActivePageId(newPageId);
-    setSelectedPanelId(newPage.panels[0].id);
-    setSelectedBubbleId("");
+    nav.setActivePageId(newPageId);
+    nav.setSelectedPanelId(newPage.panels[0].id);
+    nav.setSelectedBubbleId("");
   }
 
   function deletePage(pageId: string) {
@@ -233,11 +211,11 @@ export function useComicStudioState() {
 
     setPages(reorderedPages);
 
-    if (activePageId === pageId) {
+    if (nav.activePageId === pageId) {
       const fallbackPage = reorderedPages[0];
-      setActivePageId(fallbackPage.id);
-      setSelectedPanelId(fallbackPage.panels[0].id);
-      setSelectedBubbleId(fallbackPage.panels[0].bubbles[0]?.id ?? "");
+      nav.setActivePageId(fallbackPage.id);
+      nav.setSelectedPanelId(fallbackPage.panels[0].id);
+      nav.setSelectedBubbleId(fallbackPage.panels[0].bubbles[0]?.id ?? "");
     }
   }
 
@@ -253,8 +231,8 @@ export function useComicStudioState() {
         ),
       })),
     );
-    setSelectedPanelId(panelId);
-    setSelectedBubbleId(bubble.id);
+    nav.setSelectedPanelId(panelId);
+    nav.setSelectedBubbleId(bubble.id);
   }
 
   function updateBubble(
@@ -286,50 +264,26 @@ export function useComicStudioState() {
         ),
       })),
     );
-    setSelectedBubbleId("");
+    nav.setSelectedBubbleId("");
   }
 
-  function handleBubbleMove(
-    event: React.PointerEvent<HTMLDivElement>,
-    panelId: string,
-  ) {
-    if (!dragging || dragging.panelId !== panelId) {
-      return;
-    }
-
-    const stage = event.currentTarget.getBoundingClientRect();
-    updateBubble(panelId, dragging.bubbleId, {
-      x: nextBubbleCoordinate(
-        event.clientX,
-        stage.left,
-        dragging.offsetX,
-        stage.width,
-        DEFAULT_BUBBLE_WIDTH,
-      ),
-      y: nextBubbleCoordinate(
-        event.clientY,
-        stage.top,
-        dragging.offsetY,
-        stage.height,
-        DEFAULT_BUBBLE_HEIGHT,
-      ),
-    });
-  }
+  // 5. Phân rã Trạng thái Kéo thả Bong bóng thoại
+  const drag = useBubbleDragState(updateBubble);
 
   const allPanels = useMemo(() => {
-    const projectPages = pages.filter((p) => p.projectId === activeProjectId);
+    const projectPages = pages.filter((p) => p.projectId === nav.activeProjectId);
     return projectPages.flatMap((page) => page.panels);
-  }, [pages, activeProjectId]);
+  }, [pages, nav.activeProjectId]);
 
   return {
     state: {
-      view,
+      view: nav.view,
       projects,
-      activeProjectId,
+      activeProjectId: nav.activeProjectId,
       activeProject,
-      characters,
+      characters: casting.characters,
       pages,
-      activePageId,
+      activePageId: nav.activePageId,
       panels,
       allPanels,
       storyTitle,
@@ -339,35 +293,35 @@ export function useComicStudioState() {
       selectedPanelId,
       selectedBubbleId,
       selectedBubble,
-      dragging,
-      exportOpen,
+      dragging: drag.dragging,
+      exportOpen: nav.exportOpen,
       isGeneratingAll: panelActions.isGeneratingAll,
       missingImages,
       generationSummary,
     },
     actions: {
-      setView,
+      setView: nav.setView,
       setStoryTitle,
       setStoryText,
-      setSelectedPanelId,
-      setSelectedBubbleId,
-      setDragging,
-      setExportOpen,
+      setSelectedPanelId: nav.setSelectedPanelId,
+      setSelectedBubbleId: nav.setSelectedBubbleId,
+      setDragging: drag.setDragging,
+      setExportOpen: nav.setExportOpen,
       selectProject,
       analyzeStory,
       updatePanel: panelActions.updatePanel,
       deletePanel: panelActions.deletePanel,
       generatePanel: panelActions.generatePanel,
       generateAll: panelActions.generateAll,
-      addCharacter,
-      updateCharacter,
+      addCharacter: casting.addCharacter,
+      updateCharacter: casting.updateCharacter,
       addPage,
       deletePage,
-      setActivePageId,
+      setActivePageId: nav.setActivePageId,
       addBubble,
       updateBubble,
       deleteBubble,
-      handleBubbleMove,
+      handleBubbleMove: drag.handleBubbleMove,
     },
   };
 }

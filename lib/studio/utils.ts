@@ -68,7 +68,6 @@ export function updateCharacterProfile(
 
 export function createMockPanels(
   storyText: string,
-  timestamp = Date.now(),
 ): Panel[] {
   const cleanText = storyText.trim();
   const sentences = cleanText
@@ -121,7 +120,7 @@ export function createMockPanels(
     const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 200)}. Highly detailed, comic book style.`;
 
     return {
-      id: `panel-${timestamp}-${index + 1}`,
+      id: crypto.randomUUID(),
       orderIndex: index + 1,
       scenePrompt,
       dialogue,

@@ -23,9 +23,9 @@ export type KeyValueStorage = {
 };
 
 export interface StudioRepository {
-  loadSnapshot(): StudioSnapshot | null;
-  saveSnapshot(snapshot: StudioSnapshot): void;
-  clearSnapshot(): void;
+  loadSnapshot(): Promise<StudioSnapshot | null> | StudioSnapshot | null;
+  saveSnapshot(snapshot: StudioSnapshot): Promise<void> | void;
+  clearSnapshot(): Promise<void> | void;
 }
 
 export enum StudioPersistenceErrorCode {
@@ -40,7 +40,7 @@ export class LocalStorageStudioRepository implements StudioRepository {
     private readonly key = STUDIO_STORAGE_KEY,
   ) {}
 
-  loadSnapshot() {
+  async loadSnapshot() {
     try {
       const rawSnapshot = this.storage.getItem(this.key);
       if (!rawSnapshot) {
@@ -63,9 +63,9 @@ export class LocalStorageStudioRepository implements StudioRepository {
     }
   }
 
-  saveSnapshot(snapshot: StudioSnapshot) {
+  async saveSnapshot(snapshot: StudioSnapshot) {
     try {
-      const cleanSnapshot = extractAndSaveBase64Images(snapshot);
+      const cleanSnapshot = await extractAndSaveBase64Images(snapshot);
       this.storage.setItem(this.key, JSON.stringify(cleanSnapshot));
     } catch (error) {
       warnPersistenceIssue(
@@ -225,52 +225,58 @@ function warnPersistenceIssue(
   console.warn("[StudioPersistence]", code, originalError);
 }
 
-function extractAndSaveBase64Images(snapshot: StudioSnapshot): StudioSnapshot {
+async function extractAndSaveBase64Images(snapshot: StudioSnapshot): Promise<StudioSnapshot> {
   if (typeof window === "undefined") {
     return snapshot;
   }
 
-  const cleanPages = snapshot.pages.map((page) => {
-    const cleanPanels = page.panels.map((panel) => {
-      if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
-        const key = `panel-image-${panel.id}`;
-        import("@/lib/studio/indexeddb-storage").then(({ writeImage }) => {
-          writeImage(key, panel.imageUrl!).catch((err) => {
-            console.warn("[IndexedDB] Error saving image:", err);
-          });
-        });
+  const { writeImage } = await import("@/lib/studio/indexeddb-storage");
 
-        return {
-          ...panel,
-          imageUrl: `indexeddb://${key}`,
-        };
-      }
-      return panel;
-    });
+  const cleanPages = await Promise.all(
+    snapshot.pages.map(async (page) => {
+      const cleanPanels = await Promise.all(
+        page.panels.map(async (panel) => {
+          if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
+            const key = `panel-image-${panel.id}`;
+            try {
+              await writeImage(key, panel.imageUrl!);
+              return {
+                ...panel,
+                imageUrl: `indexeddb://${key}`,
+              };
+            } catch (err) {
+              console.warn("[IndexedDB] Error saving image:", err);
+            }
+          }
+          return panel;
+        })
+      );
 
-    return {
-      ...page,
-      panels: cleanPanels,
-    };
-  });
+      return {
+        ...page,
+        panels: cleanPanels,
+      };
+    })
+  );
 
   const cleanPanels = snapshot.panels
-    ? snapshot.panels.map((panel) => {
-        if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
-          const key = `panel-image-${panel.id}`;
-          import("@/lib/studio/indexeddb-storage").then(({ writeImage }) => {
-            writeImage(key, panel.imageUrl!).catch((err) => {
+    ? await Promise.all(
+        snapshot.panels.map(async (panel) => {
+          if (panel.imageUrl && panel.imageUrl.startsWith("data:image/")) {
+            const key = `panel-image-${panel.id}`;
+            try {
+              await writeImage(key, panel.imageUrl!);
+              return {
+                ...panel,
+                imageUrl: `indexeddb://${key}`,
+              };
+            } catch (err) {
               console.warn("[IndexedDB] Error saving image:", err);
-            });
-          });
-
-          return {
-            ...panel,
-            imageUrl: `indexeddb://${key}`,
-          };
-        }
-        return panel;
-      })
+            }
+          }
+          return panel;
+        })
+      )
     : undefined;
 
   return {

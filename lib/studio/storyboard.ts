@@ -19,14 +19,14 @@ const PANEL_IMAGE_TONES = [
 
 export function createFallbackStoryboardResponse(
   storyText: string,
-  projectId = `project-${Date.now()}`,
+  projectId = crypto.randomUUID(),
   warning = "Gemini is not configured. Using deterministic fallback storyboard.",
 ): StoryboardResponse {
   const panels = createMockPanels(storyText);
   return {
     pages: [
       {
-        id: `page-${Date.now()}-1`,
+        id: crypto.randomUUID(),
         projectId,
         orderIndex: 1,
         title: "Page 1",
@@ -40,12 +40,11 @@ export function createFallbackStoryboardResponse(
 
 export function normalizeStoryboardAiResponse(
   response: StoryboardAiResponse,
-  timestamp = Date.now(),
 ): Panel[] {
   return response.panels
     .sort((left, right) => left.orderIndex - right.orderIndex)
     .map((panel, index) => ({
-      id: `panel-${timestamp}-${index + 1}`,
+      id: crypto.randomUUID(),
       orderIndex: index + 1,
       scenePrompt: panel.scenePrompt,
       dialogue: panel.dialogue,

@@ -39,14 +39,12 @@ describe("studio utils", () => {
   });
 
   it("should create three draft panels from story text with deterministic ids", () => {
-    const panels = createMockPanels("A cold road leads to a quiet inn.", 123);
+    const panels = createMockPanels("A cold road leads to a quiet inn.");
 
     expect(panels).toHaveLength(3);
-    expect(panels.map((panel) => panel.id)).toEqual([
-      "panel-123-1",
-      "panel-123-2",
-      "panel-123-3",
-    ]);
+    panels.forEach((panel) => {
+      expect(panel.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    });
     expect(panels.every((panel) => panel.status === "draft")).toBe(true);
     expect(panels[0].scenePrompt).toContain("A cold road");
   });
