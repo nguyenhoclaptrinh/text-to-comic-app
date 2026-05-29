@@ -26,6 +26,11 @@ export function PageSelector({
           .sort((a, b) => a.orderIndex - b.orderIndex)
           .map((page) => {
             const isActive = page.id === activePageId;
+            // Việt hóa tiêu đề hiển thị từ "Page X" sang "Trang X"
+            const displayTitle = page.title.startsWith("Page ") 
+              ? page.title.replace("Page ", "Trang ") 
+              : page.title;
+
             return (
               <div
                 key={page.id}
@@ -36,7 +41,7 @@ export function PageSelector({
                 }`}
                 onClick={() => onSelectPage(page.id)}
               >
-                <span className="px-3.5 pr-8 select-none">{page.title}</span>
+                <span className="px-3.5 pr-8 select-none">{displayTitle}</span>
                 {pages.length > 1 && (
                   <button
                     type="button"
@@ -45,7 +50,7 @@ export function PageSelector({
                       onDeletePage(page.id);
                     }}
                     className="absolute right-1.5 opacity-0 group-hover:opacity-100 flex items-center justify-center w-5 h-5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 transition-all duration-150"
-                    title={`Delete ${page.title}`}
+                    title={`Xóa ${displayTitle}`}
                   >
                     <X size={12} />
                   </button>
@@ -59,7 +64,7 @@ export function PageSelector({
         type="button"
         onClick={onAddPage}
         className="flex items-center justify-center w-9 h-9 rounded-lg border border-dashed border-zinc-800 hover:border-violet-500/50 hover:bg-violet-500/5 bg-zinc-900/10 text-zinc-500 hover:text-violet-300 transition-all duration-200"
-        title="Add new page"
+        title="Thêm trang mới"
       >
         <Plus size={16} />
       </button>

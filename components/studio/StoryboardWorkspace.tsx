@@ -3,7 +3,8 @@
  * @description Storyboard editing workspace with page selection, character casting and panel cards.
  */
 
-import { AlertTriangle, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, MessageCircle, Users } from "lucide-react";
 
 import { CharacterCastingPanel } from "@/components/studio/CharacterCastingPanel";
 import { StoryboardPanelCard } from "@/components/studio/StoryboardPanelCard";
@@ -45,18 +46,27 @@ export function StoryboardWorkspace({
   onDeletePanel: (panelId: string) => void;
   onGoToComic: () => void;
 }) {
+  const [isCastingOpen, setIsCastingOpen] = useState(false);
   const hasBackendError = panels.some((panel) => panel.status === "error");
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[288px_minmax(0,1fr)]">
+    <div className="relative grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[288px_minmax(0,1fr)]">
+      {/* Sidebar Casting nhân vật tĩnh trên màn hình lớn */}
       <CharacterCastingPanel
         characters={characters}
         onAddCharacter={onAddCharacter}
         onUpdateCharacter={onUpdateCharacter}
+        className="hidden lg:block"
       />
+
+      {/* Vùng biên tập Storyboard bên phải */}
       <section className="min-w-0 overflow-y-auto px-4 py-5 lg:px-6">
         {hasBackendError ? <ImageBackendAlert /> : null}
-        <StoryboardHeader onGoToComic={onGoToComic} />
+        
+        <StoryboardHeader 
+          onGoToComic={onGoToComic} 
+          onOpenCasting={() => setIsCastingOpen(true)}
+        />
         
         <PageSelector
           pages={pages}
@@ -83,6 +93,36 @@ export function StoryboardWorkspace({
           ))}
         </div>
       </section>
+
+      {/* ============================================================== */}
+      {/* RESPONSIVE UI: LEFT SLIDE DRAWER FOR CHARACTER CASTING         */}
+      {/* ============================================================== */}
+
+      {/* Slide-out Drawer cho Casting Panel trên di động (< 1024px) */}
+      {isCastingOpen && (
+        <div className="fixed inset-0 z-40 flex bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-200">
+          <div className="relative flex h-full w-[288px] flex-col border-r border-zinc-800 bg-[#111114] p-4 shadow-2xl animate-in slide-in-from-left duration-300">
+            <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
+              <span className="font-semibold text-zinc-200">👥 Casting Nhân vật</span>
+              <button
+                onClick={() => setIsCastingOpen(false)}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <CharacterCastingPanel
+                characters={characters}
+                onAddCharacter={onAddCharacter}
+                onUpdateCharacter={onUpdateCharacter}
+                className="border-none bg-transparent p-0"
+              />
+            </div>
+          </div>
+          <div className="flex-1" onClick={() => setIsCastingOpen(false)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -95,32 +135,48 @@ function ImageBackendAlert() {
     >
       <AlertTriangle className="mt-0.5 shrink-0" size={17} />
       <div>
-        <div className="font-semibold">Image backend needs attention</div>
+        <div className="font-semibold">Hệ thống vẽ ảnh cần lưu ý</div>
         <div className="mt-1 text-red-100/80">
-          Failed panels keep their storyboard text and can be retried one by
-          one.
+          Các khung hình bị lỗi vẽ ảnh vẫn giữ nguyên văn bản mô tả bối cảnh và lời thoại, bạn có thể thực hiện thử vẽ lại riêng lẻ từng khung hình.
         </div>
       </div>
     </div>
   );
 }
 
-function StoryboardHeader({ onGoToComic }: { onGoToComic: () => void }) {
+function StoryboardHeader({ 
+  onGoToComic,
+  onOpenCasting 
+}: { 
+  onGoToComic: () => void;
+  onOpenCasting: () => void;
+}) {
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-xl font-semibold">Storyboard Editor</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold text-zinc-100">Biên soạn Storyboard</h1>
+          {/* Nút mở Casting nhanh trên mobile (< 1024px) */}
+          <button
+            type="button"
+            onClick={onOpenCasting}
+            className="inline-flex h-7 items-center gap-1.5 rounded-full bg-violet-500/20 px-2.5 text-xs font-medium text-violet-300 hover:bg-violet-500/30 transition-colors lg:hidden"
+          >
+            <Users size={12} />
+            <span>👥 Casting</span>
+          </button>
+        </div>
         <p className="mt-1 text-sm text-zinc-400">
-          Review prompts, dialogue, and panel status.
+          Xem xét và điều chỉnh mô tả bối cảnh, lời thoại nhân vật và trạng thái vẽ tranh.
         </p>
       </div>
       <button
         type="button"
         onClick={onGoToComic}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium hover:bg-zinc-800 transition-colors"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
       >
         <MessageCircle size={16} />
-        Open Comic Editor
+        Mở Trình biên tập Bong bóng
       </button>
     </div>
   );

@@ -31,11 +31,11 @@ export function TopBar({
           aria-live="polite"
         >
           <span>
-            {generationSummary.done}/{generationSummary.total} panels done
+            Đã vẽ {generationSummary.done}/{generationSummary.total} khung hình
           </span>
           {generationSummary.errors > 0 ? (
             <span className="text-red-300">
-              {generationSummary.errors} needs retry
+              {generationSummary.errors} khung hình lỗi cần vẽ lại
             </span>
           ) : null}
         </div>
@@ -48,7 +48,7 @@ export function TopBar({
           className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-zinc-100 transition hover:bg-zinc-800"
         >
           <Download size={16} />
-          <span className="hidden sm:inline">Export</span>
+          <span className="hidden sm:inline">Xuất truyện</span>
         </button>
         <button
           type="button"
@@ -61,7 +61,7 @@ export function TopBar({
           ) : (
             <Wand2 size={16} />
           )}
-          <span className="hidden sm:inline">Generate All</span>
+          <span className="hidden sm:inline">Vẽ Toàn bộ</span>
         </button>
       </div>
     </header>

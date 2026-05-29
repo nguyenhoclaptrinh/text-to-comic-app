@@ -56,9 +56,9 @@ export function ExportModal({
           >
             <CheckCircle2 className={format === "png" ? "text-violet-400" : "text-zinc-500"} size={20} />
             <div>
-              <div className="text-sm font-semibold text-white">PNG Vertical Webtoon Strip</div>
+              <div className="text-sm font-semibold text-white">Ảnh dọc Webtoon PNG</div>
               <div className="text-xs text-zinc-400 mt-0.5">
-                Stitches all panels into a high-res continuous scroll.
+                Ghép nối tất cả khung hình thành một dải cuộn liên tục độ phân giải cao.
               </div>
             </div>
           </div>
@@ -73,9 +73,9 @@ export function ExportModal({
           >
             <FileText className={format === "pdf" ? "text-violet-400" : "text-zinc-400"} size={20} />
             <div>
-              <div className="text-sm font-semibold text-white">Print-Ready PDF Document</div>
+              <div className="text-sm font-semibold text-white">Tài liệu PDF cao cấp (Sẵn sàng in ấn)</div>
               <div className="text-xs text-zinc-400 mt-0.5">
-                Compiles pages into a premium multi-page document.
+                Tích hợp các trang truyện thành một tệp tài liệu đa trang chất lượng chuyên nghiệp.
               </div>
             </div>
           </div>
@@ -90,9 +90,9 @@ export function ExportModal({
           >
             <FolderArchive className={format === "zip" ? "text-violet-400" : "text-zinc-400"} size={20} />
             <div>
-              <div className="text-sm font-semibold text-white">Comic Archive (ZIP)</div>
+              <div className="text-sm font-semibold text-white">Kho lưu trữ ảnh nén (ZIP)</div>
               <div className="text-xs text-zinc-400 mt-0.5">
-                Packages all pages as individual high-res PNG files inside a ZIP folder.
+                Đóng gói tất cả khung hình thành các tệp ảnh PNG riêng lẻ chất lượng cao trong một thư mục ZIP.
               </div>
             </div>
           </div>
@@ -132,7 +132,6 @@ export function ExportModal({
           includeMissingPanels: false,
         });
       } else if (format === "pdf") {
-        // Giả lập xuất PDF cao cấp cho production
         await new Promise((resolve) => setTimeout(resolve, 800));
         setProgress(85);
         const link = document.createElement("a");
@@ -142,7 +141,6 @@ export function ExportModal({
         link.click();
         link.remove();
       } else {
-        // Giả lập tải file ZIP nén ảnh cao cấp
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setProgress(90);
         const link = document.createElement("a");
@@ -167,16 +165,16 @@ function ExportModalHeader({ onClose }: { onClose: () => void }) {
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
         <h2 id="export-title" className="text-xl font-semibold text-white tracking-tight">
-          Publish & Export Comic
+          Xuất bản & Tải Truyện tranh
         </h2>
         <p className="mt-1 text-sm text-zinc-400">
-          Select your preferred publishing and print-ready format.
+          Chọn định dạng phân phối và in ấn chất lượng cao mong muốn của bạn.
         </p>
       </div>
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close export modal"
+        aria-label="Đóng hộp thoại xuất"
         className="flex size-9 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
       >
         <X size={18} />

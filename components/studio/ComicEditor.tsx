@@ -3,7 +3,8 @@
  * @description Comic editor screen with page selector, speech bubble tools, preview canvas, and panel list.
  */
 
-import { Save } from "lucide-react";
+import { useState } from "react";
+import { Save, MessageSquare, Layers } from "lucide-react";
 
 import { BubbleTools } from "@/components/studio/BubbleTools";
 import { ComicPanelCanvas } from "@/components/studio/ComicPanelCanvas";
@@ -57,11 +58,15 @@ export function ComicEditor({
     panelId: string,
   ) => void;
 }) {
+  const [isBubbleOpen, setIsBubbleOpen] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+
   const selectedPanel =
     panels.find((panel) => panel.id === selectedPanelId) ?? panels[0];
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[280px_minmax(0,1fr)_260px]">
+    <div className="relative grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[280px_minmax(0,1fr)_260px]">
+      {/* BubbleTools (Sidebar tĩnh trên màn hình lớn) */}
       <BubbleTools
         selectedBubble={selectedBubble}
         onAddBubble={() => onAddBubble(selectedPanel.id)}
@@ -71,9 +76,11 @@ export function ComicEditor({
         onDeleteBubble={() =>
           deleteSelectedBubble(selectedPanel, selectedBubble)
         }
+        className="hidden xl:block"
       />
 
-      <section className="overflow-y-auto px-4 py-5 lg:px-6">
+      {/* Vùng Canvas chính ở giữa */}
+      <section className="overflow-y-auto px-4 py-5 lg:px-6 pb-24 xl:pb-8">
         <ComicEditorHeader />
         
         <PageSelector
@@ -92,7 +99,13 @@ export function ComicEditor({
               selectedBubbleId={selectedBubbleId}
               dragging={dragging}
               onSelectPanel={onSelectPanel}
-              onSelectBubble={onSelectBubble}
+              onSelectBubble={(bubbleId) => {
+                onSelectBubble(bubbleId);
+                // Tự động mở bottom sheet điều khiển bong bóng thoại trên di động để thuận tiện chỉnh sửa
+                if (window.innerWidth < 1280) {
+                  setIsBubbleOpen(true);
+                }
+              }}
               onStartDrag={onStartDrag}
               onStopDrag={onStopDrag}
               onBubbleMove={onBubbleMove}
@@ -101,11 +114,97 @@ export function ComicEditor({
         </div>
       </section>
 
+      {/* PanelList (Sidebar tĩnh trên màn hình lớn) */}
       <PanelList
         panels={panels}
         selectedPanelId={selectedPanelId}
         onSelectPanel={onSelectPanel}
+        className="hidden xl:block"
       />
+
+      {/* ============================================================== */}
+      {/* RESPONSIVE UI: FLOATING ACTION DOCK & OVERLAY DRAWERS          */}
+      {/* ============================================================== */}
+
+      {/* Floating Action Dock cho tablet & mobile (< 1280px) */}
+      <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-zinc-700 bg-zinc-900/90 p-2 shadow-2xl backdrop-blur-md xl:hidden">
+        <button
+          type="button"
+          onClick={() => setIsBubbleOpen(true)}
+          className="flex h-11 items-center gap-2 rounded-full bg-zinc-800 px-4 text-sm font-medium text-zinc-200 hover:bg-zinc-700 active:scale-95 transition"
+        >
+          <MessageSquare size={16} className="text-violet-400" />
+          <span>Lời thoại</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsPanelOpen(true)}
+          className="flex h-11 items-center gap-2 rounded-full bg-zinc-800 px-4 text-sm font-medium text-zinc-200 hover:bg-zinc-700 active:scale-95 transition"
+        >
+          <Layers size={16} className="text-violet-400" />
+          <span>Khung tranh</span>
+        </button>
+        <button
+          type="button"
+          className="flex h-11 items-center gap-2 rounded-full bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500 active:scale-95 transition"
+        >
+          <Save size={16} />
+          <span>Lưu</span>
+        </button>
+      </div>
+
+      {/* Bottom Sheet cho Bubble Tools trên mobile */}
+      {isBubbleOpen && (
+        <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/60 backdrop-blur-sm xl:hidden">
+          <div className="flex-1" onClick={() => setIsBubbleOpen(false)} />
+          <div className="relative flex max-h-[80vh] flex-col rounded-t-2xl border-t border-zinc-800 bg-[#111114] p-4 shadow-2xl">
+            {/* Thanh kéo handle bar giả */}
+            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-zinc-700" onClick={() => setIsBubbleOpen(false)} />
+            <div className="overflow-y-auto pb-8">
+              <BubbleTools
+                selectedBubble={selectedBubble}
+                onAddBubble={() => onAddBubble(selectedPanel.id)}
+                onUpdateBubble={(patch) =>
+                  updateSelectedBubble(selectedPanel, selectedBubble, patch)
+                }
+                onDeleteBubble={() =>
+                  deleteSelectedBubble(selectedPanel, selectedBubble)
+                }
+                className="border-none bg-transparent p-0"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Right Drawer cho Panel List trên mobile */}
+      {isPanelOpen && (
+        <div className="fixed inset-0 z-40 flex justify-end bg-black/60 backdrop-blur-sm xl:hidden">
+          <div className="flex-1" onClick={() => setIsPanelOpen(false)} />
+          <div className="relative flex h-full w-[280px] flex-col border-l border-zinc-800 bg-[#111114] p-4 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
+              <span className="font-semibold text-zinc-200">Danh sách Panel</span>
+              <button
+                onClick={() => setIsPanelOpen(false)}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <PanelList
+                panels={panels}
+                selectedPanelId={selectedPanelId}
+                onSelectPanel={(panelId) => {
+                  onSelectPanel(panelId);
+                  setIsPanelOpen(false);
+                }}
+                className="border-none bg-transparent p-0"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -134,9 +233,9 @@ function ComicEditorHeader() {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold">Comic Editor</h1>
+        <h1 className="text-xl font-semibold text-zinc-100">Biên tập Truyện tranh</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Speech bubbles are saved per panel.
+          Các bong bóng hội thoại thoại được lưu riêng biệt cho từng khung tranh.
         </p>
       </div>
       <button
@@ -144,7 +243,7 @@ function ComicEditorHeader() {
         className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
       >
         <Save size={15} />
-        Save
+        Lưu truyện
       </button>
     </div>
   );
