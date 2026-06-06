@@ -131,6 +131,18 @@ describe("studio AI services", () => {
     vi.useRealTimers();
   });
 
+  it("should create a successful panel generation patch with no bubbles if dialogue is empty", async () => {
+    vi.useFakeTimers();
+    const promise = generatePanelImage({ ...PANELS_SEED[1], dialogue: "", bubbles: [] });
+
+    await vi.runAllTimersAsync();
+    const patch = await promise;
+
+    expect(patch).toMatchObject({ status: "success" });
+    expect(patch.bubbles).toHaveLength(0);
+    vi.useRealTimers();
+  });
+
   it("should load generated panel images through the browser API adapter", async () => {
     vi.stubGlobal("window", {});
     vi.stubGlobal(

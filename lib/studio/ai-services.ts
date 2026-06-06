@@ -148,7 +148,9 @@ export async function generatePanelImage(
       bubbles:
         panel.bubbles.length > 0
           ? panel.bubbles
-          : [createGeneratedBubble(panel)],
+          : panel.dialogue.trim()
+            ? [createGeneratedBubble(panel)]
+            : [],
     };
   }
 
@@ -158,7 +160,11 @@ export async function generatePanelImage(
     status: "success",
     errorMessage: undefined,
     bubbles:
-      panel.bubbles.length > 0 ? panel.bubbles : [createGeneratedBubble(panel)],
+      panel.bubbles.length > 0
+        ? panel.bubbles
+        : panel.dialogue.trim()
+          ? [createGeneratedBubble(panel)]
+          : [],
   };
 }
 
