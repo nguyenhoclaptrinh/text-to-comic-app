@@ -45,6 +45,16 @@ npm run dev
 
 Mở ứng dụng tại `http://localhost:3000`.
 
+Chạy bản production demo local-first:
+
+```bash
+npm ci
+npm run build
+npm run start
+```
+
+Chi tiết vận hành: `docs/060-delivery/Production-Runbook.md`.
+
 ## Cấu Hình Môi Trường
 
 Khi muốn dùng dịch vụ AI thật, tạo file `.env.local` từ `.env.example`:
@@ -92,6 +102,8 @@ Lớp AI đã có contract phía server và cơ chế fallback. Gemini có thể
 - `docs/020-architecture/SystemDesign.md`
 - `docs/035-QA/Test-Plan.md`
 - `docs/060-delivery/Demo-Runbook.md`
+- `docs/060-delivery/Production-Runbook.md`
+- `docs/060-delivery/Optional-Docker-DB.md`
 - `docs/060-delivery/Supabase-Setup.md`
 - `docs/070-report/FinalReport.md`
 - `docs/070-report/PresentationOutline.md`

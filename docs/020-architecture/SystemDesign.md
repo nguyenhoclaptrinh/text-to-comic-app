@@ -56,16 +56,16 @@ graph TD
 
 ## 3. Tech Stack Decisions
 
-| Area | Choice | Reason |
-| --- | --- | --- |
-| Framework | Next.js App Router + TypeScript | Full-stack trong một repo, dễ demo/deploy |
-| UI | Tailwind CSS + shadcn/ui | Tốc độ triển khai nhanh, consistent components |
-| Auth/DB/Storage | Supabase | Auth, Postgres, Storage có free tier phù hợp demo |
-| ORM | Prisma hoặc Supabase client typed queries | Prisma dễ quản schema; Supabase client thuận tiện RLS |
-| Text AI | Gemini Flash model hiện có | Free tier tốt cho demo, hỗ trợ structured JSON |
-| Image AI | Hugging Face/Inference Providers hoặc Colab ComfyUI | Basic path dễ tích hợp; Colab path hỗ trợ control/reference tốt hơn |
-| Validation | Zod | Validate request body và AI JSON |
-| Export | html-to-image/canvas pipeline cho PNG dọc; PDF optional | PNG là MVP ít rủi ro hơn PDF |
+| Area            | Choice                                                  | Reason                                                              |
+| --------------- | ------------------------------------------------------- | ------------------------------------------------------------------- |
+| Framework       | Next.js App Router + TypeScript                         | Full-stack trong một repo, dễ demo/deploy                           |
+| UI              | Tailwind CSS + shadcn/ui                                | Tốc độ triển khai nhanh, consistent components                      |
+| Auth/DB/Storage | Supabase                                                | Auth, Postgres, Storage có free tier phù hợp demo                   |
+| ORM             | Prisma hoặc Supabase client typed queries               | Prisma dễ quản schema; Supabase client thuận tiện RLS               |
+| Text AI         | Gemini Flash model hiện có                              | Free tier tốt cho demo, hỗ trợ structured JSON                      |
+| Image AI        | Hugging Face/Inference Providers hoặc Colab ComfyUI     | Basic path dễ tích hợp; Colab path hỗ trợ control/reference tốt hơn |
+| Validation      | Zod                                                     | Validate request body và AI JSON                                    |
+| Export          | html-to-image/canvas pipeline cho PNG dọc; PDF optional | PNG là MVP ít rủi ro hơn PDF                                        |
 
 ## 4. Data Model
 
@@ -73,7 +73,9 @@ graph TD
 erDiagram
     USER ||--o{ PROJECT : owns
     PROJECT ||--o{ CHARACTER : defines
-    PROJECT ||--o{ PANEL : contains
+    PROJECT ||--o{ PAGE : contains
+    PAGE ||--o{ PANEL : contains
+    PANEL ||--o{ BUBBLE : overlays
 
     USER {
         string id PK
@@ -101,26 +103,47 @@ erDiagram
         datetime created_at
     }
 
+    PAGE {
+        string id PK
+        string project_id FK
+        int order_index
+        string title
+        datetime created_at
+        datetime updated_at
+    }
+
     PANEL {
         string id PK
         string project_id FK
+        string page_id FK
         int order_index
         text scene_prompt
         json characters "Character names/ids detected by AI"
         text dialogue
         string image_url
         json speech_bubbles
-        string status "DRAFT | PENDING | GENERATING | SUCCESS | ERROR"
+        string status "DRAFT | QUEUED | GENERATING | SUCCESS | ERROR"
         text error_message
         datetime created_at
         datetime updated_at
     }
+
+    BUBBLE {
+        string id PK
+        string panel_id FK
+        text text
+        float x
+        float y
+        float width
+        float height
+    }
 ```
 
 ### Notes
+
 - MVP có thể bỏ entity `Scene` để giảm độ phức tạp; mỗi `Panel` là một slice user-facing.
 - Nếu sau này cần chapter/scene hierarchy, thêm `Scene` giữa `Project` và `Panel`.
-- `speech_bubbles` lưu JSON gồm `{ id, text, x, y, width, height, style }`.
+- Local-first runtime lưu `speech_bubbles` trong `Panel.bubbles`; DB production dài hạn có thể tách bảng `BUBBLE`, còn Supabase baseline hiện có thể lưu JSONB.
 - Supabase RLS cần đảm bảo user chỉ đọc/ghi project của mình.
 
 ## 5. Core Flows
@@ -147,6 +170,7 @@ sequenceDiagram
 ```
 
 Error handling:
+
 - JSON invalid: retry once with repair prompt, then return validation error.
 - Quota/rate limit: return typed error `AI_TEXT_QUOTA`.
 - Safety block: return typed error `AI_TEXT_POLICY_BLOCK`.
@@ -173,6 +197,7 @@ sequenceDiagram
 ```
 
 Generation rules:
+
 - `Generate All` gọi từng panel tuần tự từ client để tránh serverless timeout.
 - Nếu một panel lỗi, các panel thành công vẫn giữ nguyên.
 - Regenerate chỉ thay ảnh cũ sau khi ảnh mới upload thành công.
@@ -185,6 +210,7 @@ Client dùng editor kéo thả để cập nhật `speech_bubbles` theo panel. D
 ### 5.4. Export PNG
 
 MVP export trên client bằng canvas/html-to-image:
+
 1. Load panels theo `order_index`.
 2. Render image + speech bubbles.
 3. Ghép dọc thành một canvas lớn.
@@ -197,65 +223,67 @@ PDF export có thể được thêm sau bằng jsPDF hoặc server-side renderin
 ### `POST /api/storyboard`
 
 Request:
+
 ```json
 {
-  "projectId": "string"
+  "storyTitle": "string",
+  "storyText": "string"
 }
 ```
 
 Response:
+
 ```json
 {
-  "panels": [
-    {
-      "id": "string",
-      "orderIndex": 1,
-      "scenePrompt": "string",
-      "characters": ["string"],
-      "dialogue": "string",
-      "status": "DRAFT"
-    }
-  ]
+  "pages": [],
+  "source": "gemini",
+  "warning": "string"
 }
 ```
 
 ### `POST /api/generate-panel`
 
 Request:
+
 ```json
 {
-  "panelId": "string"
+  "panel": {},
+  "characters": []
 }
 ```
 
 Response:
+
 ```json
 {
   "panelId": "string",
   "imageUrl": "string",
-  "status": "SUCCESS"
+  "source": "image-backend",
+  "warning": "string"
 }
 ```
 
 Error response:
+
 ```json
 {
   "code": "AI_IMAGE_OFFLINE",
-  "message": "Image backend is offline. Please retry after restarting Colab."
+  "message": "Image backend is offline. Please retry later.",
+  "retryable": true
 }
 ```
 
 ## 7. Risk Controls
 
-| Risk | Control |
-| --- | --- |
-| Serverless timeout khi tạo nhiều ảnh | Client-side sequential generation |
-| Colab/ngrok đổi URL | Lưu endpoint trong env/admin config, hiển thị trạng thái offline |
-| Free tier hết quota | Typed error, retry later, demo cache/mock data |
-| AI trả dữ liệu sai schema | Zod validation + repair retry |
-| User truy cập project người khác | Supabase RLS + server-side ownership check |
-| Prompt injection trong truyện chữ | Treat story text as data, schema-constrained output, no tool execution |
-| Upload ảnh reference không phù hợp | File type/size validation, optional content moderation |
+| Risk                                 | Control                                                                |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| Serverless timeout khi tạo nhiều ảnh | Client-side sequential generation                                      |
+| Colab/ngrok đổi URL                  | Lưu endpoint trong env/admin config, hiển thị trạng thái offline       |
+| Free tier hết quota                  | Typed error, retry later, demo cache/mock data                         |
+| AI trả dữ liệu sai schema            | Zod validation + repair retry                                          |
+| User truy cập project người khác     | Supabase RLS + server-side ownership check                             |
+| Prompt injection trong truyện chữ    | Treat story text as data, schema-constrained output, no tool execution |
+| Upload ảnh reference không phù hợp   | File type/size validation, optional content moderation                 |
 
 ## 8. Implementation Priority
 

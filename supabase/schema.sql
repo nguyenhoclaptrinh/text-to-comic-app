@@ -45,7 +45,7 @@ create table if not exists public.panels (
   dialogue text not null,
   character_ids text[] not null default '{}',
   status text not null default 'draft'
-    check (status in ('draft', 'generating', 'success', 'error')),
+    check (status in ('draft', 'queued', 'generating', 'success', 'error')),
   image_tone text not null default 'from-slate-900 via-zinc-800 to-indigo-950',
   image_url text,
   error_message text,

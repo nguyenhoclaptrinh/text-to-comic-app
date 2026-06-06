@@ -11,7 +11,11 @@ export async function POST(request: Request) {
 
   if (!body || typeof body !== "object") {
     return NextResponse.json(
-      { code: "INVALID_PAYLOAD", message: "Snapshot payload is required." },
+      {
+        code: "INVALID_PAYLOAD",
+        message: "Snapshot payload is required.",
+        retryable: false,
+      },
       { status: 400 },
     );
   }
@@ -29,6 +33,7 @@ export async function POST(request: Request) {
       {
         code: "NOT_CONFIGURED",
         message: "Supabase connection is not configured on the server.",
+        retryable: true,
       },
       { status: 503 },
     );
@@ -201,6 +206,9 @@ export async function POST(request: Request) {
       error instanceof Error
         ? error.message
         : "Failed to synchronize snapshot to Supabase.";
-    return NextResponse.json({ code: "SYNC_FAILED", message }, { status: 500 });
+    return NextResponse.json(
+      { code: "SYNC_FAILED", message, retryable: true },
+      { status: 500 },
+    );
   }
 }

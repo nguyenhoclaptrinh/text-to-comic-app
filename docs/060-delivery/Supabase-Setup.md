@@ -8,7 +8,7 @@ updated: 2026-05-18
 
 # Supabase Setup Guide
 
-Supabase is an optional upgrade for the final project. The current app uses localStorage as the safe baseline. Only enable Supabase after the Gemini/storyboard, image fallback, export, and E2E flow are stable.
+Supabase is an optional upgrade for the final project. The production demo baseline is local-first (`localStorage` + IndexedDB). Only enable Supabase after the Gemini/storyboard, image fallback, export, backup/restore, and E2E flow are stable.
 
 ## Required Environment Variables
 
@@ -33,8 +33,9 @@ Only expose `NEXT_PUBLIC_*` values to the browser. Keep `SUPABASE_SERVICE_ROLE_K
 ## Tables
 
 - `projects`: project title, original text, status.
+- `pages`: page order and title for each project.
 - `characters`: character casting data.
-- `panels`: prompts, dialogue, image URL, status, speech bubbles.
+- `panels`: prompts, dialogue, image URL, status, speech bubbles JSON.
 
 ## RLS Strategy
 
@@ -47,5 +48,6 @@ Use Supabase live only if:
 - Login and DB save/load were tested before the defense.
 - Generated image URLs load correctly.
 - PNG export works with those image URLs.
+- Backup JSON still works as a fallback recovery path.
 
 Otherwise, use localStorage baseline and explain Supabase as the production-ready extension.
