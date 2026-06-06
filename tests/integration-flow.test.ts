@@ -85,7 +85,7 @@ describe("Integration Flow Test with Real Gemini", () => {
 
       expect(imageResult.imageUrl).toBeDefined();
       expect(imageResult.imageUrl.length).toBeGreaterThan(0);
-      expect(imageResult.source).toBe("fallback"); // No HF token configured, so fallback is expected
+      expect(["image-backend", "fallback"]).toContain(imageResult.source);
 
       generationResults.push({
         panelId: panel.id,

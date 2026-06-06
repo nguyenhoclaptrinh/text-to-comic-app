@@ -40,7 +40,60 @@ async function generateRawPanelImage(
     throw new Error("Image backend is offline.");
   }
 
-  // 1. Thử dùng IMAGE_BACKEND_URL trước
+  // 1. Thử dùng Google AI Studio Imagen 4 nếu có GEMINI_API_KEY
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  if (geminiApiKey) {
+    try {
+      const prompt = createImagePrompt(input);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiApiKey}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          instances: [{ prompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: "16:9",
+            outputMimeType: "image/png",
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data: unknown = await response.json();
+        if (
+          isRecord(data) &&
+          Array.isArray(data.predictions) &&
+          data.predictions.length > 0 &&
+          isRecord(data.predictions[0]) &&
+          typeof data.predictions[0].bytesBase64Encoded === "string"
+        ) {
+          const base64 = data.predictions[0].bytesBase64Encoded;
+          const mimeType =
+            typeof data.predictions[0].mimeType === "string"
+              ? data.predictions[0].mimeType
+              : "image/png";
+          const imageUrl = `data:${mimeType};base64,${base64}`;
+
+          return {
+            panelId: input.panel.id,
+            imageUrl,
+            source: "image-backend",
+          };
+        }
+      } else {
+        const errText = await response.text().catch(() => "");
+        console.warn(
+          `[Gemini Imagen] API returned error status ${response.status}:`,
+          errText,
+        );
+      }
+    } catch (err) {
+      console.warn("[Gemini Imagen] Failed, trying other backends...", err);
+    }
+  }
+
+  // 2. Thử dùng IMAGE_BACKEND_URL
   const endpoint = process.env.IMAGE_BACKEND_URL;
   if (endpoint) {
     try {
@@ -69,7 +122,7 @@ async function generateRawPanelImage(
     }
   }
 
-  // 2. Thử dùng Hugging Face Inference API nếu có Token
+  // 3. Thử dùng Hugging Face Inference API nếu có Token
   const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
   if (hfToken) {
     try {
@@ -105,7 +158,7 @@ async function generateRawPanelImage(
 
   return createFallbackPanelImageResponse(
     input,
-    "Image backend/HuggingFace is not configured or failed.",
+    "Image backend/Gemini/HuggingFace is not configured or failed.",
   );
 }
 
