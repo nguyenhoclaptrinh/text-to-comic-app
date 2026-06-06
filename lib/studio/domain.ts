@@ -30,10 +30,6 @@ export function markPanelQueued(panel: Panel): Panel {
 }
 
 export function markPanelGenerating(panel: Panel): Panel {
-  if (!canTransitionPanelStatus(panel.status, "generating")) {
-    return panel;
-  }
-
   return {
     ...panel,
     status: "generating",

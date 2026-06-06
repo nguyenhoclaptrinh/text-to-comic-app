@@ -16,7 +16,11 @@ export async function generatePanelImageFromProvider(
   customHfToken?: string,
   customGeminiApiKey?: string,
 ): Promise<GeneratePanelResponse> {
-  const response = await generateRawPanelImage(input, customHfToken, customGeminiApiKey);
+  const response = await generateRawPanelImage(
+    input,
+    customHfToken,
+    customGeminiApiKey,
+  );
   const cloudUrl = await uploadToSupabaseStorage(
     input.panel.id,
     input.panel.seed,
@@ -71,11 +75,13 @@ async function generateRawPanelImage(
           data.candidates[0].content.parts.length > 0 &&
           isRecord(data.candidates[0].content.parts[0]) &&
           isRecord(data.candidates[0].content.parts[0].inlineData) &&
-          typeof data.candidates[0].content.parts[0].inlineData.data === "string"
+          typeof data.candidates[0].content.parts[0].inlineData.data ===
+            "string"
         ) {
           const base64 = data.candidates[0].content.parts[0].inlineData.data;
           const mimeType =
-            typeof data.candidates[0].content.parts[0].inlineData.mimeType === "string"
+            typeof data.candidates[0].content.parts[0].inlineData.mimeType ===
+            "string"
               ? data.candidates[0].content.parts[0].inlineData.mimeType
               : "image/png";
           const imageUrl = `data:${mimeType};base64,${base64}`;
@@ -201,9 +207,10 @@ function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
       resolvedStyle as keyof typeof COMIC_STYLE_MODIFIERS
     ] || COMIC_STYLE_MODIFIERS.webtoon;
 
-  const characterHeading = selectedCharacters.length > 0
-    ? `featuring character ${characterContext}`
-    : "";
+  const characterHeading =
+    selectedCharacters.length > 0
+      ? `featuring character ${characterContext}`
+      : "";
 
   return [
     `A high-quality comic panel illustration ${characterHeading}, in the style of ${styleModifier}`,

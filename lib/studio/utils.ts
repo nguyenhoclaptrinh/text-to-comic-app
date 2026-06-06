@@ -100,7 +100,7 @@ export function createMockPanels(storyText: string): Panel[] {
     let characterIds: string[] = [];
 
     // Hỗ trợ trích xuất tiếng Việt có dấu dạng: "Tên nhân vật: Lời thoại"
-    const colonMatch = textFragment.match(/^([A-ZÀ-Ỹa-zà-ỹ\s]+):\s*(.+)$/ui);
+    const colonMatch = textFragment.match(/^([A-ZÀ-Ỹa-zà-ỹ\s]+):\s*(.+)$/iu);
     if (colonMatch) {
       dialogue = `${colonMatch[1].trim()}: ${colonMatch[2].trim()}`;
       characterIds = [
@@ -113,14 +113,12 @@ export function createMockPanels(storyText: string): Panel[] {
       // Hỗ trợ trích xuất thoại trong dấu ngoặc kép "..." hoặc “...”
       const quoteMatch = textFragment.match(/["“]([^"”]+)["”]/);
       if (quoteMatch) {
-        const speechIndicator = textFragment.match(/([A-ZÀ-Ỹa-zà-ỹ\s]+)\s+(nói|hỏi|trả lời|thầm nghĩ|cười)/ui);
+        const speechIndicator = textFragment.match(
+          /([A-ZÀ-Ỹa-zà-ỹ\s]+)\s+(nói|hỏi|trả lời|thầm nghĩ|cười)/iu,
+        );
         const speaker = speechIndicator ? speechIndicator[1].trim() : "Speaker";
         dialogue = `${speaker}: ${quoteMatch[1].trim()}`;
-        characterIds = [
-          speaker
-            .toLowerCase()
-            .replace(/[^a-z0-9à-ỹ]+/gi, "-"),
-        ];
+        characterIds = [speaker.toLowerCase().replace(/[^a-z0-9à-ỹ]+/gi, "-")];
       }
     }
 

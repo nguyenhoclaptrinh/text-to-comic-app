@@ -169,6 +169,52 @@ describe("studio AI services", () => {
     });
   });
 
+  it("should forward local API tokens to browser image generation requests", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        panelId: PANELS_SEED[0].id,
+        imageUrl: "data:image/svg+xml;charset=utf-8,%3Csvg%2F%3E",
+        source: "fallback",
+      }),
+    });
+
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) =>
+        key.includes("huggingface") ? "hf-token" : "gemini-key",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await generatePanelImage(PANELS_SEED[0]);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/generate-panel",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-huggingface-token": "hf-token",
+          "x-gemini-api-key": "gemini-key",
+        }),
+      }),
+    );
+  });
+
+  it("should map browser image API failures without raw provider messages", async () => {
+    vi.stubGlobal("window", {});
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ invalid: true }),
+      }),
+    );
+
+    await expect(generatePanelImage(PANELS_SEED[0])).rejects.toMatchObject({
+      code: StudioAiErrorCode.AI_IMAGE_OFFLINE,
+      message: "Image backend offline. Retry later.",
+    });
+  });
+
   it("should reject invalid browser image API responses", async () => {
     vi.stubGlobal("window", {});
     vi.stubGlobal(
@@ -191,14 +237,14 @@ describe("studio AI services", () => {
         scenePrompt: "[offline] test prompt",
       }),
     ).rejects.toMatchObject({
-      code: StudioAiErrorCode.IMAGE_BACKEND_OFFLINE,
+      code: StudioAiErrorCode.AI_IMAGE_OFFLINE,
     });
   });
 
   it("should map typed and unknown errors to user-facing copy", () => {
     expect(
       getStudioAiErrorMessage(
-        new StudioAiError(StudioAiErrorCode.IMAGE_BACKEND_OFFLINE, "Offline"),
+        new StudioAiError(StudioAiErrorCode.AI_IMAGE_OFFLINE, "Offline"),
       ),
     ).toBe(
       "Dịch vụ vẽ ảnh chưa sẵn sàng. Khung truyện vẫn được lưu, bạn có thể thử vẽ lại sau.",

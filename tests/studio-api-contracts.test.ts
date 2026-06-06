@@ -108,7 +108,8 @@ describe("studio API contracts", () => {
       panels: [
         {
           orderIndex: 1,
-          scenePrompt: "A scenic snow-covered view with no characters speaking.",
+          scenePrompt:
+            "A scenic snow-covered view with no characters speaking.",
           characters: [],
           dialogue: "",
         },
@@ -127,4 +128,3 @@ describe("studio API contracts", () => {
     expect(generateRequestParse.success).toBe(true);
   });
 });
-

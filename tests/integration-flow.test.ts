@@ -20,10 +20,14 @@ function loadEnv() {
       for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed.startsWith("GEMINI_API_KEY=")) {
-          process.env.GEMINI_API_KEY = trimmed.replace("GEMINI_API_KEY=", "").trim();
+          process.env.GEMINI_API_KEY = trimmed
+            .replace("GEMINI_API_KEY=", "")
+            .trim();
         }
         if (trimmed.startsWith("GEMINI_MODEL=")) {
-          process.env.GEMINI_MODEL = trimmed.replace("GEMINI_MODEL=", "").trim();
+          process.env.GEMINI_MODEL = trimmed
+            .replace("GEMINI_MODEL=", "")
+            .trim();
         }
       }
     }
@@ -42,19 +46,24 @@ describe("Integration Flow Test with Real Gemini", () => {
 
     // Skip if API Key is not configured (e.g. in environments without secrets)
     if (!apiKey) {
-      console.warn("Skipping integration test: GEMINI_API_KEY is not configured.");
+      console.warn(
+        "Skipping integration test: GEMINI_API_KEY is not configured.",
+      );
       return;
     }
 
     const input = {
       storyTitle: "The Silent Mountain",
-      storyText: 
+      storyText:
         "The wind howled through the pine trees. Suddenly, the camera pans to a beautiful wooden cabin half-buried in snow, no one is around, only the soft sound of snow falling. Inside the cabin, a flame danced in the stone fireplace.",
     };
 
     console.log("Step 1: Generating storyboard pages via Gemini...");
     const projectId = `test-project-${Date.now()}`;
-    const storyboardResult = await generateMultiPageStoryboard(input, projectId);
+    const storyboardResult = await generateMultiPageStoryboard(
+      input,
+      projectId,
+    );
 
     expect(storyboardResult.source).toBe("gemini");
     expect(storyboardResult.pages.length).toBeGreaterThanOrEqual(1);
@@ -64,7 +73,9 @@ describe("Integration Flow Test with Real Gemini", () => {
 
     // Check if any panel has empty dialogue (to verify our schema fix)
     const emptyDialoguePanels = allPanels.filter((p) => p.dialogue === "");
-    console.log(`Found ${emptyDialoguePanels.length} panels with empty dialogue.`);
+    console.log(
+      `Found ${emptyDialoguePanels.length} panels with empty dialogue.`,
+    );
 
     console.log("Step 2: Generating panel images...");
     const generationResults: Array<{
@@ -111,8 +122,14 @@ describe("Integration Flow Test with Real Gemini", () => {
     };
 
     const outputFilePath = path.join(logDir, "flow-test-results.json");
-    fs.writeFileSync(outputFilePath, JSON.stringify(testOutput, null, 2), "utf-8");
-    console.log(`Successfully logged flow results and output to: ${outputFilePath}`);
+    fs.writeFileSync(
+      outputFilePath,
+      JSON.stringify(testOutput, null, 2),
+      "utf-8",
+    );
+    console.log(
+      `Successfully logged flow results and output to: ${outputFilePath}`,
+    );
 
     // Assert that the log file was created and is not empty
     expect(fs.existsSync(outputFilePath)).toBe(true);

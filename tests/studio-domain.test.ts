@@ -19,6 +19,7 @@ describe("studio domain rules", () => {
     expect(canTransitionPanelStatus("queued", "generating")).toBe(true);
     expect(canTransitionPanelStatus("generating", "success")).toBe(true);
     expect(canTransitionPanelStatus("success", "generating")).toBe(true);
+    expect(canTransitionPanelStatus("success", "queued")).toBe(false);
   });
 
   it("should mark queued and generating panels without keeping stale errors", () => {
@@ -50,5 +51,11 @@ describe("studio domain rules", () => {
       imageUrl: "data:image/png;base64,old-image",
       errorMessage: "Thử lại sau",
     });
+  });
+
+  it("should leave panels unchanged for invalid queued transitions", () => {
+    const successPanel = { ...PANELS_SEED[0], status: "success" as const };
+
+    expect(markPanelQueued(successPanel)).toBe(successPanel);
   });
 });

@@ -140,7 +140,11 @@ export function useComicStudioState() {
     );
   }
 
-  async function analyzeStory(style: string = "webtoon", overrideTitle?: string, overrideText?: string) {
+  async function analyzeStory(
+    style: string = "webtoon",
+    overrideTitle?: string,
+    overrideText?: string,
+  ) {
     setIsAnalyzingStory(true);
 
     const finalTitle = overrideTitle !== undefined ? overrideTitle : storyTitle;
@@ -182,13 +186,20 @@ export function useComicStudioState() {
         });
       });
 
-      const colors = ["#8b5cf6", "#ef4444", "#10b981", "#f59e0b", "#3b82f6", "#ec4899"];
+      const colors = [
+        "#8b5cf6",
+        "#ef4444",
+        "#10b981",
+        "#f59e0b",
+        "#3b82f6",
+        "#ec4899",
+      ];
       const newCharactersList = Array.from(detectedIds).map((id, idx) => {
         const name = id
           .split("-")
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(" ");
-        
+
         return {
           id,
           name,

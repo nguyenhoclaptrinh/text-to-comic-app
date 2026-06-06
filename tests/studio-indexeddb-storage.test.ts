@@ -85,7 +85,9 @@ const mockIndexedDB = {
 
     setTimeout(() => {
       if (req.onupgradeneeded) {
-        req.onupgradeneeded(new Event("upgradeneeded") as unknown as IDBVersionChangeEvent);
+        req.onupgradeneeded(
+          new Event("upgradeneeded") as unknown as IDBVersionChangeEvent,
+        );
       }
       if (req.onsuccess) {
         req.onsuccess(new Event("success"));
@@ -142,7 +144,9 @@ describe("IndexedDB Storage Wrapper", () => {
 
         setTimeout(() => {
           if (req.onupgradeneeded) {
-            req.onupgradeneeded(new Event("upgradeneeded") as unknown as IDBVersionChangeEvent);
+            req.onupgradeneeded(
+              new Event("upgradeneeded") as unknown as IDBVersionChangeEvent,
+            );
           }
           if (req.onsuccess) {
             req.onsuccess(new Event("success"));
