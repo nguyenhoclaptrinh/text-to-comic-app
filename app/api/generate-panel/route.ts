@@ -25,10 +25,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const customHfToken = request.headers.get("x-huggingface-token") || undefined;
   try {
     return NextResponse.json(
       GeneratePanelResponseSchema.parse(
-        await generatePanelImageFromProvider(parsedRequest.data),
+        await generatePanelImageFromProvider(parsedRequest.data, customHfToken),
       ),
     );
   } catch {

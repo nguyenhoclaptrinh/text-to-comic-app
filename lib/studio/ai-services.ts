@@ -50,9 +50,20 @@ export async function analyzeStoryToPages({
   }
 
   if (typeof window !== "undefined") {
+    const geminiKey =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("text-to-comic:gemini-key") || ""
+        : "";
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (geminiKey) {
+      headers["x-gemini-api-key"] = geminiKey;
+    }
+
     const response = await fetch("/api/storyboard", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(parsedRequest.data),
     });
 
@@ -69,8 +80,7 @@ export async function analyzeStoryToPages({
       return parsedResponse.data.pages;
     }
 
-    return createFallbackStoryboardResponse(parsedRequest.data.storyText)
-      .pages;
+    return createFallbackStoryboardResponse(parsedRequest.data.storyText).pages;
   }
 
   await sleep(420);
@@ -98,9 +108,20 @@ export async function generatePanelImage(
   }
 
   if (typeof window !== "undefined") {
+    const hfToken =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("text-to-comic:huggingface-token") || ""
+        : "";
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (hfToken) {
+      headers["x-huggingface-token"] = hfToken;
+    }
+
     const response = await fetch("/api/generate-panel", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ panel, characters }),
     });
     const body: unknown = await response.json().catch(() => null);

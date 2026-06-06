@@ -6,7 +6,10 @@
 import { useState } from "react";
 import type { View } from "@/lib/studio/types";
 
-export function useStudioNavigation(initialProjectId: string, initialPageId: string) {
+export function useStudioNavigation(
+  initialProjectId: string,
+  initialPageId: string,
+) {
   const [view, setView] = useState<View>("storyboard");
   const [activeProjectId, setActiveProjectId] = useState(initialProjectId);
   const [activePageId, setActivePageId] = useState(initialPageId);

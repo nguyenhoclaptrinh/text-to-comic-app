@@ -82,7 +82,7 @@ export function ComicEditor({
       {/* Vùng Canvas chính ở giữa */}
       <section className="overflow-y-auto px-4 py-5 lg:px-6 pb-24 xl:pb-8">
         <ComicEditorHeader />
-        
+
         <PageSelector
           pages={pages}
           activePageId={activePageId}
@@ -159,7 +159,10 @@ export function ComicEditor({
           <div className="flex-1" onClick={() => setIsBubbleOpen(false)} />
           <div className="relative flex max-h-[80vh] flex-col rounded-t-2xl border-t border-zinc-800 bg-[#111114] p-4 shadow-2xl">
             {/* Thanh kéo handle bar giả */}
-            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-zinc-700" onClick={() => setIsBubbleOpen(false)} />
+            <div
+              className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-zinc-700"
+              onClick={() => setIsBubbleOpen(false)}
+            />
             <div className="overflow-y-auto pb-8">
               <BubbleTools
                 selectedBubble={selectedBubble}
@@ -183,7 +186,9 @@ export function ComicEditor({
           <div className="flex-1" onClick={() => setIsPanelOpen(false)} />
           <div className="relative flex h-full w-[280px] flex-col border-l border-zinc-800 bg-[#111114] p-4 shadow-2xl">
             <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
-              <span className="font-semibold text-zinc-200">Danh sách Panel</span>
+              <span className="font-semibold text-zinc-200">
+                Danh sách Panel
+              </span>
               <button
                 onClick={() => setIsPanelOpen(false)}
                 className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
@@ -233,9 +238,12 @@ function ComicEditorHeader() {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-100">Biên tập Truyện tranh</h1>
+        <h1 className="text-xl font-semibold text-zinc-100">
+          Biên tập Truyện tranh
+        </h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Các bong bóng hội thoại thoại được lưu riêng biệt cho từng khung tranh.
+          Các bong bóng hội thoại thoại được lưu riêng biệt cho từng khung
+          tranh.
         </p>
       </div>
       <button

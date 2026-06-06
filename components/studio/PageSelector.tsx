@@ -27,8 +27,8 @@ export function PageSelector({
           .map((page) => {
             const isActive = page.id === activePageId;
             // Việt hóa tiêu đề hiển thị từ "Page X" sang "Trang X"
-            const displayTitle = page.title.startsWith("Page ") 
-              ? page.title.replace("Page ", "Trang ") 
+            const displayTitle = page.title.startsWith("Page ")
+              ? page.title.replace("Page ", "Trang ")
               : page.title;
 
             return (

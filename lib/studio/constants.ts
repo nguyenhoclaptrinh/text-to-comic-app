@@ -38,3 +38,18 @@ export const STATUS_CLASS: Record<PanelStatus, string> = {
   success: "border-emerald-400/40 bg-emerald-500/15 text-emerald-200",
   error: "border-red-400/40 bg-red-500/15 text-red-200",
 };
+
+export const COMIC_STYLES = {
+  webtoon: "Modern Webtoon (Color)",
+  manga: "Classic Manga (B&W)",
+  western: "Western Comic Book",
+} as const;
+
+export const COMIC_STYLE_MODIFIERS = {
+  webtoon:
+    "Modern webtoon style, vibrant digital color, clean lineart, soft shading, manhwa aesthetic.",
+  manga:
+    "Manga style, black and white, hand-drawn ink lineart, detailed screentones, classic Japanese manga aesthetic.",
+  western:
+    "Western comic book style, bold inks, cel shading, classic American comic book aesthetic, retro pop art style.",
+} as const;

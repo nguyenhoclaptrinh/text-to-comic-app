@@ -9,6 +9,7 @@ import {
   generatePanelImage,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
+import { dialogueToBubble } from "@/lib/studio/utils";
 import type { Character, Page, Panel, Project } from "@/lib/studio/types";
 
 export function usePanelActions({
@@ -20,6 +21,7 @@ export function usePanelActions({
   setPages,
   setSelectedPanelId,
   setSelectedBubbleId,
+  projectStyle,
 }: {
   pages: Page[];
   characters: Character[];
@@ -29,6 +31,7 @@ export function usePanelActions({
   setPages: React.Dispatch<React.SetStateAction<Page[]>>;
   setSelectedPanelId: (panelId: string) => void;
   setSelectedBubbleId: (bubbleId: string) => void;
+  projectStyle: string;
 }) {
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
@@ -36,9 +39,27 @@ export function usePanelActions({
     setPages((currentPages) =>
       currentPages.map((page) => ({
         ...page,
-        panels: page.panels.map((panel) =>
-          panel.id === panelId ? { ...panel, ...patch } : panel,
-        ),
+        panels: page.panels.map((panel) => {
+          if (panel.id !== panelId) {
+            return panel;
+          }
+
+          const updatedPanel = { ...panel, ...patch };
+
+          if (
+            patch.dialogue !== undefined &&
+            patch.dialogue !== panel.dialogue
+          ) {
+            const cleanText = dialogueToBubble(patch.dialogue);
+            if (panel.bubbles.length > 0) {
+              updatedPanel.bubbles = panel.bubbles.map((bubble, idx) =>
+                idx === 0 ? { ...bubble, text: cleanText } : bubble,
+              );
+            }
+          }
+
+          return updatedPanel;
+        }),
       })),
     );
   }
@@ -105,7 +126,15 @@ export function usePanelActions({
     updatePanel(panelId, { status: "generating", errorMessage: undefined });
 
     try {
-      updatePanel(panelId, await generatePanelImage(target, characters));
+      const resolvedStyle = (target.style && target.style !== "inherit" ? target.style : (projectStyle || "webtoon")) as
+        | "manga"
+        | "webtoon"
+        | "western";
+      const panelWithResolvedStyle = { ...target, style: resolvedStyle };
+      updatePanel(
+        panelId,
+        await generatePanelImage(panelWithResolvedStyle, characters),
+      );
     } catch (error) {
       updatePanel(panelId, {
         status: "error",
@@ -131,11 +160,43 @@ export function usePanelActions({
     setIsGeneratingAll(false);
   }
 
+  function movePanel(panelId: string, direction: "up" | "down") {
+    setPages((currentPages) =>
+      currentPages.map((page) => {
+        const panelIdx = page.panels.findIndex((p) => p.id === panelId);
+        if (panelIdx === -1) {
+          return page;
+        }
+
+        const targetIdx = direction === "up" ? panelIdx - 1 : panelIdx + 1;
+        if (targetIdx < 0 || targetIdx >= page.panels.length) {
+          return page;
+        }
+
+        const newPanels = [...page.panels];
+        const temp = newPanels[panelIdx];
+        newPanels[panelIdx] = newPanels[targetIdx];
+        newPanels[targetIdx] = temp;
+
+        const reorderedPanels = newPanels.map((panel, idx) => ({
+          ...panel,
+          orderIndex: idx + 1,
+        }));
+
+        return {
+          ...page,
+          panels: reorderedPanels,
+        };
+      }),
+    );
+  }
+
   return {
     isGeneratingAll,
     updatePanel,
     deletePanel,
     generatePanel,
     generateAll,
+    movePanel,
   };
 }

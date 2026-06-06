@@ -5,6 +5,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { ComicEditor } from "@/components/studio/ComicEditor";
 import { Dashboard } from "@/components/studio/Dashboard";
 import { ExportModal } from "@/components/studio/ExportModal";
@@ -12,10 +13,12 @@ import { SideNavigation } from "@/components/studio/SideNavigation";
 import { StoryboardWorkspace } from "@/components/studio/StoryboardWorkspace";
 import { TextImport } from "@/components/studio/TextImport";
 import { TopBar } from "@/components/studio/TopBar";
+import { SettingsModal } from "@/components/studio/SettingsModal";
 import { useComicStudioState } from "@/hooks/useComicStudioState";
 
 export function ComicStudioApp() {
   const { state, actions } = useComicStudioState();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <main className="flex h-screen min-h-[720px] bg-[#09090b] text-zinc-100 font-sans">
@@ -27,6 +30,7 @@ export function ComicStudioApp() {
           onGenerateAll={() => void actions.generateAll()}
           onExport={() => actions.setExportOpen(true)}
           isGeneratingAll={state.isGeneratingAll}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
         <ActiveView state={state} actions={actions} />
       </section>
@@ -40,6 +44,14 @@ export function ComicStudioApp() {
             actions.setExportOpen(false);
             actions.setView("storyboard");
           }}
+        />
+      ) : null}
+      {isSettingsOpen ? (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          activeProject={state.activeProject}
+          onUpdateProjectStyle={actions.updateProjectStyle}
         />
       ) : null}
     </main>
@@ -70,7 +82,7 @@ function ActiveView({
         isAnalyzing={state.isAnalyzingStory}
         setTitle={actions.setStoryTitle}
         setStoryText={actions.setStoryText}
-        onAnalyze={() => void actions.analyzeStory()}
+        onAnalyze={(style) => void actions.analyzeStory(style)}
       />
     );
   }
@@ -121,6 +133,7 @@ function ActiveView({
       onDeletePanel={actions.deletePanel}
       onGoToComic={() => actions.setView("comic")}
       onUpdateCharacter={actions.updateCharacter}
+      onMovePanel={actions.movePanel}
     />
   );
 }

@@ -51,28 +51,28 @@ describe("studio API contracts", () => {
   });
 
   it("should normalize AI panels into app panel records", () => {
-    const panels = normalizeStoryboardAiResponse(
-      {
-        panels: [
-          {
-            orderIndex: 2,
-            scenePrompt: "A red-robed traveler kicks open the inn door.",
-            characters: ["Lei Wujie"],
-            dialogue: "Lei Wujie: Noodles!",
-          },
-          {
-            orderIndex: 1,
-            scenePrompt: "A quiet inn waits under heavy snow.",
-            characters: ["Xiao Se"],
-            dialogue: "Xiao Se: Empty tables again.",
-          },
-        ],
-      },
-    );
+    const panels = normalizeStoryboardAiResponse({
+      panels: [
+        {
+          orderIndex: 2,
+          scenePrompt: "A red-robed traveler kicks open the inn door.",
+          characters: ["Lei Wujie"],
+          dialogue: "Lei Wujie: Noodles!",
+        },
+        {
+          orderIndex: 1,
+          scenePrompt: "A quiet inn waits under heavy snow.",
+          characters: ["Xiao Se"],
+          dialogue: "Xiao Se: Empty tables again.",
+        },
+      ],
+    });
 
     expect(panels).toHaveLength(2);
     panels.forEach((panel) => {
-      expect(panel.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      expect(panel.id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      );
     });
     expect(panels[0]).toMatchObject({
       orderIndex: 1,

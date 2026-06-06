@@ -35,7 +35,9 @@ export function BubbleTools({
       </button>
 
       <div className="rounded-xl border border-zinc-800 bg-[#18181b] p-4">
-        <div className="mb-3 text-sm font-semibold text-zinc-200">Bong bóng được chọn</div>
+        <div className="mb-3 text-sm font-semibold text-zinc-200">
+          Bong bóng được chọn
+        </div>
         {selectedBubble ? (
           <SelectedBubbleForm
             selectedBubble={selectedBubble}
@@ -44,7 +46,8 @@ export function BubbleTools({
           />
         ) : (
           <p className="text-sm leading-6 text-zinc-400">
-            Chọn một bong bóng trên hình preview hoặc thêm mới một bong bóng thoại.
+            Chọn một bong bóng trên hình preview hoặc thêm mới một bong bóng
+            thoại.
           </p>
         )}
       </div>
@@ -81,14 +84,18 @@ function SelectedBubbleForm({
         <div>
           <div className="mb-1 flex justify-between text-xs text-zinc-400">
             <span>Chiều rộng</span>
-            <span className="font-semibold text-zinc-200">{selectedBubble.width}%</span>
+            <span className="font-semibold text-zinc-200">
+              {selectedBubble.width}%
+            </span>
           </div>
           <input
             type="range"
             min="10"
             max="100"
             value={selectedBubble.width}
-            onChange={(e) => onUpdateBubble({ width: parseInt(e.target.value) })}
+            onChange={(e) =>
+              onUpdateBubble({ width: parseInt(e.target.value) })
+            }
             className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-800 accent-violet-500"
           />
         </div>
@@ -96,22 +103,30 @@ function SelectedBubbleForm({
         <div>
           <div className="mb-1 flex justify-between text-xs text-zinc-400">
             <span>Chiều cao</span>
-            <span className="font-semibold text-zinc-200">{selectedBubble.height}%</span>
+            <span className="font-semibold text-zinc-200">
+              {selectedBubble.height}%
+            </span>
           </div>
           <input
             type="range"
             min="5"
             max="80"
             value={selectedBubble.height}
-            onChange={(e) => onUpdateBubble({ height: parseInt(e.target.value) })}
+            onChange={(e) =>
+              onUpdateBubble({ height: parseInt(e.target.value) })
+            }
             className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-800 accent-violet-500"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400">
-        <div className="rounded-md bg-zinc-950 p-2 text-center">Tọa độ X: {selectedBubble.x}%</div>
-        <div className="rounded-md bg-zinc-950 p-2 text-center">Tọa độ Y: {selectedBubble.y}%</div>
+        <div className="rounded-md bg-zinc-950 p-2 text-center">
+          Tọa độ X: {selectedBubble.x}%
+        </div>
+        <div className="rounded-md bg-zinc-950 p-2 text-center">
+          Tọa độ Y: {selectedBubble.y}%
+        </div>
       </div>
 
       <button

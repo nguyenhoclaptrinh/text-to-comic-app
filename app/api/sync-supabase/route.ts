@@ -8,7 +8,7 @@ import type { StudioSnapshot, Panel, Character } from "@/lib/studio/types";
 
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null);
-  
+
   if (!body || typeof body !== "object") {
     return NextResponse.json(
       { code: "INVALID_PAYLOAD", message: "Snapshot payload is required." },
@@ -17,12 +17,19 @@ export async function POST(request: Request) {
   }
 
   const snapshot = body as StudioSnapshot;
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const url =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const anonKey =
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "";
 
   if (!url || !anonKey) {
     return NextResponse.json(
-      { code: "NOT_CONFIGURED", message: "Supabase connection is not configured on the server." },
+      {
+        code: "NOT_CONFIGURED",
+        message: "Supabase connection is not configured on the server.",
+      },
       { status: 503 },
     );
   }
@@ -30,8 +37,8 @@ export async function POST(request: Request) {
   try {
     const headers = {
       "Content-Type": "application/json",
-      "apikey": anonKey,
-      "Authorization": `Bearer ${anonKey}`,
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
     };
 
     const projectPayload = {
@@ -42,27 +49,33 @@ export async function POST(request: Request) {
     };
 
     // 1. Upsert Project
-    const projectRes = await fetch(`${url}/rest/v1/projects?id=eq.${snapshot.activeProjectId}`, {
-      method: "PUT",
-      headers: {
-        ...headers,
-        "Prefer": "resolution=merge-duplicates,return=representation",
+    const projectRes = await fetch(
+      `${url}/rest/v1/projects?id=eq.${encodeURIComponent(snapshot.activeProjectId)}`,
+      {
+        method: "PUT",
+        headers: {
+          ...headers,
+          Prefer: "resolution=merge-duplicates,return=representation",
+        },
+        body: JSON.stringify({
+          id: snapshot.activeProjectId,
+          ...projectPayload,
+        }),
       },
-      body: JSON.stringify({
-        id: snapshot.activeProjectId,
-        ...projectPayload,
-      }),
-    });
+    );
 
     if (!projectRes.ok) {
       throw new Error(`Failed to upsert project: ${projectRes.statusText}`);
     }
 
     // 2. Sync Characters (Bulk Delete and Insert)
-    await fetch(`${url}/rest/v1/characters?project_id=eq.${snapshot.activeProjectId}`, {
-      method: "DELETE",
-      headers,
-    });
+    await fetch(
+      `${url}/rest/v1/characters?project_id=eq.${encodeURIComponent(snapshot.activeProjectId)}`,
+      {
+        method: "DELETE",
+        headers,
+      },
+    );
 
     if (snapshot.characters.length > 0) {
       const charactersPayload = snapshot.characters.map((char: Character) => ({
@@ -77,7 +90,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: {
           ...headers,
-          "Prefer": "return=minimal",
+          Prefer: "return=minimal",
         },
         body: JSON.stringify(charactersPayload),
       });
@@ -87,17 +100,20 @@ export async function POST(request: Request) {
     const pageIds = snapshot.pages.map((page) => page.id);
     if (pageIds.length > 0) {
       await fetch(
-        `${url}/rest/v1/pages?project_id=eq.${snapshot.activeProjectId}&id=not.in.(${pageIds.join(",")})`,
+        `${url}/rest/v1/pages?project_id=eq.${encodeURIComponent(snapshot.activeProjectId)}&id=not.in.(${pageIds.map(encodeURIComponent).join(",")})`,
         {
           method: "DELETE",
           headers,
-        }
+        },
       );
     } else {
-      await fetch(`${url}/rest/v1/pages?project_id=eq.${snapshot.activeProjectId}`, {
-        method: "DELETE",
-        headers,
-      });
+      await fetch(
+        `${url}/rest/v1/pages?project_id=eq.${encodeURIComponent(snapshot.activeProjectId)}`,
+        {
+          method: "DELETE",
+          headers,
+        },
+      );
     }
 
     if (snapshot.pages.length > 0) {
@@ -112,7 +128,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: {
           ...headers,
-          "Prefer": "resolution=merge-duplicates,return=minimal",
+          Prefer: "resolution=merge-duplicates,return=minimal",
         },
         body: JSON.stringify(pagesPayload),
       });
@@ -131,17 +147,20 @@ export async function POST(request: Request) {
     const panelIds = allPanels.map((panel) => panel.id);
     if (panelIds.length > 0) {
       await fetch(
-        `${url}/rest/v1/panels?project_id=eq.${snapshot.activeProjectId}&id=not.in.(${panelIds.join(",")})`,
+        `${url}/rest/v1/panels?project_id=eq.${encodeURIComponent(snapshot.activeProjectId)}&id=not.in.(${panelIds.map(encodeURIComponent).join(",")})`,
         {
           method: "DELETE",
           headers,
-        }
+        },
       );
     } else {
-      await fetch(`${url}/rest/v1/panels?project_id=eq.${snapshot.activeProjectId}`, {
-        method: "DELETE",
-        headers,
-      });
+      await fetch(
+        `${url}/rest/v1/panels?project_id=eq.${encodeURIComponent(snapshot.activeProjectId)}`,
+        {
+          method: "DELETE",
+          headers,
+        },
+      );
     }
 
     if (panelsWithPage.length > 0) {
@@ -165,7 +184,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: {
           ...headers,
-          "Prefer": "resolution=merge-duplicates,return=minimal",
+          Prefer: "resolution=merge-duplicates,return=minimal",
         },
         body: JSON.stringify(panelsPayload),
       });
@@ -178,10 +197,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: "Sync successful." });
   } catch (error) {
     console.error("[Supabase Server Sync Error]", error);
-    const message = error instanceof Error ? error.message : "Failed to synchronize snapshot to Supabase.";
-    return NextResponse.json(
-      { code: "SYNC_FAILED", message },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to synchronize snapshot to Supabase.";
+    return NextResponse.json({ code: "SYNC_FAILED", message }, { status: 500 });
   }
 }

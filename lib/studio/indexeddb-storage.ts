@@ -28,7 +28,10 @@ export function openDatabase(): Promise<IDBDatabase> {
   });
 }
 
-export async function writeImage(key: string, base64Data: string): Promise<void> {
+export async function writeImage(
+  key: string,
+  base64Data: string,
+): Promise<void> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");

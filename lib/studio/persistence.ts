@@ -108,21 +108,31 @@ export function normalizeSnapshot(snapshot: StudioSnapshot): StudioSnapshot {
 
   const normalizedPages = (pages || []).map((page) => ({
     ...page,
-    panels: page.panels.map((panel) =>
-      panel.status === "generating"
+    panels: page.panels.map((panel) => {
+      const basePanel = {
+        ...panel,
+        style: panel.style || "inherit",
+      };
+      return panel.status === "generating"
         ? {
-            ...panel,
+            ...basePanel,
             status: "error" as const,
             errorMessage: INTERRUPTED_GENERATION_ERROR,
           }
-        : panel,
-    ),
+        : basePanel;
+    }),
+  }));
+
+  const normalizedProjects = (snapshot.projects || []).map((project) => ({
+    ...project,
+    style: project.style || "webtoon",
   }));
 
   return {
     ...snapshot,
     activePageId: activePageId || `page-${snapshot.activeProjectId}-default`,
     pages: normalizedPages,
+    projects: normalizedProjects,
   };
 }
 
@@ -225,7 +235,9 @@ function warnPersistenceIssue(
   console.warn("[StudioPersistence]", code, originalError);
 }
 
-async function extractAndSaveBase64Images(snapshot: StudioSnapshot): Promise<StudioSnapshot> {
+async function extractAndSaveBase64Images(
+  snapshot: StudioSnapshot,
+): Promise<StudioSnapshot> {
   if (typeof window === "undefined") {
     return snapshot;
   }
@@ -249,14 +261,14 @@ async function extractAndSaveBase64Images(snapshot: StudioSnapshot): Promise<Stu
             }
           }
           return panel;
-        })
+        }),
       );
 
       return {
         ...page,
         panels: cleanPanels,
       };
-    })
+    }),
   );
 
   const cleanPanels = snapshot.panels
@@ -275,7 +287,7 @@ async function extractAndSaveBase64Images(snapshot: StudioSnapshot): Promise<Stu
             }
           }
           return panel;
-        })
+        }),
       )
     : undefined;
 

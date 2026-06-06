@@ -3,6 +3,7 @@
  * @description Storyboard response normalization and fallback creation.
  */
 
+import { chunkStoryText } from "@/lib/server/chunking-engine";
 import { createMockPanels } from "@/lib/studio/utils";
 import type {
   StoryboardAiResponse,
@@ -22,17 +23,20 @@ export function createFallbackStoryboardResponse(
   projectId = crypto.randomUUID(),
   warning = "Gemini is not configured. Using deterministic fallback storyboard.",
 ): StoryboardResponse {
-  const panels = createMockPanels(storyText);
+  const chunks = chunkStoryText(storyText, 4500);
+  const pages = chunks.map((chunk, index) => {
+    const panels = createMockPanels(chunk);
+    return {
+      id: crypto.randomUUID(),
+      projectId,
+      orderIndex: index + 1,
+      title: `Page ${index + 1}`,
+      panels,
+    };
+  });
+
   return {
-    pages: [
-      {
-        id: crypto.randomUUID(),
-        projectId,
-        orderIndex: 1,
-        title: "Page 1",
-        panels,
-      },
-    ],
+    pages,
     source: "fallback",
     warning,
   };
@@ -53,6 +57,7 @@ export function normalizeStoryboardAiResponse(
       imageTone: PANEL_IMAGE_TONES[index % PANEL_IMAGE_TONES.length],
       bubbles: [],
       seed: Math.floor(Math.random() * 1000000),
+      style: "inherit",
     }));
 }
 

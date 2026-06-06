@@ -23,9 +23,12 @@ export function Dashboard({
     <div className="flex-1 overflow-y-auto px-4 py-6 lg:px-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">Dự án của tôi</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
+            Dự án của tôi
+          </h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Tiếp tục bản nháp, vẽ lại các khung hình bị lỗi hoặc bắt đầu tạo một truyện tranh mới.
+            Tiếp tục bản nháp, vẽ lại các khung hình bị lỗi hoặc bắt đầu tạo một
+            truyện tranh mới.
           </p>
         </div>
         <button
@@ -47,7 +50,8 @@ export function Dashboard({
             Hành trình sáng tạo bắt đầu từ đây!
           </h3>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-400">
-            Biến câu chuyện chữ của bạn thành những trang truyện tranh/webtoon sống động với sức mạnh trí tuệ nhân tạo Gemini.
+            Biến câu chuyện chữ của bạn thành những trang truyện tranh/webtoon
+            sống động với sức mạnh trí tuệ nhân tạo Gemini.
           </p>
           <button
             type="button"
@@ -88,7 +92,9 @@ function ProjectCard({
       type="button"
       onClick={onSelect}
       className={`min-h-56 rounded-xl border bg-[#18181b] p-4 text-left transition hover:border-violet-400/50 ${
-        selected ? "border-violet-400/60 shadow-lg shadow-violet-500/5" : "border-zinc-800"
+        selected
+          ? "border-violet-400/60 shadow-lg shadow-violet-500/5"
+          : "border-zinc-800"
       }`}
     >
       <div

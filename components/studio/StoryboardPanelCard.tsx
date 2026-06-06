@@ -3,7 +3,7 @@
  * @description Editable storyboard panel card with generation controls.
  */
 
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 import { CharacterChips } from "@/components/studio/CharacterChips";
 import { EditablePanelText } from "@/components/studio/EditablePanelText";
@@ -17,20 +17,26 @@ export function StoryboardPanelCard({
   selected,
   disabled,
   canDelete,
+  canMoveUp,
+  canMoveDown,
   onSelect,
   onUpdate,
   onGenerate,
   onDelete,
+  onMove,
 }: {
   panel: Panel;
   characters: Character[];
   selected: boolean;
   disabled: boolean;
   canDelete: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onSelect: () => void;
   onUpdate: (patch: Partial<Panel>) => void;
   onGenerate: () => void;
   onDelete: () => void;
+  onMove: (direction: "up" | "down") => void;
 }) {
   return (
     <article
@@ -42,14 +48,18 @@ export function StoryboardPanelCard({
         panel={panel}
         characters={characters}
         canDelete={canDelete}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
         onSelect={onSelect}
         onUpdate={onUpdate}
         onDelete={onDelete}
+        onMove={onMove}
       />
       <PanelImageControls
         panel={panel}
         disabled={disabled}
         onGenerate={onGenerate}
+        onUpdate={onUpdate}
       />
     </article>
   );
@@ -59,16 +69,22 @@ function PanelTextEditor({
   panel,
   characters,
   canDelete,
+  canMoveUp,
+  canMoveDown,
   onSelect,
   onUpdate,
   onDelete,
+  onMove,
 }: {
   panel: Panel;
   characters: Character[];
   canDelete: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onSelect: () => void;
   onUpdate: (patch: Partial<Panel>) => void;
   onDelete: () => void;
+  onMove: (direction: "up" | "down") => void;
 }) {
   return (
     <div className="p-4">
@@ -83,15 +99,35 @@ function PanelTextEditor({
           </span>
           <StatusBadge status={panel.status} />
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={!canDelete}
-          aria-label={`Delete panel ${panel.orderIndex}`}
-          className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Trash2 size={15} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onMove("up")}
+            disabled={!canMoveUp}
+            aria-label={`Move panel ${panel.orderIndex} up`}
+            className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30 transition"
+          >
+            <ChevronUp size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onMove("down")}
+            disabled={!canMoveDown}
+            aria-label={`Move panel ${panel.orderIndex} down`}
+            className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30 transition"
+          >
+            <ChevronDown size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={!canDelete}
+            aria-label={`Delete panel ${panel.orderIndex}`}
+            className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 transition"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
       </div>
 
       <EditablePanelText panel={panel} onUpdate={onUpdate} />

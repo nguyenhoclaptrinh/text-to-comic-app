@@ -9,16 +9,16 @@ test("creates, generates, edits, and exports a comic", async ({ page }) => {
   await page.goto("/");
 
   await page.getByRole("button", { name: "Import" }).click();
-  await page.getByLabel("Project title").fill("E2E Snow Road");
+  await page.getByLabel("Tiêu đề truyện tranh").fill("E2E Snow Road");
   await page
-    .getByLabel("Original story text")
+    .getByLabel("Nội dung câu chuyện chữ gốc")
     .fill(
       "Snow covered the mountain road while a quiet inn waited for guests. A young innkeeper watched the door. A cheerful traveler entered with a loud request for noodles.",
     );
-  await page.getByRole("button", { name: /Analyze Story/ }).click();
+  await page.getByRole("button", { name: "Phân tích Kịch bản" }).click();
 
   await expect(
-    page.getByRole("heading", { name: "Storyboard Editor" }),
+    page.getByRole("heading", { name: "Biên soạn Storyboard" }),
   ).toBeVisible();
 
   await page
@@ -36,13 +36,15 @@ test("creates, generates, edits, and exports a comic", async ({ page }) => {
     page.getByRole("button", { name: "Regenerate", exact: true }).first(),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Open Comic Editor" }).click();
-  await page.getByRole("button", { name: "Add Bubble" }).click();
-  await page.getByLabel("Text").fill("A guest at last!");
+  await page
+    .getByRole("button", { name: "Mở Trình biên tập Bong bóng" })
+    .click();
+  await page.getByRole("button", { name: "Thêm Bong bóng thoại" }).click();
+  await page.getByLabel("Nội dung hội thoại").fill("A guest at last!");
 
-  await page.getByRole("button", { name: "Export" }).click();
+  await page.getByRole("button", { name: "Xuất truyện" }).click();
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export PNG" }).click();
+  await page.getByRole("button", { name: "Xuất bản & Tải về" }).click();
   const download = await downloadPromise;
 
   expect(download.suggestedFilename()).toContain("e2e-snow-road");

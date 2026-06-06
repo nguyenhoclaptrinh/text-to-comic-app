@@ -26,7 +26,8 @@ export function chunkStoryText(text: string, maxChunkSize = 5000): string[] {
 
   for (const sentence of sentences) {
     // Độ dài ước tính khi cộng câu mới (bao gồm khoảng trắng phân cách)
-    const estimatedLength = currentLength + (currentLength > 0 ? 1 : 0) + sentence.length;
+    const estimatedLength =
+      currentLength + (currentLength > 0 ? 1 : 0) + sentence.length;
 
     if (estimatedLength <= maxChunkSize) {
       currentChunk.push(sentence);
@@ -36,7 +37,7 @@ export function chunkStoryText(text: string, maxChunkSize = 5000): string[] {
       if (currentChunk.length > 0) {
         chunks.push(currentChunk.join(" "));
       }
-      
+
       // Khởi tạo đoạn mới bằng câu hiện hành
       currentChunk = [sentence];
       currentLength = sentence.length;

@@ -53,9 +53,12 @@ export class SupabaseStudioRepository implements StudioRepository {
   private async syncFromSupabase(): Promise<void> {
     try {
       // Gọi PostgREST endpoint lấy project mới nhất của user kèm pages và panels lồng nhau
-      const response = await fetch(`${this.url}/rest/v1/projects?select=*,pages(*,panels(*)),characters(*)&order=updated_at.desc&limit=1`, {
-        headers: this.getHeaders(),
-      });
+      const response = await fetch(
+        `${this.url}/rest/v1/projects?select=*,pages(*,panels(*)),characters(*)&order=updated_at.desc&limit=1`,
+        {
+          headers: this.getHeaders(),
+        },
+      );
 
       if (!response.ok) {
         return;
@@ -64,10 +67,16 @@ export class SupabaseStudioRepository implements StudioRepository {
       const data = await response.json();
       if (Array.isArray(data) && data.length > 0) {
         const dbProject = data[0] as { title?: string };
-        console.log("[Supabase Sync] Cực bộ đã được đồng bộ với DB. Project:", dbProject.title);
+        console.log(
+          "[Supabase Sync] Cực bộ đã được đồng bộ với DB. Project:",
+          dbProject.title,
+        );
       }
     } catch (error) {
-      console.warn("[Supabase Sync] Không thể đồng bộ dữ liệu từ cloud:", error);
+      console.warn(
+        "[Supabase Sync] Không thể đồng bộ dữ liệu từ cloud:",
+        error,
+      );
     }
   }
 
@@ -83,7 +92,9 @@ export class SupabaseStudioRepository implements StudioRepository {
         throw new Error(`Sync API proxy returned status ${response.status}`);
       }
 
-      console.log("[Supabase Sync] Đồng bộ đám mây thành công qua Next.js API Route Proxy.");
+      console.log(
+        "[Supabase Sync] Đồng bộ đám mây thành công qua Next.js API Route Proxy.",
+      );
     } catch (error) {
       console.warn("[Supabase Sync] Lỗi đồng bộ đám mây qua API Proxy:", error);
     }
@@ -92,8 +103,8 @@ export class SupabaseStudioRepository implements StudioRepository {
   private getHeaders(): Record<string, string> {
     return {
       "Content-Type": "application/json",
-      "apikey": this.anonKey,
-      "Authorization": `Bearer ${this.anonKey}`,
+      apikey: this.anonKey,
+      Authorization: `Bearer ${this.anonKey}`,
     };
   }
 }

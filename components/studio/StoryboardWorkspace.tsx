@@ -28,6 +28,7 @@ export function StoryboardWorkspace({
   onGeneratePanel,
   onDeletePanel,
   onGoToComic,
+  onMovePanel,
 }: {
   characters: Character[];
   pages: Page[];
@@ -45,6 +46,7 @@ export function StoryboardWorkspace({
   onGeneratePanel: (panelId: string) => void;
   onDeletePanel: (panelId: string) => void;
   onGoToComic: () => void;
+  onMovePanel: (panelId: string, direction: "up" | "down") => void;
 }) {
   const [isCastingOpen, setIsCastingOpen] = useState(false);
   const hasBackendError = panels.some((panel) => panel.status === "error");
@@ -62,12 +64,12 @@ export function StoryboardWorkspace({
       {/* Vùng biên tập Storyboard bên phải */}
       <section className="min-w-0 overflow-y-auto px-4 py-5 lg:px-6">
         {hasBackendError ? <ImageBackendAlert /> : null}
-        
-        <StoryboardHeader 
-          onGoToComic={onGoToComic} 
+
+        <StoryboardHeader
+          onGoToComic={onGoToComic}
           onOpenCasting={() => setIsCastingOpen(true)}
         />
-        
+
         <PageSelector
           pages={pages}
           activePageId={activePageId}
@@ -77,7 +79,7 @@ export function StoryboardWorkspace({
         />
 
         <div className="space-y-4 pb-8">
-          {panels.map((panel) => (
+          {panels.map((panel, index) => (
             <StoryboardPanelCard
               key={panel.id}
               panel={panel}
@@ -85,10 +87,13 @@ export function StoryboardWorkspace({
               selected={panel.id === selectedPanelId}
               disabled={isGeneratingAll}
               canDelete={panels.length > 1}
+              canMoveUp={index > 0}
+              canMoveDown={index < panels.length - 1}
               onSelect={() => onSelectPanel(panel.id)}
               onUpdate={(patch) => onUpdatePanel(panel.id, patch)}
               onGenerate={() => onGeneratePanel(panel.id)}
               onDelete={() => onDeletePanel(panel.id)}
+              onMove={(direction) => onMovePanel(panel.id, direction)}
             />
           ))}
         </div>
@@ -103,7 +108,9 @@ export function StoryboardWorkspace({
         <div className="fixed inset-0 z-40 flex bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-200">
           <div className="relative flex h-full w-[288px] flex-col border-r border-zinc-800 bg-[#111114] p-4 shadow-2xl animate-in slide-in-from-left duration-300">
             <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
-              <span className="font-semibold text-zinc-200">👥 Casting Nhân vật</span>
+              <span className="font-semibold text-zinc-200">
+                👥 Casting Nhân vật
+              </span>
               <button
                 onClick={() => setIsCastingOpen(false)}
                 className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
@@ -137,17 +144,18 @@ function ImageBackendAlert() {
       <div>
         <div className="font-semibold">Hệ thống vẽ ảnh cần lưu ý</div>
         <div className="mt-1 text-red-100/80">
-          Các khung hình bị lỗi vẽ ảnh vẫn giữ nguyên văn bản mô tả bối cảnh và lời thoại, bạn có thể thực hiện thử vẽ lại riêng lẻ từng khung hình.
+          Các khung hình bị lỗi vẽ ảnh vẫn giữ nguyên văn bản mô tả bối cảnh và
+          lời thoại, bạn có thể thực hiện thử vẽ lại riêng lẻ từng khung hình.
         </div>
       </div>
     </div>
   );
 }
 
-function StoryboardHeader({ 
+function StoryboardHeader({
   onGoToComic,
-  onOpenCasting 
-}: { 
+  onOpenCasting,
+}: {
   onGoToComic: () => void;
   onOpenCasting: () => void;
 }) {
@@ -155,7 +163,9 @@ function StoryboardHeader({
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-zinc-100">Biên soạn Storyboard</h1>
+          <h1 className="text-xl font-semibold text-zinc-100">
+            Biên soạn Storyboard
+          </h1>
           {/* Nút mở Casting nhanh trên mobile (< 1024px) */}
           <button
             type="button"
@@ -167,7 +177,8 @@ function StoryboardHeader({
           </button>
         </div>
         <p className="mt-1 text-sm text-zinc-400">
-          Xem xét và điều chỉnh mô tả bối cảnh, lời thoại nhân vật và trạng thái vẽ tranh.
+          Xem xét và điều chỉnh mô tả bối cảnh, lời thoại nhân vật và trạng thái
+          vẽ tranh.
         </p>
       </div>
       <button

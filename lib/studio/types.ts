@@ -51,6 +51,7 @@ export type Panel = {
   errorMessage?: string;
   bubbles: Bubble[];
   seed: number;
+  style?: "inherit" | "manga" | "webtoon" | "western";
 };
 
 export type Project = {
@@ -59,6 +60,7 @@ export type Project = {
   status: ProjectStatus;
   updatedAt: string;
   panelCount: number;
+  style?: string;
 };
 
 export type DragState = {
@@ -66,6 +68,8 @@ export type DragState = {
   bubbleId: string;
   offsetX: number;
   offsetY: number;
+  bubbleWidth: number;
+  bubbleHeight: number;
 };
 
 export type GenerationSummary = {

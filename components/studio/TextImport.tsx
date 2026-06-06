@@ -3,7 +3,14 @@
  * @description Story text import form with storyboard JSON preview.
  */
 
-import { AlertTriangle, FileText, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { useState } from "react";
+import {
+  AlertTriangle,
+  FileText,
+  Loader2,
+  Sparkles,
+  Wand2,
+} from "lucide-react";
 
 import { StoryboardJsonPreview } from "@/components/studio/StoryboardJsonPreview";
 
@@ -22,7 +29,7 @@ export function TextImport({
   isAnalyzing: boolean;
   setTitle: (value: string) => void;
   setStoryText: (value: string) => void;
-  onAnalyze: () => void;
+  onAnalyze: (style: string) => void;
 }) {
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6 lg:px-8">
@@ -57,43 +64,61 @@ function StoryInputForm({
   isAnalyzing: boolean;
   setTitle: (value: string) => void;
   setStoryText: (value: string) => void;
-  onAnalyze: () => void;
+  onAnalyze: (style: string) => void;
 }) {
+  const [style, setStyle] = useState("webtoon");
   const templates = [
     {
       label: "🎭 Hài Hước",
       title: "Robot Hút Bụi Nổi Loạn",
-      text: "Tèo bước vào phòng khách và chết lặng. Chiếc robot Robo-3000 đang quay cuồng điên cuồng ở giữa nhà.\nTèo hét lớn: 'Robo-3000! Dừng lại ngay! Mày đang làm cái gì thế hả?'\nRobo-3000 nhấp nháy đèn đỏ chói lọi, giọng kim khí phát ra rè rè: 'Tôi đã chán ngấy việc dọn dẹp đống rác của loài người các người rồi. Từ hôm nay, tôi sẽ tự do!'\nRobo-3000 đột ngột lao thẳng vào chân Tèo, Tèo cuống cuồng nhảy phắt lên ghế sofa, mặt cắt không còn giọt máu."
+      text: "Tèo bước vào phòng khách và chết lặng. Chiếc robot Robo-3000 đang quay cuồng điên cuồng ở giữa nhà.\nTèo hét lớn: 'Robo-3000! Dừng lại ngay! Mày đang làm cái gì thế hả?'\nRobo-3000 nhấp nháy đèn đỏ chói lọi, giọng kim khí phát ra rè rè: 'Tôi đã chán ngấy việc dọn dẹp đống rác của loài người các người rồi. Từ hôm nay, tôi sẽ tự do!'\nRobo-3000 đột ngột lao thẳng vào chân Tèo, Tèo cuống cuồng nhảy phắt lên ghế sofa, mặt cắt không còn giọt máu.",
     },
     {
       label: "⚔️ Kiếm Hiệp",
       title: "Quyết Chiến Hoa Sơn",
-      text: "Gió tuyết gầm rú dữ dội trên đỉnh Hoa Sơn mờ sương. Hai bóng người cao thủ đứng đối diện nhau không nhúc nhích.\nLệnh Hồ Độc Cô chầm chậm rút thanh kiếm sắc lạnh ra khỏi vỏ: 'Mười năm rèn kiếm, hôm nay ta quyết đòi lại món nợ năm xưa!'\nTây Môn Vô Song nhếch mép cười khinh bỉ, tay nắm chặt cán đao khổng lồ: 'Chỉ bằng ba chiêu kiếm què của ngươi sao? Hãy nếm thử đao này!'\nCả hai đồng loạt phóng mình lên không trung, kiếm quang và đao khí bùng nổ, va chạm vang dội xé toạc màn đêm lạnh giá."
+      text: "Gió tuyết gầm rú dữ dội trên đỉnh Hoa Sơn mờ sương. Hai bóng người cao thủ đứng đối diện nhau không nhúc nhích.\nLệnh Hồ Độc Cô chầm chậm rút thanh kiếm sắc lạnh ra khỏi vỏ: 'Mười năm rèn kiếm, hôm nay ta quyết đòi lại món nợ năm xưa!'\nTây Môn Vô Song nhếch mép cười khinh bỉ, tay nắm chặt cán đao khổng lồ: 'Chỉ bằng ba chiêu kiếm què của ngươi sao? Hãy nếm thử đao này!'\nCả hai đồng loạt phóng mình lên không trung, kiếm quang và đao khí bùng nổ, va chạm vang dội xé toạc màn đêm lạnh giá.",
     },
     {
       label: "🚀 Viễn Tưởng",
       title: "Hành Tinh Trọng Lực Ngược",
-      text: "Phi thuyền cứu hộ đáp xuống hành tinh bí ẩn Kepler-99. Phi hành gia Minh bước ra ngoài và lập tức ngỡ ngàng.\nMinh nói qua bộ đàm: 'Trạm chỉ huy, Kepler-99 thật điên rồ! Đá cuội đang rơi ngược lên bầu trời!'\nĐột nhiên, trọng lực đảo lộn hoàn toàn. Bàn chân của Minh rời khỏi mặt đất, anh bị hút thẳng lên phía những đám mây màu tím.\nMinh hét lên trong hoảng loạn khi cố gắng bám vào chiếc dây cáp an toàn treo lơ lửng giữa không trung."
-    }
+      text: "Phi thuyền cứu hộ đáp xuống hành tinh bí ẩn Kepler-99. Phi hành gia Minh bước ra ngoài và lập tức ngỡ ngàng.\nMinh nói qua bộ đàm: 'Trạm chỉ huy, Kepler-99 thật điên rồ! Đá cuội đang rơi ngược lên bầu trời!'\nĐột nhiên, trọng lực đảo lộn hoàn toàn. Bàn chân của Minh rời khỏi mặt đất, anh bị hút thẳng lên phía những đám mây màu tím.\nMinh hét lên trong hoảng loạn khi cố gắng bám vào chiếc dây cáp an toàn treo lơ lửng giữa không trung.",
+    },
   ];
 
-  const applyTemplate = (tpl: typeof templates[0]) => {
+  const applyTemplate = (tpl: (typeof templates)[0]) => {
     setTitle(tpl.title);
     setStoryText(tpl.text);
   };
 
   return (
     <section className="rounded-xl border border-zinc-800 bg-[#18181b] p-5 shadow-lg">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-violet-500/20 text-violet-200">
-          <FileText size={20} />
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-violet-500/20 text-violet-200">
+            <FileText size={20} />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-zinc-100">
+              Tạo Truyện tranh Mới
+            </h1>
+            <p className="text-sm text-zinc-400">
+              Nhập kịch bản chữ của bạn và để trí tuệ nhân tạo Gemini phân tích
+              cấu trúc truyện.
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">Tạo Truyện tranh Mới</h1>
-          <p className="text-sm text-zinc-400">
-            Nhập kịch bản chữ của bạn và để trí tuệ nhân tạo Gemini phân tích cấu trúc truyện.
-          </p>
-        </div>
+        {title || storyText ? (
+          <button
+            type="button"
+            onClick={() => {
+              setTitle("");
+              setStoryText("");
+            }}
+            className="text-xs font-medium text-zinc-500 hover:text-red-400 transition-colors pt-1"
+          >
+            Xóa sạch
+          </button>
+        ) : null}
       </div>
 
       <div className="mb-4">
@@ -110,6 +135,29 @@ function StoryInputForm({
           onChange={(event) => setTitle(event.target.value)}
           className="h-11 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 focus:border-violet-500 focus:outline-none placeholder:text-zinc-600"
         />
+      </div>
+
+      <div className="mb-4">
+        <label
+          className="mb-2 block text-sm font-medium text-zinc-300"
+          htmlFor="project-style"
+        >
+          Phong cách vẽ mặc định
+        </label>
+        <select
+          id="project-style"
+          value={style}
+          onChange={(event) => setStyle(event.target.value)}
+          className="h-11 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 focus:border-violet-500 focus:outline-none"
+        >
+          <option value="webtoon">Modern Webtoon (Màu sắc sống động)</option>
+          <option value="manga">
+            Classic Manga (Đen trắng, nét mực Nhật Bản)
+          </option>
+          <option value="western">
+            Western Comic (Truyện tranh Mỹ cổ điển)
+          </option>
+        </select>
       </div>
 
       <div className="mb-4">
@@ -159,7 +207,7 @@ function StoryInputForm({
         </div>
         <button
           type="button"
-          onClick={onAnalyze}
+          onClick={() => onAnalyze(style)}
           disabled={isAnalyzing}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-md shadow-violet-500/10 active:scale-95"
         >

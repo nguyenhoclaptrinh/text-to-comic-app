@@ -22,6 +22,7 @@ export function createProject(projectId: string, storyTitle: string): Project {
     status: "storyboard",
     updatedAt: "Just now",
     panelCount: 3,
+    style: "webtoon",
   };
 }
 

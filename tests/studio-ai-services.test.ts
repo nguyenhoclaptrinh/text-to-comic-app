@@ -57,8 +57,11 @@ describe("studio AI services", () => {
               projectId: "project-1",
               orderIndex: 1,
               title: "Page 1",
-              panels: PANELS_SEED.map((panel) => ({ ...panel, status: "draft" })),
-            }
+              panels: PANELS_SEED.map((panel) => ({
+                ...panel,
+                status: "draft",
+              })),
+            },
           ],
         }),
       }),
@@ -89,7 +92,9 @@ describe("studio AI services", () => {
 
     expect(pages).toHaveLength(1);
     expect(pages[0].panels).toHaveLength(3);
-    expect(pages[0].panels[0].id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    expect(pages[0].panels[0].id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
   });
 
   it("should map browser storyboard API failures to typed errors", async () => {

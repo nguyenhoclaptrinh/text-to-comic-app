@@ -4,6 +4,8 @@
  */
 
 import { createCachedPanelImage } from "@/lib/studio/cached-images";
+import { slugifyCharacterName } from "@/lib/studio/storyboard";
+import { COMIC_STYLE_MODIFIERS } from "@/lib/studio/constants";
 import type {
   GeneratePanelRequest,
   GeneratePanelResponse,
@@ -11,8 +13,9 @@ import type {
 
 export async function generatePanelImageFromProvider(
   input: GeneratePanelRequest,
+  customHfToken?: string,
 ): Promise<GeneratePanelResponse> {
-  const response = await generateRawPanelImage(input);
+  const response = await generateRawPanelImage(input, customHfToken);
   const cloudUrl = await uploadToSupabaseStorage(
     input.panel.id,
     input.panel.seed,
@@ -22,62 +25,88 @@ export async function generatePanelImageFromProvider(
   return {
     ...response,
     imageUrl: cloudUrl,
-    source: cloudUrl.startsWith("http") && !cloudUrl.startsWith("data:") ? "image-backend" : response.source,
+    source:
+      cloudUrl.startsWith("http") && !cloudUrl.startsWith("data:")
+        ? "image-backend"
+        : response.source,
   };
 }
 
 async function generateRawPanelImage(
   input: GeneratePanelRequest,
+  customHfToken?: string,
 ): Promise<GeneratePanelResponse> {
   if (input.panel.scenePrompt.toLowerCase().includes("[offline]")) {
     throw new Error("Image backend is offline.");
   }
 
+  // 1. Thử dùng IMAGE_BACKEND_URL trước
   const endpoint = process.env.IMAGE_BACKEND_URL;
-  if (!endpoint) {
-    return createFallbackPanelImageResponse(
-      input,
-      "Image backend is not configured.",
-    );
+  if (endpoint) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: createImagePrompt(input),
+          panel: input.panel,
+          characters: input.characters,
+        }),
+      });
+
+      if (response.ok) {
+        const data: unknown = await response.json();
+        if (isRecord(data) && typeof data.imageUrl === "string") {
+          return {
+            panelId: input.panel.id,
+            imageUrl: data.imageUrl,
+            source: "image-backend",
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("[Image Backend] Failed, trying HuggingFace...", err);
+    }
   }
 
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: createImagePrompt(input),
-        panel: input.panel,
-        characters: input.characters,
-      }),
-    });
-
-    if (!response.ok) {
-      return createFallbackPanelImageResponse(
-        input,
-        `Image backend returned status ${response.status}.`,
+  // 2. Thử dùng Hugging Face Inference API nếu có Token
+  const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
+  if (hfToken) {
+    try {
+      const prompt = createImagePrompt(input);
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${hfToken}`,
+          },
+          body: JSON.stringify({ inputs: prompt }),
+        },
       );
-    }
 
-    const data: unknown = await response.json();
-    if (isRecord(data) && typeof data.imageUrl === "string") {
-      return {
-        panelId: input.panel.id,
-        imageUrl: data.imageUrl,
-        source: "image-backend",
-      };
-    }
+      if (response.ok) {
+        const buffer = await response.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString("base64");
+        const contentType = response.headers.get("content-type") || "image/png";
+        const imageUrl = `data:${contentType};base64,${base64}`;
 
-    return createFallbackPanelImageResponse(
-      input,
-      "Image backend response did not include imageUrl.",
-    );
-  } catch {
-    return createFallbackPanelImageResponse(
-      input,
-      "Image backend request failed.",
-    );
+        return {
+          panelId: input.panel.id,
+          imageUrl,
+          source: "image-backend",
+        };
+      }
+    } catch (err) {
+      console.warn("[Hugging Face] Inference failed:", err);
+    }
   }
+
+  return createFallbackPanelImageResponse(
+    input,
+    "Image backend/HuggingFace is not configured or failed.",
+  );
 }
 
 function createFallbackPanelImageResponse(
@@ -95,14 +124,26 @@ function createFallbackPanelImageResponse(
 function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
   const characterContext = panel.characterIds
     .map((characterId) =>
-      characters.find((character) => character.id === characterId),
+      characters.find(
+        (character) =>
+          character.id === characterId ||
+          slugifyCharacterName(character.name) === characterId,
+      ),
     )
     .filter(isDefined)
     .map((character) => `${character.name}: ${character.description}`)
     .join("\n");
 
+  const resolvedStyle =
+    panel.style && panel.style !== "inherit" ? panel.style : "webtoon";
+  const styleModifier =
+    COMIC_STYLE_MODIFIERS[
+      resolvedStyle as keyof typeof COMIC_STYLE_MODIFIERS
+    ] || COMIC_STYLE_MODIFIERS.webtoon;
+
   return [
     "Create a clean comic panel illustration.",
+    `Style: ${styleModifier}`,
     `Scene: ${panel.scenePrompt}`,
     `Dialogue context: ${panel.dialogue}`,
     characterContext ? `Characters:\n${characterContext}` : "",
@@ -126,7 +167,9 @@ async function uploadToSupabaseStorage(
   imageUrl: string,
 ): Promise<string> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !serviceKey) {
     return imageUrl;
@@ -158,8 +201,8 @@ async function uploadToSupabaseStorage(
     const uploadRes = await fetch(uploadUrl, {
       method: "POST",
       headers: {
-        "apikey": serviceKey,
-        "Authorization": `Bearer ${serviceKey}`,
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
         "Content-Type": contentType,
         "x-upsert": "true",
       },

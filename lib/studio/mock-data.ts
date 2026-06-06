@@ -46,6 +46,7 @@ export const PANELS_SEED: Panel[] = [
       },
     ],
     seed: 42,
+    style: "inherit",
   },
   {
     id: "panel-2",
@@ -58,6 +59,7 @@ export const PANELS_SEED: Panel[] = [
     imageTone: "from-red-950 via-zinc-800 to-amber-950",
     bubbles: [],
     seed: 43,
+    style: "inherit",
   },
   {
     id: "panel-3",
@@ -72,6 +74,7 @@ export const PANELS_SEED: Panel[] = [
       "Image backend offline. Restart Colab or retry with cached images.",
     bubbles: [],
     seed: 44,
+    style: "inherit",
   },
 ];
 
@@ -82,6 +85,7 @@ export const PROJECTS_SEED: Project[] = [
     status: "storyboard",
     updatedAt: "Today",
     panelCount: 3,
+    style: "webtoon",
   },
   {
     id: "project-2",
@@ -89,6 +93,7 @@ export const PROJECTS_SEED: Project[] = [
     status: "error",
     updatedAt: "Yesterday",
     panelCount: 5,
+    style: "webtoon",
   },
 ];
 

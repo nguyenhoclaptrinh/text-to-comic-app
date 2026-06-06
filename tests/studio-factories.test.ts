@@ -32,7 +32,16 @@ describe("studio factories", () => {
       status: "storyboard",
       updatedAt: "Just now",
       panelCount: 3,
+      style: "webtoon",
     });
+  });
+
+  it("should generate random UUID when projectId is empty", () => {
+    const project = createProject("", "Demo Story");
+    expect(project.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+    expect(project.style).toBe("webtoon");
   });
 
   it("should create a character with predictable display copy", () => {
@@ -42,7 +51,9 @@ describe("studio factories", () => {
       role: "Supporting role",
       color: "#06b6d4",
     });
-    expect(character.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    expect(character.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
   });
 
   it("should create a default bubble using centralized dimensions", () => {
@@ -54,7 +65,9 @@ describe("studio factories", () => {
       width: DEFAULT_BUBBLE_WIDTH,
       height: DEFAULT_BUBBLE_HEIGHT,
     });
-    expect(bubble.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    expect(bubble.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
   });
 
   it("should create a generated bubble from panel dialogue", () => {
@@ -78,6 +91,8 @@ describe("studio factories", () => {
       width: GENERATED_BUBBLE_WIDTH,
       height: DEFAULT_BUBBLE_HEIGHT,
     });
-    expect(bubble.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    expect(bubble.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
   });
 });

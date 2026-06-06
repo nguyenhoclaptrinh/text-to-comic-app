@@ -42,7 +42,8 @@ export function ComicPanelCanvas({
         <StatusBadge status={panel.status} />
       </div>
       <div
-        className={`relative h-[320px] overflow-hidden rounded-lg border border-zinc-700 bg-gradient-to-br ${panel.imageTone}`}
+        className={`relative w-full overflow-hidden rounded-lg border border-zinc-700 bg-gradient-to-br ${panel.imageTone}`}
+        style={{ aspectRatio: "900 / 520" }}
         onPointerMove={(event) => onBubbleMove(event, panel.id)}
         onPointerUp={onStopDrag}
         onPointerLeave={() => {
@@ -66,6 +67,8 @@ export function ComicPanelCanvas({
                 bubbleId: bubble.id,
                 offsetX: event.clientX - bubbleBox.left,
                 offsetY: event.clientY - bubbleBox.top,
+                bubbleWidth: bubble.width,
+                bubbleHeight: bubble.height,
               });
             }}
             className={`comic-text absolute rounded-[24px] rounded-bl-md border-2 border-black bg-white p-3 text-left text-sm font-bold leading-5 text-zinc-950 shadow-lg transition ${

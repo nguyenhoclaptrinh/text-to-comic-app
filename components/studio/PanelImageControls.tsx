@@ -13,14 +13,43 @@ export function PanelImageControls({
   panel,
   disabled,
   onGenerate,
+  onUpdate,
 }: {
   panel: Panel;
   disabled: boolean;
   onGenerate: () => void;
+  onUpdate: (patch: Partial<Panel>) => void;
 }) {
   return (
     <div className="flex min-h-72 flex-col border-t border-zinc-800 bg-zinc-950 p-4 lg:border-l lg:border-t-0">
       <PanelPreview panel={panel} />
+      <div className="mt-3">
+        <label
+          htmlFor={`panel-style-${panel.id}`}
+          className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+        >
+          Phong cách vẽ của Panel
+        </label>
+        <select
+          id={`panel-style-${panel.id}`}
+          value={panel.style || "inherit"}
+          onChange={(e) =>
+            onUpdate({
+              style: e.target.value as
+                | "inherit"
+                | "manga"
+                | "webtoon"
+                | "western",
+            })
+          }
+          className="mt-1 h-8 w-full rounded-md border border-zinc-800 bg-zinc-900 px-2 text-xs text-zinc-200 focus:border-violet-500 focus:outline-none"
+        >
+          <option value="inherit">Kế thừa phong cách truyện</option>
+          <option value="webtoon">Modern Webtoon (Màu)</option>
+          <option value="manga">Classic Manga (Đen trắng)</option>
+          <option value="western">Western Comic (Mỹ cổ điển)</option>
+        </select>
+      </div>
       <div className="mt-4 flex items-center justify-between gap-3">
         <PanelImageMessage panel={panel} />
         <GenerateButton

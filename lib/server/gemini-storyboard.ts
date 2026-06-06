@@ -51,9 +51,10 @@ const GEMINI_RESPONSE_SCHEMA = {
 export async function generateMultiPageStoryboard(
   input: StoryboardRequest,
   projectId = crypto.randomUUID(),
+  customApiKey?: string,
 ): Promise<{ pages: Page[]; source: "gemini" | "fallback" }> {
   const chunks = chunkStoryText(input.storyText, 4500);
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = customApiKey || process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 
   const pages: Page[] = [];

@@ -43,9 +43,11 @@ export function useStudioPersistence({
   }, [onSnapshotLoaded]);
 }
 
-async function resolveIndexedDbImages(snapshot: StudioSnapshot): Promise<StudioSnapshot> {
+async function resolveIndexedDbImages(
+  snapshot: StudioSnapshot,
+): Promise<StudioSnapshot> {
   const { readImage } = await import("@/lib/studio/indexeddb-storage");
-  
+
   const resolvedPages = await Promise.all(
     snapshot.pages.map(async (page) => {
       const resolvedPanels = await Promise.all(
@@ -65,13 +67,13 @@ async function resolveIndexedDbImages(snapshot: StudioSnapshot): Promise<StudioS
             }
           }
           return panel;
-        })
+        }),
       );
       return {
         ...page,
         panels: resolvedPanels,
       };
-    })
+    }),
   );
 
   const resolvedPanels = snapshot.panels
@@ -92,7 +94,7 @@ async function resolveIndexedDbImages(snapshot: StudioSnapshot): Promise<StudioS
             }
           }
           return panel;
-        })
+        }),
       )
     : undefined;
 

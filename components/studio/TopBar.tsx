@@ -3,7 +3,7 @@
  * @description Studio header with project status, generation, and export actions.
  */
 
-import { Download, Loader2, Wand2 } from "lucide-react";
+import { Download, Loader2, Wand2, Settings } from "lucide-react";
 
 import type { GenerationSummary } from "@/lib/studio/types";
 
@@ -13,18 +13,26 @@ export function TopBar({
   isGeneratingAll,
   onGenerateAll,
   onExport,
+  onOpenSettings,
 }: {
   projectTitle: string;
   generationSummary: GenerationSummary;
   isGeneratingAll: boolean;
   onGenerateAll: () => void;
   onExport: () => void;
+  onOpenSettings: () => void;
 }) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-800 bg-[#101014]/95 px-4 lg:px-6">
       <div className="min-w-0">
-        <div className="truncate text-sm font-semibold text-white">
-          {projectTitle}
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-semibold text-white">
+            {projectTitle}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-2.5 py-0.5 text-[10px] font-semibold text-zinc-400 border border-zinc-800/60 shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Tự động lưu
+          </span>
         </div>
         <div
           className="mt-1 flex items-center gap-3 text-xs text-zinc-500"
@@ -42,6 +50,14 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          aria-label="Cấu hình API Keys"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition"
+        >
+          <Settings size={16} />
+        </button>
         <button
           type="button"
           onClick={onExport}

@@ -18,6 +18,7 @@ import {
   updateCharacterProfile,
   updatePanelBubble,
 } from "@/lib/studio/utils";
+import { slugifyCharacterName } from "@/lib/studio/storyboard";
 
 describe("studio utils", () => {
   it("should clamp values within a numeric boundary", () => {
@@ -43,10 +44,33 @@ describe("studio utils", () => {
 
     expect(panels).toHaveLength(3);
     panels.forEach((panel) => {
-      expect(panel.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      expect(panel.id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      );
     });
     expect(panels.every((panel) => panel.status === "draft")).toBe(true);
     expect(panels[0].scenePrompt).toContain("A cold road");
+  });
+
+  it("should cover all parsing branches of createMockPanels", () => {
+    // 1. Short text (sentences.length < 3)
+    const panelsShort = createMockPanels(
+      "Innkeeper: Welcome to our humble place.",
+    );
+    expect(panelsShort).toHaveLength(3);
+    expect(panelsShort[0].dialogue).toBe(
+      "Innkeeper: Welcome to our humble place.",
+    );
+
+    // 2. Text with quotes and longer than bubble max length
+    const longTextWithQuotes =
+      'He sighed. "This is going to be a very long day, my friend, so let us make the best out of it." The wind blew.';
+    const panelsQuote = createMockPanels(longTextWithQuotes);
+    expect(panelsQuote).toHaveLength(3);
+    expect(panelsQuote[1].dialogue).toContain("Speaker: This is going to be");
+    expect(panelsQuote[1].dialogue.length).toBeLessThanOrEqual(
+      BUBBLE_TEXT_MAX_LENGTH,
+    );
   });
 
   it("should keep moved bubbles inside the visible panel boundary", () => {
@@ -57,7 +81,27 @@ describe("studio utils", () => {
   });
 
   it("should update only the requested bubble on the requested panel", () => {
-    const panel = PANELS_SEED[0];
+    const panel = {
+      ...PANELS_SEED[0],
+      bubbles: [
+        {
+          id: "bubble-1",
+          text: "Bubble 1",
+          x: 10,
+          y: 10,
+          width: 20,
+          height: 20,
+        },
+        {
+          id: "bubble-2",
+          text: "Bubble 2",
+          x: 20,
+          y: 20,
+          width: 20,
+          height: 20,
+        },
+      ],
+    };
     const updated = updatePanelBubble(panel, panel.id, "bubble-1", {
       text: "Updated bubble",
       x: 64,
@@ -67,6 +111,9 @@ describe("studio utils", () => {
     expect(updated.bubbles[0]).toMatchObject({
       text: "Updated bubble",
       x: 64,
+    });
+    expect(updated.bubbles[1]).toMatchObject({
+      text: "Bubble 2",
     });
     expect(updatePanelBubble(panel, "other-panel", "bubble-1", {})).toBe(panel);
   });
@@ -88,5 +135,11 @@ describe("studio utils", () => {
     expect(updateCharacterProfile(character, "other", { name: "Other" })).toBe(
       character,
     );
+  });
+
+  it("should slugify character names and return fallback for empty strings", () => {
+    expect(slugifyCharacterName("  Xiao Se  ")).toBe("xiao-se");
+    expect(slugifyCharacterName("!!!")).toBe("unknown-character");
+    expect(slugifyCharacterName("")).toBe("unknown-character");
   });
 });

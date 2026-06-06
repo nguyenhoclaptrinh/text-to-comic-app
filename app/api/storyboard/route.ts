@@ -27,8 +27,13 @@ export async function POST(request: Request) {
   }
 
   const projectId = `project-${Date.now()}`;
+  const customApiKey = request.headers.get("x-gemini-api-key") || undefined;
   try {
-    const result = await generateMultiPageStoryboard(parsedRequest.data, projectId);
+    const result = await generateMultiPageStoryboard(
+      parsedRequest.data,
+      projectId,
+      customApiKey,
+    );
 
     return NextResponse.json(
       StoryboardResponseSchema.parse({

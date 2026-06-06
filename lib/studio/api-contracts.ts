@@ -58,6 +58,7 @@ export const PanelSchema = z.object({
   errorMessage: z.string().optional(),
   bubbles: z.array(BubbleSchema),
   seed: z.number(),
+  style: z.enum(["inherit", "manga", "webtoon", "western"]).optional(),
 });
 
 export const PageSchema = z.object({

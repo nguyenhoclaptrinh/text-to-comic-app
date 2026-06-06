@@ -3,6 +3,7 @@
  * @description Browser canvas renderer for vertical PNG comic export.
  */
 
+import { jsPDF } from "jspdf";
 import {
   createComicExportPlan,
   EXPORT_CANVAS_PADDING,
@@ -11,7 +12,6 @@ import {
   EXPORT_PANEL_WIDTH,
 } from "@/lib/studio/export-plan";
 import type { Bubble, Panel } from "@/lib/studio/types";
-
 
 export async function exportComicPng({
   projectTitle,
@@ -54,6 +54,73 @@ export async function exportComicPng({
 
   return {
     filename: plan.filename,
+    panelCount: plan.panels.length,
+    missingImages: plan.missingImages,
+  };
+}
+
+export async function exportComicPdf({
+  projectTitle,
+  panels,
+  includeMissingPanels,
+}: {
+  projectTitle: string;
+  panels: Panel[];
+  includeMissingPanels?: boolean;
+}) {
+  const plan = createComicExportPlan({
+    projectTitle,
+    panels,
+    includeMissingPanels,
+  });
+
+  const width = EXPORT_PANEL_WIDTH + EXPORT_CANVAS_PADDING * 2;
+  const height = EXPORT_PANEL_HEIGHT + EXPORT_CANVAS_PADDING * 2;
+
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "px",
+    format: [width, height],
+  });
+
+  for (const [index, panel] of plan.panels.entries()) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+
+    if (context) {
+      context.fillStyle = "#09090b";
+      context.fillRect(0, 0, width, height);
+
+      await drawPanel(
+        context,
+        panel,
+        EXPORT_CANVAS_PADDING,
+        EXPORT_CANVAS_PADDING,
+      );
+
+      const dataUrl = canvas.toDataURL("image/png");
+
+      if (index > 0) {
+        pdf.addPage([width, height], "portrait");
+      }
+
+      pdf.addImage(dataUrl, "PNG", 0, 0, width, height);
+    }
+  }
+
+  const slug = projectTitle
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+
+  const date = new Date().toISOString().slice(0, 10);
+  pdf.save(`${slug || "comic-export"}-${date}.pdf`);
+
+  return {
     panelCount: plan.panels.length,
     missingImages: plan.missingImages,
   };

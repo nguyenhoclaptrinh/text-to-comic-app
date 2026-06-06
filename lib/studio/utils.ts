@@ -35,9 +35,7 @@ export function nextBubbleCoordinate(
     100 - itemSizePercent - BUBBLE_BOUNDARY_PADDING,
     BUBBLE_BOUNDARY_PADDING,
   );
-  return Math.round(
-    clamp(percent, BUBBLE_BOUNDARY_PADDING, max),
-  );
+  return Math.round(clamp(percent, BUBBLE_BOUNDARY_PADDING, max));
 }
 
 export function updatePanelBubble(
@@ -63,12 +61,13 @@ export function updateCharacterProfile(
   characterId: string,
   patch: Partial<Character>,
 ) {
-  return character.id === characterId ? { ...character, ...patch } : character;
+  if (character.id === characterId) {
+    return { ...character, ...patch };
+  }
+  return character;
 }
 
-export function createMockPanels(
-  storyText: string,
-): Panel[] {
+export function createMockPanels(storyText: string): Panel[] {
   const cleanText = storyText.trim();
   const sentences = cleanText
     .split(/(?<=[.?!])\s+|\n+/)
@@ -104,7 +103,12 @@ export function createMockPanels(
     const colonMatch = textFragment.match(/^([A-Za-z\s]+):\s*(.+)$/);
     if (colonMatch) {
       dialogue = `${colonMatch[1].trim()}: ${colonMatch[2].trim()}`;
-      characterIds = [colonMatch[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")];
+      characterIds = [
+        colonMatch[1]
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-"),
+      ];
     } else {
       const quoteMatch = textFragment.match(/["“]([^"”]+)["”]/);
       if (quoteMatch) {
@@ -129,6 +133,7 @@ export function createMockPanels(
       imageTone: defaultTones[index % defaultTones.length],
       bubbles: [],
       seed: Math.floor(Math.random() * 1000000),
+      style: "inherit",
     };
   });
 }

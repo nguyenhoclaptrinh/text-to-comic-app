@@ -3,7 +3,7 @@
  * @description Unit tests for studio snapshot persistence.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   INTERRUPTED_GENERATION_ERROR,
@@ -20,6 +20,13 @@ import {
   PROJECTS_SEED,
   SAMPLE_STORY,
 } from "@/lib/studio/mock-data";
+
+const mockWriteImage = vi.fn();
+vi.mock("@/lib/studio/indexeddb-storage", () => ({
+  writeImage: (...args: unknown[]) => mockWriteImage(...args),
+  readImage: vi.fn(),
+  deleteImage: vi.fn(),
+}));
 
 class MemoryStorage implements KeyValueStorage {
   private readonly store = new Map<string, string>();
@@ -40,6 +47,11 @@ class MemoryStorage implements KeyValueStorage {
 describe("LocalStorageStudioRepository", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockWriteImage.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("should use the current snapshot version in factory output", () => {
@@ -56,6 +68,30 @@ describe("LocalStorageStudioRepository", () => {
     await repository.saveSnapshot(snapshot);
 
     expect(await repository.loadSnapshot()).toEqual(snapshot);
+  });
+
+  it("should extract base64 images and save to IndexedDB when window is defined", async () => {
+    vi.stubGlobal("window", {});
+    mockWriteImage.mockResolvedValue(undefined);
+
+    const storage = new MemoryStorage();
+    const repository = new LocalStorageStudioRepository(storage, "test-key");
+
+    const snapshot = createTestSnapshot();
+    snapshot.pages[0].panels[0].imageUrl = "data:image/png;base64,abcdef";
+    snapshot.panels = [
+      {
+        ...snapshot.pages[0].panels[0],
+        imageUrl: "data:image/png;base64,123456",
+      },
+    ];
+
+    await repository.saveSnapshot(snapshot);
+
+    expect(mockWriteImage).toHaveBeenCalledTimes(2);
+
+    const savedRaw = storage.getItem("test-key");
+    expect(savedRaw).toContain("indexeddb://panel-image-");
   });
 
   it("should clear a saved snapshot", async () => {
