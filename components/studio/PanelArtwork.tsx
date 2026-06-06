@@ -47,7 +47,7 @@ export function ComicPanelArt({ panel }: { panel: Panel }) {
       <div className="absolute bottom-8 left-[14%] h-24 w-16 rounded-t-full bg-zinc-200/20" />
       <div className="absolute bottom-8 right-[18%] h-28 w-20 rounded-t-full bg-red-300/20" />
       <div className="absolute left-5 top-5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/70">
-        Panel {panel.orderIndex}
+        Khung {panel.orderIndex}
       </div>
     </div>
   );

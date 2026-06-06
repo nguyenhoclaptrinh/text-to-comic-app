@@ -142,7 +142,7 @@ export function ComicEditor({
           className="flex h-11 items-center gap-2 rounded-full bg-zinc-800 px-4 text-sm font-medium text-zinc-200 hover:bg-zinc-700 active:scale-95 transition"
         >
           <Layers size={16} className="text-violet-400" />
-          <span>Khung tranh</span>
+          <span>Danh sách</span>
         </button>
         <button
           type="button"
@@ -187,7 +187,7 @@ export function ComicEditor({
           <div className="relative flex h-full w-[280px] flex-col border-l border-zinc-800 bg-[#111114] p-4 shadow-2xl">
             <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
               <span className="font-semibold text-zinc-200">
-                Danh sách Panel
+                Danh sách khung
               </span>
               <button
                 onClick={() => setIsPanelOpen(false)}
@@ -238,12 +238,10 @@ function ComicEditorHeader() {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-100">
-          Biên tập Truyện tranh
-        </h1>
+        <h1 className="text-xl font-semibold text-zinc-100">Chỉnh truyện</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Các bong bóng hội thoại thoại được lưu riêng biệt cho từng khung
-          tranh.
+          Đặt bong bóng thoại lên từng khung ảnh và kiểm tra bản truyện trước
+          khi xuất.
         </p>
       </div>
       <button
@@ -251,7 +249,7 @@ function ComicEditorHeader() {
         className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
       >
         <Save size={15} />
-        Lưu truyện
+        Đã tự lưu
       </button>
     </div>
   );

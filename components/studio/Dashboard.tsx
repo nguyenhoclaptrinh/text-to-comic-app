@@ -77,8 +77,8 @@ export function Dashboard({
             Dự án của tôi
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Tiếp tục bản nháp, vẽ lại các khung hình bị lỗi hoặc bắt đầu tạo một
-            truyện tranh mới.
+            Tiếp tục bản nháp, xử lý khung cần vẽ lại hoặc bắt đầu một truyện
+            mới từ văn bản.
           </p>
         </div>
         <button
@@ -101,7 +101,7 @@ export function Dashboard({
           </h3>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-400">
             Biến câu chuyện chữ của bạn thành những trang truyện tranh/webtoon
-            sống động với sức mạnh trí tuệ nhân tạo Gemini.
+            sống động với quy trình AI có thể chỉnh sửa từng bước.
           </p>
           <button
             type="button"
@@ -147,8 +147,8 @@ export function Dashboard({
                     Tạo Truyện tranh Mới bằng AI
                   </h2>
                   <p className="text-xs text-zinc-400 mt-0.5">
-                    Nhập câu chuyện thô của bạn để AI tự động phân tách phân
-                    cảnh.
+                    Nhập câu chuyện thô để app tách thành storyboard có thể
+                    chỉnh sửa.
                   </p>
                 </div>
               </div>
@@ -213,7 +213,7 @@ export function Dashboard({
                   </label>
                   <span className="inline-flex items-center gap-1 text-[11px] text-violet-400">
                     <Wand2 size={12} />
-                    Phân tích tự động bằng Gemini
+                    Tự động tách storyboard
                   </span>
                 </div>
                 <textarea
@@ -227,7 +227,7 @@ export function Dashboard({
 
               <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/10 p-3">
                 <span className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                  💡 Kịch bản mẫu nhanh (Click để điền)
+                  Kịch bản mẫu nhanh
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {templates.map((tpl, idx) => (
@@ -267,7 +267,7 @@ export function Dashboard({
                   ) : (
                     <Sparkles size={16} />
                   )}
-                  {isAnalyzing ? "Đang phân tích..." : "Bắt đầu Phân tích"}
+                  {isAnalyzing ? "Đang phân tích..." : "Tạo storyboard"}
                 </button>
               </div>
             </div>

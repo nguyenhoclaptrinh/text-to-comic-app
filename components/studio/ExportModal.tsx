@@ -3,7 +3,7 @@
  * @description Export dialog for multi-page PNG, PDF, and ZIP workflow.
  */
 
-import { CheckCircle2, FileText, FolderArchive, X } from "lucide-react";
+import { CheckCircle2, FileText, X } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -15,7 +15,7 @@ import { exportComicPng, exportComicPdf } from "@/lib/studio/export-renderer";
 import type { Panel } from "@/lib/studio/types";
 
 type ExportStatus = "idle" | "rendering" | "done" | "error";
-type ExportFormat = "png" | "pdf" | "zip";
+type ExportFormat = "png" | "pdf";
 
 export function ExportModal({
   panels,
@@ -92,29 +92,6 @@ export function ExportModal({
             </div>
           </div>
 
-          <div
-            onClick={() => setFormat("zip")}
-            className={`flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-all duration-200 ${
-              format === "zip"
-                ? "border-violet-500/50 bg-violet-500/10 shadow-[0_0_12px_rgba(139,92,246,0.1)]"
-                : "border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 hover:bg-zinc-800/40"
-            }`}
-          >
-            <FolderArchive
-              className={format === "zip" ? "text-violet-400" : "text-zinc-400"}
-              size={20}
-            />
-            <div>
-              <div className="text-sm font-semibold text-white">
-                Kho lưu trữ ảnh nén (ZIP)
-              </div>
-              <div className="text-xs text-zinc-400 mt-0.5">
-                Đóng gói tất cả khung hình thành các tệp ảnh PNG riêng lẻ chất
-                lượng cao trong một thư mục ZIP.
-              </div>
-            </div>
-          </div>
-
           {missingImages > 0 ? (
             <MissingImagesWarning
               count={missingImages}
@@ -155,16 +132,6 @@ export function ExportModal({
           panels,
           includeMissingPanels: false,
         });
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setProgress(90);
-        const link = document.createElement("a");
-        link.href =
-          "data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==";
-        link.download = `${projectTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-comic-archive.zip`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
       }
 
       setProgress(100);
@@ -184,10 +151,10 @@ function ExportModalHeader({ onClose }: { onClose: () => void }) {
           id="export-title"
           className="text-xl font-semibold text-white tracking-tight"
         >
-          Xuất bản & Tải Truyện tranh
+          Xuất truyện
         </h2>
         <p className="mt-1 text-sm text-zinc-400">
-          Chọn định dạng phân phối và in ấn chất lượng cao mong muốn của bạn.
+          Tải bản truyện đã vẽ thành file để nộp, trình chiếu hoặc chia sẻ.
         </p>
       </div>
       <button

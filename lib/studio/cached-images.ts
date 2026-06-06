@@ -10,7 +10,7 @@ const SVG_HEIGHT = 520;
 
 export function createCachedPanelImage(panel: Panel) {
   const [start, middle, end] = getPanelColors(panel);
-  const title = escapeSvgText(`Panel ${panel.orderIndex}`);
+  const title = escapeSvgText(`Khung ${panel.orderIndex}`);
   const dialogue = escapeSvgText(panel.dialogue.slice(0, 96));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SVG_WIDTH}" height="${SVG_HEIGHT}" viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}">
 <defs>

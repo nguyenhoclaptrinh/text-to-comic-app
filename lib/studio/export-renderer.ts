@@ -213,7 +213,7 @@ function drawPanelLabel(
   context.fillRect(x + 24, y + 24, 120, 34);
   context.fillStyle = "rgba(255,255,255,0.78)";
   context.font = "600 18px Arial";
-  context.fillText(`Panel ${panel.orderIndex}`, x + 40, y + 47);
+  context.fillText(`Khung ${panel.orderIndex}`, x + 40, y + 47);
 }
 
 function drawPanelMissingState(
@@ -232,7 +232,7 @@ function drawPanelMissingState(
   context.font = "700 28px Arial";
   context.textAlign = "center";
   context.fillText(
-    "Panel image missing",
+    "Khung này chưa có ảnh",
     x + EXPORT_PANEL_WIDTH / 2,
     y + EXPORT_PANEL_HEIGHT / 2,
   );
@@ -288,7 +288,7 @@ function drawBubble(
     context,
     bubble.text,
     width - paddingX * 2,
-    textLineHeight
+    textLineHeight,
   );
 
   const minBubbleHeight = (bubble.height / 100) * EXPORT_PANEL_HEIGHT;
@@ -326,7 +326,7 @@ function drawBubble(
     x + paddingX,
     y + paddingY + 16, // Điều chỉnh baseline dòng đầu
     width - paddingX * 2,
-    textLineHeight
+    textLineHeight,
   );
 }
 

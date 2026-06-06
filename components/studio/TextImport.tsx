@@ -99,7 +99,7 @@ function StoryInputForm({
           </div>
           <div>
             <h1 className="text-xl font-semibold text-zinc-100">
-              Tạo Truyện tranh Mới
+              Tạo truyện mới
             </h1>
             <p className="text-sm text-zinc-400">
               Nhập truyện chữ, app sẽ tách thành các khung storyboard để bạn
@@ -185,7 +185,7 @@ function StoryInputForm({
       {/* Gợi ý Kịch bản Mẫu nhanh */}
       <div className="mb-5 rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-3">
         <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
-          💡 Gợi ý kịch bản mẫu nhanh (Click để thử ngay)
+          Gợi ý kịch bản mẫu nhanh
         </span>
         <div className="flex flex-wrap gap-2">
           {templates.map((tpl, idx) => (
@@ -216,7 +216,7 @@ function StoryInputForm({
           ) : (
             <Sparkles size={16} />
           )}
-          {isAnalyzing ? "Đang phân tích..." : "Phân tích Kịch bản"}
+          {isAnalyzing ? "Đang phân tích..." : "Tạo storyboard"}
         </button>
       </div>
 

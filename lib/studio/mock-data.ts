@@ -71,7 +71,7 @@ export const PANELS_SEED: Panel[] = [
     status: "error",
     imageTone: "from-zinc-900 via-stone-800 to-slate-900",
     errorMessage:
-      "Image backend offline. Restart Colab or retry with cached images.",
+      "Dịch vụ vẽ ảnh chưa sẵn sàng. Bạn có thể thử vẽ lại khung này sau.",
     bubbles: [],
     seed: 44,
     style: "inherit",

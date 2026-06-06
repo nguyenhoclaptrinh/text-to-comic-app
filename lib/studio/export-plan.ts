@@ -10,7 +10,7 @@ export const EXPORT_PANEL_GAP = 28;
 export const EXPORT_PANEL_WIDTH = 900;
 export const EXPORT_PANEL_HEIGHT = 520;
 export const NO_EXPORTABLE_PANELS_ERROR =
-  "Generate at least one panel before exporting PNG.";
+  "Hãy vẽ ít nhất một khung trước khi xuất PNG.";
 
 export type ComicExportPlan = {
   filename: string;

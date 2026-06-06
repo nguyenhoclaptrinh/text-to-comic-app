@@ -37,7 +37,7 @@ export function ComicPanelCanvas({
           onClick={() => onSelectPanel(panel.id)}
           className="text-sm font-semibold text-zinc-100"
         >
-          Panel {panel.orderIndex}
+          Khung {panel.orderIndex}
         </button>
         <StatusBadge status={panel.status} />
       </div>
@@ -57,7 +57,7 @@ export function ComicPanelCanvas({
           <button
             key={bubble.id}
             type="button"
-            aria-label={`Edit speech bubble: ${bubble.text}`}
+            aria-label={`Sửa bong bóng thoại: ${bubble.text}`}
             onPointerDown={(event) => {
               const bubbleBox = event.currentTarget.getBoundingClientRect();
               onSelectPanel(panel.id);
@@ -96,8 +96,8 @@ function MissingImageOverlay({ status }: { status: Panel["status"] }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm text-zinc-200">
       {status === "error"
-        ? "Panel image missing"
-        : "Generate panel before export"}
+        ? "Khung này cần vẽ lại"
+        : "Hãy vẽ ảnh trước khi xuất"}
     </div>
   );
 }

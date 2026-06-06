@@ -19,16 +19,14 @@ export function MissingImagesWarning({
     >
       <AlertTriangle className="mt-0.5 shrink-0" size={18} />
       <div>
-        <div className="font-semibold">
-          Có {count} khung hình chưa được vẽ ảnh.
-        </div>
+        <div className="font-semibold">Có {count} khung chưa có ảnh.</div>
         <button
           type="button"
           onClick={onGoToStoryboard}
           className="mt-2 inline-flex h-8 items-center gap-2 rounded-lg border border-amber-300/30 px-3 text-xs font-semibold hover:bg-amber-500/10 transition-colors"
         >
           <Play size={13} />
-          Quay lại Storyboard để vẽ ảnh
+          Quay lại vẽ ảnh
         </button>
       </div>
     </div>
@@ -39,7 +37,7 @@ export function ExportProgress({ progress }: { progress: number }) {
   return (
     <div className="mt-5" role="status" aria-live="polite">
       <div className="mb-2 flex items-center justify-between text-xs text-zinc-500">
-        <span>Đang ghép nối và kết xuất hình ảnh...</span>
+        <span>Đang ghép ảnh và lời thoại...</span>
         <span>{progress}%</span>
       </div>
       <div className="h-3 overflow-hidden rounded-full bg-zinc-900">
@@ -72,7 +70,7 @@ export function ExportActions({
         onClick={onClose}
         className="h-10 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 hover:bg-zinc-900 transition-colors"
       >
-        Hủy bỏ
+        Đóng
       </button>
       <button
         type="button"
@@ -89,7 +87,7 @@ export function ExportActions({
           ? "Đã xuất xong"
           : status === "rendering"
             ? "Đang xuất..."
-            : "Xuất bản & Tải về"}
+            : "Tải file"}
       </button>
     </div>
   );

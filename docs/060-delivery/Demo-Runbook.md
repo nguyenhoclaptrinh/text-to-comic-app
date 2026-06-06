@@ -10,10 +10,11 @@ updated: 2026-05-17
 
 ## Demo Goal
 
-Show an end-to-end AI-assisted comic creation workflow:
+Show an end-to-end AI-assisted comic creation workflow with a Vietnamese,
+demo-first workspace:
 
 ```text
-Text import -> storyboard -> edit -> generate panels -> edit bubbles -> export PNG
+Dự án -> Nhập truyện -> Storyboard -> Vẽ ảnh -> Chỉnh truyện -> Xuất file
 ```
 
 ## Pre-Demo Checklist
@@ -38,35 +39,35 @@ npm audit --audit-level=moderate
 
 ## Demo Script
 
-1. Start from the Dashboard and open the existing project.
-2. Navigate to Text Import and create a new comic from a story paragraph.
-3. Explain that the storyboard service calls `/api/storyboard`, which uses Gemini when `GEMINI_API_KEY` is configured and fallback storyboard data otherwise.
-4. Edit one panel prompt and one dialogue line to demonstrate human-in-the-loop control.
-5. Edit one character name/role/visual description in Casting.
-6. Generate one panel, then use Generate All.
-7. Open Comic Editor and add or drag a speech bubble.
-8. Reload the page to show local persistence.
-9. Export PNG and explain missing-image warning behavior.
+1. Start from `Dự án` and show the existing draft.
+2. Open `Nhập truyện`, paste a short story, and create a storyboard.
+3. In `Storyboard`, edit one `Mô tả cảnh` and one `Lời thoại`.
+4. Open `Nhân vật` and adjust a name/role/visual description.
+5. Use `Vẽ ảnh` for one panel, then `Vẽ tất cả`.
+6. Open `Chỉnh truyện` and add or drag a speech bubble.
+7. Reload the page to show local persistence and generation recovery.
+8. Open `Xuất file`, download PNG, and explain the missing-image warning if shown.
 
 ## Acceptance Evidence
 
-| Requirement | Current Evidence |
-| --- | --- |
-| Create project from text | Text Import creates a new project and panels |
-| Storyboard editing | Panel prompt/dialogue fields are editable |
-| Character consistency support | Character casting data is editable and persisted |
-| Generate/regenerate panel | Per-panel button and Generate All update panel status |
-| Bubble editing | Bubble text, add/delete, and drag are available |
-| Reload safety | Studio snapshot persists in localStorage |
-| Export PNG | Export modal renders vertical PNG through canvas |
-| Error handling | Typed AI errors, missing-image warnings, interrupted generation recovery |
+| Requirement                   | Current Evidence                                                         |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| Create project from text      | Text Import creates a new project and panels                             |
+| Storyboard editing            | Panel prompt/dialogue fields are editable                                |
+| Character consistency support | Character casting data is editable and persisted                         |
+| Generate/regenerate panel     | Per-panel `Vẽ ảnh` / `Vẽ lại` and `Vẽ tất cả` update panel status        |
+| Bubble editing                | Bubble text, add/delete, and drag are available                          |
+| Reload safety                 | Studio snapshot persists in localStorage                                 |
+| Export PNG                    | Export modal renders vertical PNG through canvas                         |
+| Error handling                | Typed AI errors, missing-image warnings, interrupted generation recovery |
 
 ## Current Limitations
 
 - Gemini requires `GEMINI_API_KEY`; without it the storyboard API intentionally falls back to deterministic demo data.
 - Real image generation requires `IMAGE_BACKEND_URL`; without it the image API intentionally falls back to cached SVG panel artwork.
 - Supabase Auth/DB/Storage is documented as target architecture but not implemented in the prototype.
-- PNG export supports generated/cached panel images and bubble overlays.
+- PNG export is the primary demo path and supports generated/cached panel images plus bubble overlays.
+- Panel statuses are shown in Vietnamese: `Chưa vẽ`, `Đang chờ`, `Đang vẽ`, `Đã vẽ`, `Cần thử lại`.
 - Reference image upload is shown as a future control.
 
 ## Next Integration Tasks
