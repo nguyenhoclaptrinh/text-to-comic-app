@@ -1,4 +1,12 @@
-import { AlertTriangle, FileText, Loader2, Plus, Sparkles, Wand2, X } from "lucide-react";
+import {
+  AlertTriangle,
+  FileText,
+  Loader2,
+  Plus,
+  Sparkles,
+  Wand2,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 
 import { ProjectStatusPill } from "@/components/studio/StatusBadge";
@@ -22,7 +30,7 @@ export function Dashboard({
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("Snow Road Inn");
   const [storyText, setStoryText] = useState(
-    "Outside the inn, snow covered the mountain road. A young man in a white fur coat sat by the window, counting the empty tables. Suddenly, the wooden door flew open and a red-robed teenager rushed inside with a bright grin."
+    "Outside the inn, snow covered the mountain road. A young man in a white fur coat sat by the window, counting the empty tables. Suddenly, the wooden door flew open and a red-robed teenager rushed inside with a bright grin.",
   );
   const [style, setStyle] = useState("webtoon");
 
@@ -62,7 +70,7 @@ export function Dashboard({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+    <div className="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-8 lg:px-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
@@ -139,7 +147,8 @@ export function Dashboard({
                     Tạo Truyện tranh Mới bằng AI
                   </h2>
                   <p className="text-xs text-zinc-400 mt-0.5">
-                    Nhập câu chuyện thô của bạn để AI tự động phân tách phân cảnh.
+                    Nhập câu chuyện thô của bạn để AI tự động phân tách phân
+                    cảnh.
                   </p>
                 </div>
               </div>
@@ -182,9 +191,15 @@ export function Dashboard({
                   onChange={(event) => setStyle(event.target.value)}
                   className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/40 px-3.5 text-sm text-zinc-100 focus:border-violet-500 focus:outline-none"
                 >
-                  <option value="webtoon">Modern Webtoon (Màu sắc sống động)</option>
-                  <option value="manga">Classic Manga (Đen trắng, nét mực Nhật Bản)</option>
-                  <option value="western">Western Comic (Truyện tranh Mỹ cổ điển)</option>
+                  <option value="webtoon">
+                    Modern Webtoon (Màu sắc sống động)
+                  </option>
+                  <option value="manga">
+                    Classic Manga (Đen trắng, nét mực Nhật Bản)
+                  </option>
+                  <option value="western">
+                    Western Comic (Truyện tranh Mỹ cổ điển)
+                  </option>
                 </select>
               </div>
 

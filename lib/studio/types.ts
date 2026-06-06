@@ -3,7 +3,7 @@
  * @description Shared TypeScript models for the comic studio prototype.
  */
 
-export type View = "dashboard" | "import" | "storyboard" | "comic";
+export type View = "projects" | "import" | "storyboard" | "comic" | "export";
 
 export type ProjectStatus =
   | "draft"
@@ -12,7 +12,12 @@ export type ProjectStatus =
   | "done"
   | "error";
 
-export type PanelStatus = "draft" | "generating" | "success" | "error";
+export type PanelStatus =
+  | "draft"
+  | "queued"
+  | "generating"
+  | "success"
+  | "error";
 
 export type Character = {
   id: string;

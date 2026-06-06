@@ -32,7 +32,7 @@ export function TextImport({
   onAnalyze: (style: string) => void;
 }) {
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+    <div className="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-8 lg:px-8">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <StoryInputForm
           title={title}
@@ -102,8 +102,8 @@ function StoryInputForm({
               Tạo Truyện tranh Mới
             </h1>
             <p className="text-sm text-zinc-400">
-              Nhập kịch bản chữ của bạn và để trí tuệ nhân tạo Gemini phân tích
-              cấu trúc truyện.
+              Nhập truyện chữ, app sẽ tách thành các khung storyboard để bạn
+              chỉnh và vẽ ảnh.
             </p>
           </div>
         </div>

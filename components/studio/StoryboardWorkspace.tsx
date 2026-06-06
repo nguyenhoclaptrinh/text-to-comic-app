@@ -62,7 +62,7 @@ export function StoryboardWorkspace({
       />
 
       {/* Vùng biên tập Storyboard bên phải */}
-      <section className="min-w-0 overflow-y-auto px-4 py-5 lg:px-6">
+      <section className="min-w-0 overflow-y-auto px-4 py-5 pb-24 md:pb-8 lg:px-6">
         {hasBackendError ? <ImageBackendAlert /> : null}
 
         <StoryboardHeader
@@ -145,7 +145,8 @@ function ImageBackendAlert() {
         <div className="font-semibold">Hệ thống vẽ ảnh cần lưu ý</div>
         <div className="mt-1 text-red-100/80">
           Các khung hình bị lỗi vẽ ảnh vẫn giữ nguyên văn bản mô tả bối cảnh và
-          lời thoại, bạn có thể thực hiện thử vẽ lại riêng lẻ từng khung hình.
+          lời thoại. Bạn có thể thử vẽ lại riêng từng khung mà không mất phần đã
+          chỉnh.
         </div>
       </div>
     </div>
@@ -164,7 +165,7 @@ function StoryboardHeader({
       <div>
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-zinc-100">
-            Biên soạn Storyboard
+            Dựng storyboard
           </h1>
           {/* Nút mở Casting nhanh trên mobile (< 1024px) */}
           <button
@@ -173,12 +174,11 @@ function StoryboardHeader({
             className="inline-flex h-7 items-center gap-1.5 rounded-full bg-violet-500/20 px-2.5 text-xs font-medium text-violet-300 hover:bg-violet-500/30 transition-colors lg:hidden"
           >
             <Users size={12} />
-            <span>👥 Casting</span>
+            <span>Nhân vật</span>
           </button>
         </div>
         <p className="mt-1 text-sm text-zinc-400">
-          Xem xét và điều chỉnh mô tả bối cảnh, lời thoại nhân vật và trạng thái
-          vẽ tranh.
+          Kiểm tra mạch truyện, chỉnh mô tả cảnh và vẽ ảnh cho từng khung.
         </p>
       </div>
       <button
@@ -187,7 +187,7 @@ function StoryboardHeader({
         className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
       >
         <MessageCircle size={16} />
-        Mở Trình biên tập Bong bóng
+        Chỉnh lời thoại trên ảnh
       </button>
     </div>
   );

@@ -11,13 +11,16 @@ import {
   StoryboardRequestSchema,
   StoryboardResponseSchema,
 } from "@/lib/studio/api-contracts";
+import { toUserFacingError } from "@/lib/studio/user-facing-errors";
 import { createMockPanels, sleep } from "@/lib/studio/utils";
 import type { Character, Page, Panel } from "@/lib/studio/types";
 
 export enum StudioAiErrorCode {
   VALIDATION_ERROR = "VALIDATION_ERROR",
   AI_TEXT_UNAVAILABLE = "AI_TEXT_UNAVAILABLE",
-  IMAGE_BACKEND_OFFLINE = "IMAGE_BACKEND_OFFLINE",
+  AI_IMAGE_OFFLINE = "AI_IMAGE_OFFLINE",
+  AI_IMAGE_INVALID_RESPONSE = "AI_IMAGE_INVALID_RESPONSE",
+  IMAGE_BACKEND_OFFLINE = "AI_IMAGE_OFFLINE",
 }
 
 export class StudioAiError extends Error {
@@ -102,7 +105,7 @@ export async function generatePanelImage(
 ): Promise<Partial<Panel>> {
   if (panel.scenePrompt.toLowerCase().includes("[offline]")) {
     throw new StudioAiError(
-      StudioAiErrorCode.IMAGE_BACKEND_OFFLINE,
+      StudioAiErrorCode.AI_IMAGE_OFFLINE,
       "Image backend offline. Restart Colab or retry later.",
     );
   }
@@ -135,7 +138,7 @@ export async function generatePanelImage(
 
     if (!response.ok) {
       throw new StudioAiError(
-        StudioAiErrorCode.IMAGE_BACKEND_OFFLINE,
+        StudioAiErrorCode.AI_IMAGE_OFFLINE,
         getApiErrorMessage(body, "Image backend offline. Retry later."),
       );
     }
@@ -143,7 +146,7 @@ export async function generatePanelImage(
     const parsedResponse = GeneratePanelResponseSchema.safeParse(body);
     if (!parsedResponse.success) {
       throw new StudioAiError(
-        StudioAiErrorCode.IMAGE_BACKEND_OFFLINE,
+        StudioAiErrorCode.AI_IMAGE_INVALID_RESPONSE,
         "Image backend returned an invalid response.",
       );
     }
@@ -177,10 +180,10 @@ export async function generatePanelImage(
 
 export function getStudioAiErrorMessage(error: unknown) {
   if (error instanceof StudioAiError) {
-    return error.message;
+    return toUserFacingError(error).message;
   }
 
-  return "The AI service failed unexpectedly. Please retry.";
+  return toUserFacingError(error).message;
 }
 
 function getApiErrorMessage(body: unknown, fallback: string) {

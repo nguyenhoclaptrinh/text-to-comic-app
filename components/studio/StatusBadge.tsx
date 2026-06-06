@@ -22,6 +22,14 @@ export function StatusBadge({ status }: { status: PanelStatus }) {
 }
 
 export function ProjectStatusPill({ status }: { status: ProjectStatus }) {
+  const label: Record<ProjectStatus, string> = {
+    draft: "Bản nháp",
+    storyboard: "Đang dựng",
+    generating: "Đang vẽ",
+    done: "Hoàn tất",
+    error: "Cần xử lý",
+  };
+
   const className =
     status === "error"
       ? "border-red-400/30 bg-red-500/10 text-red-200"
@@ -33,7 +41,7 @@ export function ProjectStatusPill({ status }: { status: ProjectStatus }) {
     <span
       className={`shrink-0 rounded-full border px-2 py-1 text-xs font-medium ${className}`}
     >
-      {status}
+      {label[status]}
     </span>
   );
 }

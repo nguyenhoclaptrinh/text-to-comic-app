@@ -23,17 +23,19 @@ export const STORY_EXCERPT_MAX_LENGTH = 84;
 export const STUDIO_STORAGE_KEY = "comic-ai-studio:snapshot";
 export const STUDIO_SNAPSHOT_VERSION = 1;
 export const INTERRUPTED_GENERATION_ERROR =
-  "Generation was interrupted by reload. Please retry this panel.";
+  "Quá trình vẽ ảnh bị gián đoạn khi tải lại trang. Bạn có thể thử vẽ lại khung này.";
 
 export const STATUS_COPY: Record<PanelStatus, string> = {
-  draft: "Draft",
-  generating: "Generating",
-  success: "Done",
-  error: "Error",
+  draft: "Chưa vẽ",
+  queued: "Đang chờ",
+  generating: "Đang vẽ",
+  success: "Đã vẽ",
+  error: "Cần thử lại",
 };
 
 export const STATUS_CLASS: Record<PanelStatus, string> = {
   draft: "border-zinc-700 bg-zinc-900 text-zinc-300",
+  queued: "border-sky-400/40 bg-sky-500/15 text-sky-200",
   generating: "border-violet-400/40 bg-violet-500/15 text-violet-200",
   success: "border-emerald-400/40 bg-emerald-500/15 text-emerald-200",
   error: "border-red-400/40 bg-red-500/15 text-red-200",

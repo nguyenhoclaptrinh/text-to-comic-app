@@ -20,7 +20,7 @@ export function PanelPreview({
       className={`relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-zinc-700 bg-gradient-to-br ${panel.imageTone} ${
         compact ? "min-h-40" : "min-h-52"
       }`}
-      aria-label={`Panel ${panel.orderIndex} image status: ${STATUS_COPY[panel.status]}`}
+      aria-label={`Trạng thái ảnh khung ${panel.orderIndex}: ${STATUS_COPY[panel.status]}`}
     >
       <PanelPreviewContent panel={panel} />
     </div>
@@ -33,7 +33,7 @@ export function ComicPanelArt({ panel }: { panel: Panel }) {
       <div
         className="absolute inset-0 bg-cover bg-center"
         role="img"
-        aria-label={`Generated artwork for panel ${panel.orderIndex}`}
+        aria-label={`Ảnh đã vẽ cho khung ${panel.orderIndex}`}
         style={{ backgroundImage: `url("${panel.imageUrl}")` }}
       />
     );
@@ -61,7 +61,19 @@ function PanelPreviewContent({ panel }: { panel: Panel }) {
         role="status"
       >
         <Loader2 className="animate-spin" size={34} />
-        <div className="text-sm">Rendering panel...</div>
+        <div className="text-sm">Đang vẽ khung truyện...</div>
+      </div>
+    );
+  }
+
+  if (panel.status === "queued") {
+    return (
+      <div
+        className="flex flex-col items-center gap-3 text-sky-100"
+        role="status"
+      >
+        <Loader2 className="animate-spin" size={34} />
+        <div className="text-sm">Đang chờ đến lượt vẽ...</div>
       </div>
     );
   }
@@ -73,7 +85,7 @@ function PanelPreviewContent({ panel }: { panel: Panel }) {
         role="alert"
       >
         <AlertTriangle size={34} />
-        <div className="text-sm">Generation failed</div>
+        <div className="text-sm">Chưa vẽ được ảnh</div>
       </div>
     );
   }
@@ -82,7 +94,7 @@ function PanelPreviewContent({ panel }: { panel: Panel }) {
     return (
       <div className="flex flex-col items-center gap-3 text-zinc-300">
         <ImageIcon size={34} />
-        <div className="text-sm">No image yet</div>
+        <div className="text-sm">Chưa có ảnh</div>
       </div>
     );
   }

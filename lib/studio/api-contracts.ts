@@ -19,6 +19,7 @@ export const StudioApiErrorCodeSchema = z.enum([
 export const StudioApiErrorSchema = z.object({
   code: StudioApiErrorCodeSchema,
   message: z.string().min(1),
+  retryable: z.boolean().default(true),
 });
 
 export const StoryboardRequestSchema = z.object({
@@ -52,7 +53,7 @@ export const PanelSchema = z.object({
   scenePrompt: z.string().min(1),
   dialogue: z.string(),
   characterIds: z.array(z.string().min(1)),
-  status: z.enum(["draft", "generating", "success", "error"]),
+  status: z.enum(["draft", "queued", "generating", "success", "error"]),
   imageTone: z.string().min(1),
   imageUrl: z.string().optional(),
   errorMessage: z.string().optional(),

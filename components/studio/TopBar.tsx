@@ -23,10 +23,10 @@ export function TopBar({
   onOpenSettings: () => void;
 }) {
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-800 bg-[#101014]/95 px-4 lg:px-6">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-semibold text-white">
+    <header className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-800 bg-[#101014]/95 px-3 py-2 md:px-4 lg:px-6">
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="max-w-[42vw] truncate text-sm font-semibold text-white sm:max-w-none">
             {projectTitle}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-2.5 py-0.5 text-[10px] font-semibold text-zinc-400 border border-zinc-800/60 shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
@@ -35,7 +35,7 @@ export function TopBar({
           </span>
         </div>
         <div
-          className="mt-1 flex items-center gap-3 text-xs text-zinc-500"
+          className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500"
           aria-live="polite"
         >
           <span>
@@ -49,11 +49,11 @@ export function TopBar({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={onOpenSettings}
-          aria-label="Cấu hình API Keys"
+          aria-label="Cấu hình dịch vụ AI"
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition"
         >
           <Settings size={16} />
@@ -64,7 +64,7 @@ export function TopBar({
           className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-zinc-100 transition hover:bg-zinc-800"
         >
           <Download size={16} />
-          <span className="hidden sm:inline">Xuất truyện</span>
+          <span className="hidden sm:inline">Xuất file</span>
         </button>
         <button
           type="button"
@@ -77,7 +77,7 @@ export function TopBar({
           ) : (
             <Wand2 size={16} />
           )}
-          <span className="hidden sm:inline">Vẽ Toàn bộ</span>
+          <span className="hidden sm:inline">Vẽ tất cả</span>
         </button>
       </div>
     </header>

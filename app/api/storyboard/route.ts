@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       {
         code: "VALIDATION_ERROR",
         message: "Title and story text are required.",
+        retryable: false,
       },
       { status: 400 },
     );

@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       {
         code: "VALIDATION_ERROR",
         message: "Panel generation request is invalid.",
+        retryable: false,
       },
       { status: 400 },
     );
@@ -30,7 +31,11 @@ export async function POST(request: Request) {
   try {
     return NextResponse.json(
       GeneratePanelResponseSchema.parse(
-        await generatePanelImageFromProvider(parsedRequest.data, customHfToken, customGeminiKey),
+        await generatePanelImageFromProvider(
+          parsedRequest.data,
+          customHfToken,
+          customGeminiKey,
+        ),
       ),
     );
   } catch {
@@ -38,6 +43,7 @@ export async function POST(request: Request) {
       {
         code: "AI_IMAGE_OFFLINE",
         message: "Image backend is offline. Please retry later.",
+        retryable: true,
       },
       { status: 503 },
     );

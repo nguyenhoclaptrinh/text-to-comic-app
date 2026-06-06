@@ -76,10 +76,10 @@ export function EditablePanelText({
   return (
     <>
       <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
-        Scene prompt
+        Mô tả cảnh
       </label>
       <textarea
-        aria-label={`Scene prompt for panel ${panel.orderIndex}`}
+        aria-label={`Mô tả cảnh cho khung ${panel.orderIndex}`}
         value={localPrompt}
         onChange={(event) => handlePromptChange(event.target.value)}
         onBlur={handlePromptBlur}
@@ -87,10 +87,10 @@ export function EditablePanelText({
       />
 
       <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
-        Dialogue
+        Lời thoại
       </label>
       <textarea
-        aria-label={`Dialogue for panel ${panel.orderIndex}`}
+        aria-label={`Lời thoại cho khung ${panel.orderIndex}`}
         value={localDialogue}
         onChange={(event) => handleDialogueChange(event.target.value)}
         onBlur={handleDialogueBlur}

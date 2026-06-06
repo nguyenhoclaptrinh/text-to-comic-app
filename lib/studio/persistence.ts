@@ -113,7 +113,7 @@ export function normalizeSnapshot(snapshot: StudioSnapshot): StudioSnapshot {
         ...panel,
         style: panel.style || "inherit",
       };
-      return panel.status === "generating"
+      return panel.status === "generating" || panel.status === "queued"
         ? {
             ...basePanel,
             status: "error" as const,

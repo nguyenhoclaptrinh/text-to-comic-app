@@ -95,7 +95,7 @@ function PanelTextEditor({
           className="inline-flex items-center gap-2 rounded-md text-left text-sm font-semibold text-white"
         >
           <span className="rounded-md bg-zinc-900 px-2 py-1 text-xs text-zinc-300">
-            PANEL {panel.orderIndex}
+            Khung {panel.orderIndex}
           </span>
           <StatusBadge status={panel.status} />
         </button>

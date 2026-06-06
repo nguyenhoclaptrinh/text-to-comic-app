@@ -133,7 +133,11 @@ describe("studio AI services", () => {
 
   it("should create a successful panel generation patch with no bubbles if dialogue is empty", async () => {
     vi.useFakeTimers();
-    const promise = generatePanelImage({ ...PANELS_SEED[1], dialogue: "", bubbles: [] });
+    const promise = generatePanelImage({
+      ...PANELS_SEED[1],
+      dialogue: "",
+      bubbles: [],
+    });
 
     await vi.runAllTimersAsync();
     const patch = await promise;
@@ -176,7 +180,7 @@ describe("studio AI services", () => {
     );
 
     await expect(generatePanelImage(PANELS_SEED[0])).rejects.toMatchObject({
-      code: StudioAiErrorCode.IMAGE_BACKEND_OFFLINE,
+      code: StudioAiErrorCode.AI_IMAGE_INVALID_RESPONSE,
     });
   });
 
@@ -196,9 +200,11 @@ describe("studio AI services", () => {
       getStudioAiErrorMessage(
         new StudioAiError(StudioAiErrorCode.IMAGE_BACKEND_OFFLINE, "Offline"),
       ),
-    ).toBe("Offline");
+    ).toBe(
+      "Dịch vụ vẽ ảnh chưa sẵn sàng. Khung truyện vẫn được lưu, bạn có thể thử vẽ lại sau.",
+    );
     expect(getStudioAiErrorMessage(new Error("Unexpected"))).toBe(
-      "The AI service failed unexpectedly. Please retry.",
+      "Có lỗi ngoài dự kiến. Dữ liệu đã nhập vẫn được giữ để bạn thử lại.",
     );
   });
 });

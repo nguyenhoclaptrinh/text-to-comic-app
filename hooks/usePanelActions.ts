@@ -9,6 +9,11 @@ import {
   generatePanelImage,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
+import {
+  markPanelGenerationFailed,
+  markPanelGenerating,
+  markPanelQueued,
+} from "@/lib/studio/domain";
 import { dialogueToBubble } from "@/lib/studio/utils";
 import type { Character, Page, Panel, Project } from "@/lib/studio/types";
 
@@ -123,13 +128,14 @@ export function usePanelActions({
       return;
     }
 
-    updatePanel(panelId, { status: "generating", errorMessage: undefined });
+    updatePanel(panelId, markPanelGenerating(target));
 
     try {
-      const resolvedStyle = (target.style && target.style !== "inherit" ? target.style : (projectStyle || "webtoon")) as
-        | "manga"
-        | "webtoon"
-        | "western";
+      const resolvedStyle = (
+        target.style && target.style !== "inherit"
+          ? target.style
+          : projectStyle || "webtoon"
+      ) as "manga" | "webtoon" | "western";
       const panelWithResolvedStyle = { ...target, style: resolvedStyle };
       updatePanel(
         panelId,
@@ -137,8 +143,9 @@ export function usePanelActions({
       );
     } catch (error) {
       updatePanel(panelId, {
-        status: "error",
-        errorMessage: getStudioAiErrorMessage(error),
+        ...markPanelGenerationFailed(target, getStudioAiErrorMessage(error)),
+        imageUrl: target.imageUrl,
+        bubbles: target.bubbles,
       });
     }
   }
@@ -153,6 +160,19 @@ export function usePanelActions({
         }
       });
     });
+
+    if (panelsToGenerate.length > 0) {
+      setPages((currentPages) =>
+        currentPages.map((page) => ({
+          ...page,
+          panels: page.panels.map((panel) =>
+            panelsToGenerate.includes(panel.id)
+              ? markPanelQueued(panel)
+              : panel,
+          ),
+        })),
+      );
+    }
 
     for (const panelId of panelsToGenerate) {
       await generatePanel(panelId);
