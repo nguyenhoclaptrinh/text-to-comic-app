@@ -37,7 +37,7 @@ export function SideNavigation({
   setView: (view: View) => void;
 }) {
   return (
-    <aside className="fixed inset-x-0 bottom-0 z-30 flex h-16 shrink-0 items-center border-t border-zinc-800 bg-[#0f0f12]/95 px-2 backdrop-blur md:static md:h-auto md:w-20 md:flex-col md:items-center md:border-r md:border-t-0 md:py-4 lg:w-64 lg:items-stretch">
+    <aside className="fixed inset-x-0 bottom-0 z-30 flex h-16 shrink-0 items-center border-t border-border-main bg-surface/95 px-2 backdrop-blur transition-colors duration-200 md:static md:h-auto md:w-20 md:flex-col md:items-center md:border-r md:border-t-0 md:py-4 lg:w-64 lg:items-stretch">
       <BrandMark />
       <nav
         className="grid flex-1 grid-cols-5 gap-1 md:block md:space-y-2 md:px-3"
@@ -49,10 +49,10 @@ export function SideNavigation({
             type="button"
             aria-label={item.label}
             onClick={() => setView(item.id)}
-            className={`flex h-11 w-full items-center justify-center gap-2 rounded-lg border px-2 text-xs transition md:gap-3 md:px-3 md:text-sm lg:justify-start ${
+            className={`flex h-11 w-full items-center justify-center gap-2 rounded-lg border px-2 text-xs transition-all md:gap-3 md:px-3 md:text-sm lg:justify-start ${
               currentView === item.id
-                ? "border-violet-400/40 bg-violet-500/15 text-white"
-                : "border-transparent text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900 hover:text-white"
+                ? "border-primary/40 bg-primary/15 text-primary dark:text-white font-semibold"
+                : "border-transparent text-text-secondary hover:border-border-main hover:bg-surface-elevated hover:text-text-primary"
             }`}
           >
             {item.icon}
@@ -67,12 +67,12 @@ export function SideNavigation({
 function BrandMark() {
   return (
     <div className="hidden md:mb-8 md:flex md:items-center md:justify-center md:gap-3 md:px-4 lg:justify-start">
-      <div className="flex size-10 items-center justify-center rounded-lg bg-violet-500 text-white">
+      <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-white">
         <Sparkles size={20} />
       </div>
       <div className="hidden lg:block">
-        <div className="text-sm font-semibold">ComicAI Studio</div>
-        <div className="text-xs text-zinc-500">Xưởng tạo truyện</div>
+        <div className="text-sm font-semibold text-text-primary">ComicAI Studio</div>
+        <div className="text-xs text-text-secondary">Xưởng tạo truyện</div>
       </div>
     </div>
   );

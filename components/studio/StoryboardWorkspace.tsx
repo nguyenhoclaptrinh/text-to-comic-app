@@ -52,7 +52,7 @@ export function StoryboardWorkspace({
   const hasBackendError = panels.some((panel) => panel.status === "error");
 
   return (
-    <div className="relative grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[288px_minmax(0,1fr)]">
+    <div className="relative grid min-h-0 flex-1 grid-cols-1 overflow-hidden transition-colors duration-200 lg:grid-cols-[288px_minmax(0,1fr)]">
       {/* Sidebar Casting nhân vật tĩnh trên màn hình lớn */}
       <CharacterCastingPanel
         characters={characters}
@@ -106,14 +106,14 @@ export function StoryboardWorkspace({
       {/* Slide-out Drawer cho Casting Panel trên di động (< 1024px) */}
       {isCastingOpen && (
         <div className="fixed inset-0 z-40 flex bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-200">
-          <div className="relative flex h-full w-[288px] flex-col border-r border-zinc-800 bg-[#111114] p-4 shadow-2xl animate-in slide-in-from-left duration-300">
-            <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
-              <span className="font-semibold text-zinc-200">
+          <div className="relative flex h-full w-[288px] flex-col border-r border-border-main bg-surface-elevated p-4 shadow-2xl animate-in slide-in-from-left duration-300">
+            <div className="mb-4 flex items-center justify-between border-b border-border-main pb-3">
+              <span className="font-semibold text-text-primary">
                 👥 Casting Nhân vật
               </span>
               <button
                 onClick={() => setIsCastingOpen(false)}
-                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                className="rounded-lg p-1 text-text-secondary hover:bg-surface hover:text-text-primary transition-colors"
               >
                 ✕
               </button>
@@ -137,13 +137,13 @@ export function StoryboardWorkspace({
 function ImageBackendAlert() {
   return (
     <div
-      className="mb-4 flex items-start gap-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100"
+      className="mb-4 flex items-start gap-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-650 dark:text-red-100"
       role="alert"
     >
       <AlertTriangle className="mt-0.5 shrink-0" size={17} />
       <div>
         <div className="font-semibold">Hệ thống vẽ ảnh cần lưu ý</div>
-        <div className="mt-1 text-red-100/80">
+        <div className="mt-1 text-red-750 dark:text-red-100/80">
           Các khung hình bị lỗi vẽ ảnh vẫn giữ nguyên văn bản mô tả bối cảnh và
           lời thoại. Bạn có thể thử vẽ lại riêng từng khung mà không mất phần đã
           chỉnh.
@@ -164,27 +164,27 @@ function StoryboardHeader({
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-zinc-100">
+          <h1 className="text-xl font-semibold text-text-primary">
             Dựng storyboard
           </h1>
           {/* Nút mở Casting nhanh trên mobile (< 1024px) */}
           <button
             type="button"
             onClick={onOpenCasting}
-            className="inline-flex h-7 items-center gap-1.5 rounded-full bg-violet-500/20 px-2.5 text-xs font-medium text-violet-300 hover:bg-violet-500/30 transition-colors lg:hidden"
+            className="inline-flex h-7 items-center gap-1.5 rounded-full bg-primary/20 px-2.5 text-xs font-medium text-primary hover:bg-primary/30 transition-colors lg:hidden"
           >
             <Users size={12} />
             <span>Nhân vật</span>
           </button>
         </div>
-        <p className="mt-1 text-sm text-zinc-400">
+        <p className="mt-1 text-sm text-text-secondary">
           Kiểm tra mạch truyện, chỉnh mô tả cảnh và vẽ ảnh cho từng khung.
         </p>
       </div>
       <button
         type="button"
         onClick={onGoToComic}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-4 text-sm font-semibold text-text-primary hover:bg-surface transition-colors"
       >
         <MessageCircle size={16} />
         Chỉnh lời thoại trên ảnh

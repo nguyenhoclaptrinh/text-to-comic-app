@@ -70,13 +70,13 @@ export function Dashboard({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-8 lg:px-8">
+    <div className="flex-1 overflow-y-auto px-4 py-6 pb-24 transition-colors duration-200 md:pb-8 lg:px-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
             Dự án của tôi
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+          <p className="mt-2 max-w-2xl text-sm text-text-secondary">
             Tiếp tục bản nháp, xử lý khung cần vẽ lại hoặc bắt đầu một truyện
             mới từ văn bản.
           </p>
@@ -84,7 +84,7 @@ export function Dashboard({
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400 shadow-lg shadow-violet-500/10"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-lg shadow-primary/10"
         >
           <Plus size={16} />
           Tạo dự án mới
@@ -92,21 +92,21 @@ export function Dashboard({
       </div>
 
       {projects.length === 0 ? (
-        <div className="flex min-h-[450px] flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-[#161619] p-8 text-center shadow-inner">
-          <div className="relative mb-6 flex size-20 items-center justify-center rounded-full bg-violet-500/10 text-violet-400 ring-8 ring-violet-500/5">
+        <div className="flex min-h-[450px] flex-col items-center justify-center rounded-2xl border border-dashed border-border-main bg-surface p-8 text-center shadow-inner">
+          <div className="relative mb-6 flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5">
             <Plus size={36} className="animate-pulse" />
           </div>
-          <h3 className="text-lg font-semibold text-zinc-200">
+          <h3 className="text-lg font-semibold text-text-primary">
             Hành trình sáng tạo bắt đầu từ đây!
           </h3>
-          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-400">
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-text-secondary">
             Biến câu chuyện chữ của bạn thành những trang truyện tranh/webtoon
             sống động với quy trình AI có thể chỉnh sửa từng bước.
           </p>
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-500 px-5 text-sm font-semibold text-white transition hover:bg-violet-400 shadow-md shadow-violet-500/25 active:scale-95"
+            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-md shadow-primary/25 active:scale-95"
           >
             <Plus size={16} />
             Tạo dự án đầu tiên
@@ -132,21 +132,21 @@ export function Dashboard({
             role="dialog"
             aria-modal="true"
             aria-labelledby="new-project-title"
-            className="w-full max-w-2xl rounded-2xl border border-zinc-800/80 bg-[#121214] p-6 shadow-2xl transition-all max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-2xl rounded-2xl border border-border-main/80 bg-surface-elevated p-6 shadow-2xl transition-all max-h-[90vh] overflow-y-auto text-text-primary"
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-violet-500/20 text-violet-200">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/20 text-primary">
                   <FileText size={20} />
                 </div>
                 <div>
                   <h2
                     id="new-project-title"
-                    className="text-lg font-semibold text-white tracking-tight"
+                    className="text-lg font-semibold text-text-primary tracking-tight"
                   >
                     Tạo Truyện tranh Mới bằng AI
                   </h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-text-secondary mt-0.5">
                     Nhập câu chuyện thô để app tách thành storyboard có thể
                     chỉnh sửa.
                   </p>
@@ -155,7 +155,7 @@ export function Dashboard({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="flex size-9 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
+                className="flex size-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors"
               >
                 <X size={18} />
               </button>
@@ -164,7 +164,7 @@ export function Dashboard({
             <div className="space-y-4">
               <div>
                 <label
-                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary"
                   htmlFor="project-title"
                 >
                   Tiêu đề truyện tranh
@@ -174,13 +174,13 @@ export function Dashboard({
                   placeholder="Nhập tiêu đề truyện tại đây..."
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/40 px-3.5 text-sm text-zinc-100 focus:border-violet-500 focus:outline-none placeholder:text-zinc-650"
+                  className="h-11 w-full rounded-lg border border-border-main bg-background/40 px-3.5 text-sm text-text-primary focus:border-primary focus:outline-none placeholder:text-text-secondary/50"
                 />
               </div>
 
               <div>
                 <label
-                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary"
                   htmlFor="project-style"
                 >
                   Phong cách vẽ mặc định
@@ -189,15 +189,15 @@ export function Dashboard({
                   id="project-style"
                   value={style}
                   onChange={(event) => setStyle(event.target.value)}
-                  className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/40 px-3.5 text-sm text-zinc-100 focus:border-violet-500 focus:outline-none"
+                  className="h-11 w-full rounded-lg border border-border-main bg-background/40 px-3.5 text-sm text-text-primary focus:border-primary focus:outline-none"
                 >
-                  <option value="webtoon">
+                  <option value="webtoon" className="bg-surface text-text-primary">
                     Modern Webtoon (Màu sắc sống động)
                   </option>
-                  <option value="manga">
+                  <option value="manga" className="bg-surface text-text-primary">
                     Classic Manga (Đen trắng, nét mực Nhật Bản)
                   </option>
-                  <option value="western">
+                  <option value="western" className="bg-surface text-text-primary">
                     Western Comic (Truyện tranh Mỹ cổ điển)
                   </option>
                 </select>
@@ -206,12 +206,12 @@ export function Dashboard({
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <label
-                    className="block text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    className="block text-xs font-semibold uppercase tracking-wider text-text-secondary"
                     htmlFor="story-text"
                   >
                     Nội dung câu chuyện chữ gốc
                   </label>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-violet-400">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-primary">
                     <Wand2 size={12} />
                     Tự động tách storyboard
                   </span>
@@ -221,12 +221,12 @@ export function Dashboard({
                   placeholder="Dán hoặc nhập câu chuyện chữ tại đây..."
                   value={storyText}
                   onChange={(event) => setStoryText(event.target.value)}
-                  className="min-h-56 w-full resize-y rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-sm leading-6 text-zinc-100 focus:border-violet-500 focus:outline-none placeholder:text-zinc-650"
+                  className="min-h-56 w-full resize-y rounded-lg border border-border-main bg-background/40 p-3 text-sm leading-6 text-text-primary focus:border-primary focus:outline-none placeholder:text-text-secondary/50"
                 />
               </div>
 
-              <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/10 p-3">
-                <span className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <div className="rounded-xl border border-border-main/80 bg-background/10 p-3">
+                <span className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-text-secondary">
                   Kịch bản mẫu nhanh
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -235,7 +235,7 @@ export function Dashboard({
                       key={idx}
                       type="button"
                       onClick={() => applyTemplate(tpl)}
-                      className="rounded-lg border border-zinc-800 bg-[#161618] px-3 py-1.5 text-xs font-medium text-zinc-400 hover:border-violet-500/50 hover:bg-violet-500/10 hover:text-violet-300 transition"
+                      className="rounded-lg border border-border-main bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition"
                     >
                       {tpl.label}
                     </button>
@@ -244,15 +244,15 @@ export function Dashboard({
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-zinc-800/85 pt-4">
-              <div className="text-xs text-zinc-500">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-border-main/85 pt-4">
+              <div className="text-xs text-text-secondary">
                 {storyText.length.toLocaleString()} ký tự đã nhập
               </div>
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="rounded-lg border border-zinc-800 bg-transparent px-4 py-2 text-sm font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition"
+                  className="rounded-lg border border-border-main bg-transparent px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition"
                 >
                   Hủy
                 </button>
@@ -260,7 +260,7 @@ export function Dashboard({
                   type="button"
                   onClick={handleStartAnalyze}
                   disabled={isAnalyzing || !title.trim() || !storyText.trim()}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-500 px-5 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-md shadow-violet-500/25 active:scale-95"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 shadow-md shadow-primary/25 active:scale-95"
                 >
                   {isAnalyzing ? (
                     <Loader2 className="animate-spin" size={16} />
@@ -274,7 +274,7 @@ export function Dashboard({
 
             {importError ? (
               <div
-                className="mt-4 flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2.5 text-xs text-red-200"
+                className="mt-4 flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2.5 text-xs text-red-650 dark:text-red-200"
                 role="alert"
               >
                 <AlertTriangle size={14} className="shrink-0" />
@@ -301,27 +301,27 @@ function ProjectCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`min-h-56 rounded-xl border bg-[#18181b] p-4 text-left transition hover:border-violet-400/50 ${
+      className={`min-h-56 rounded-xl border bg-surface p-4 text-left transition hover:border-primary/50 ${
         selected
-          ? "border-violet-400/60 shadow-lg shadow-violet-500/5"
-          : "border-zinc-800"
+          ? "border-primary/60 shadow-lg shadow-primary/5"
+          : "border-border-main"
       }`}
     >
       <div
-        className="mb-4 grid h-28 grid-cols-3 gap-2 rounded-lg bg-zinc-950 p-3"
+        className="mb-4 grid h-28 grid-cols-3 gap-2 rounded-lg bg-background p-3"
         aria-hidden="true"
       >
-        <div className="rounded-md bg-slate-800" />
-        <div className="rounded-md bg-zinc-700" />
-        <div className="rounded-md bg-stone-700" />
+        <div className="rounded-md bg-slate-800/80 dark:bg-slate-800" />
+        <div className="rounded-md bg-zinc-400/80 dark:bg-zinc-700" />
+        <div className="rounded-md bg-stone-400/80 dark:bg-stone-700" />
       </div>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="min-w-0 truncate text-base font-semibold text-white">
+        <h2 className="min-w-0 truncate text-base font-semibold text-text-primary">
           {project.title}
         </h2>
         <ProjectStatusPill status={project.status} />
       </div>
-      <div className="mt-3 text-sm text-zinc-400">
+      <div className="mt-3 text-sm text-text-secondary">
         {project.panelCount} khung hình · Cập nhật {project.updatedAt}
       </div>
     </button>

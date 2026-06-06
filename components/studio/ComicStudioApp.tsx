@@ -22,7 +22,7 @@ export function ComicStudioApp() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
-    <main className="flex min-h-dvh bg-[var(--background)] text-zinc-100 font-sans">
+    <main className="flex min-h-dvh bg-background text-text-primary font-sans transition-colors duration-200">
       <SideNavigation currentView={state.view} setView={actions.setView} />
       <section className="flex min-w-0 flex-1 flex-col">
         <TopBar

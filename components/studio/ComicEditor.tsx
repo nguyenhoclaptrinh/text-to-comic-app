@@ -127,26 +127,26 @@ export function ComicEditor({
       {/* ============================================================== */}
 
       {/* Floating Action Dock cho tablet & mobile (< 1280px) */}
-      <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-zinc-700 bg-zinc-900/90 p-2 shadow-2xl backdrop-blur-md xl:hidden">
+      <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-border-main bg-surface/90 p-2 shadow-2xl backdrop-blur-md transition-colors duration-200 xl:hidden">
         <button
           type="button"
           onClick={() => setIsBubbleOpen(true)}
-          className="flex h-11 items-center gap-2 rounded-full bg-zinc-800 px-4 text-sm font-medium text-zinc-200 hover:bg-zinc-700 active:scale-95 transition"
+          className="flex h-11 items-center gap-2 rounded-full bg-surface-elevated px-4 text-sm font-medium text-text-secondary hover:bg-surface active:scale-95 transition"
         >
-          <MessageSquare size={16} className="text-violet-400" />
+          <MessageSquare size={16} className="text-primary" />
           <span>Lời thoại</span>
         </button>
         <button
           type="button"
           onClick={() => setIsPanelOpen(true)}
-          className="flex h-11 items-center gap-2 rounded-full bg-zinc-800 px-4 text-sm font-medium text-zinc-200 hover:bg-zinc-700 active:scale-95 transition"
+          className="flex h-11 items-center gap-2 rounded-full bg-surface-elevated px-4 text-sm font-medium text-text-secondary hover:bg-surface active:scale-95 transition"
         >
-          <Layers size={16} className="text-violet-400" />
+          <Layers size={16} className="text-primary" />
           <span>Danh sách</span>
         </button>
         <button
           type="button"
-          className="flex h-11 items-center gap-2 rounded-full bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500 active:scale-95 transition"
+          className="flex h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 active:scale-95 transition"
         >
           <Save size={16} />
           <span>Lưu</span>
@@ -157,10 +157,10 @@ export function ComicEditor({
       {isBubbleOpen && (
         <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/60 backdrop-blur-sm xl:hidden">
           <div className="flex-1" onClick={() => setIsBubbleOpen(false)} />
-          <div className="relative flex max-h-[80vh] flex-col rounded-t-2xl border-t border-zinc-800 bg-[#111114] p-4 shadow-2xl">
+          <div className="relative flex max-h-[80vh] flex-col rounded-t-2xl border-t border-border-main bg-surface-elevated p-4 shadow-2xl">
             {/* Thanh kéo handle bar giả */}
             <div
-              className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-zinc-700"
+              className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-border-main"
               onClick={() => setIsBubbleOpen(false)}
             />
             <div className="overflow-y-auto pb-8">
@@ -184,14 +184,14 @@ export function ComicEditor({
       {isPanelOpen && (
         <div className="fixed inset-0 z-40 flex justify-end bg-black/60 backdrop-blur-sm xl:hidden">
           <div className="flex-1" onClick={() => setIsPanelOpen(false)} />
-          <div className="relative flex h-full w-[280px] flex-col border-l border-zinc-800 bg-[#111114] p-4 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
-              <span className="font-semibold text-zinc-200">
+          <div className="relative flex h-full w-[280px] flex-col border-l border-border-main bg-surface-elevated p-4 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-border-main pb-3">
+              <span className="font-semibold text-text-primary">
                 Danh sách khung
               </span>
               <button
                 onClick={() => setIsPanelOpen(false)}
-                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                className="rounded-lg p-1 text-text-secondary hover:bg-surface hover:text-text-primary"
               >
                 ✕
               </button>
@@ -238,15 +238,15 @@ function ComicEditorHeader() {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-100">Chỉnh truyện</h1>
-        <p className="mt-1 text-sm text-zinc-400">
+        <h1 className="text-xl font-semibold text-text-primary">Chỉnh truyện</h1>
+        <p className="mt-1 text-sm text-text-secondary">
           Đặt bong bóng thoại lên từng khung ảnh và kiểm tra bản truyện trước
           khi xuất.
         </p>
       </div>
       <button
         type="button"
-        className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
+        className="inline-flex h-9 items-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-3 text-sm text-text-primary hover:bg-surface transition-colors"
       >
         <Save size={15} />
         Đã tự lưu

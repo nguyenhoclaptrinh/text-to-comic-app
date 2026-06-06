@@ -19,9 +19,9 @@ export function CharacterCastingPanel({
   className?: string;
 }) {
   return (
-    <aside className={`border-r border-zinc-800 bg-[#111114] p-4 ${className}`}>
+    <aside className={`border-r border-border-main bg-surface p-4 transition-colors duration-200 ${className}`}>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
           Casting Nhân vật
         </h2>
         <button
@@ -29,7 +29,7 @@ export function CharacterCastingPanel({
           onClick={onAddCharacter}
           aria-label="Thêm nhân vật"
           title="Thêm nhân vật"
-          className="flex size-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800 transition-colors"
+          className="flex size-8 items-center justify-center rounded-lg border border-border-main bg-surface-elevated text-text-primary hover:bg-surface transition-colors"
         >
           <Plus size={16} />
         </button>
@@ -55,7 +55,7 @@ function CharacterCard({
   onUpdate: (patch: Partial<Character>) => void;
 }) {
   return (
-    <article className="rounded-lg border border-zinc-800 bg-[#18181b] p-3">
+    <article className="rounded-lg border border-border-main bg-surface-elevated p-3 transition-colors duration-200">
       <div className="mb-3 flex items-center gap-3">
         <div
           className="flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white shadow-sm"
@@ -69,14 +69,14 @@ function CharacterCard({
             value={character.name}
             placeholder="Tên nhân vật..."
             onChange={(event) => onUpdate({ name: event.target.value })}
-            className="h-8 w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 text-sm font-semibold text-zinc-100 focus:border-violet-500 focus:outline-none"
+            className="h-8 w-full rounded-md border border-border-main bg-background px-2 text-sm font-semibold text-text-primary focus:border-primary focus:outline-none"
           />
           <input
             aria-label="Vai trò nhân vật"
             value={character.role}
             placeholder="Vai trò (vd: Nhân vật chính)"
             onChange={(event) => onUpdate({ role: event.target.value })}
-            className="h-8 w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-300 focus:border-violet-500 focus:outline-none"
+            className="h-8 w-full rounded-md border border-border-main bg-background px-2 text-xs text-text-secondary focus:border-primary focus:outline-none"
           />
         </div>
       </div>
@@ -85,11 +85,11 @@ function CharacterCard({
         value={character.description}
         placeholder="Mô tả ngoại hình (vd: Mặc áo khoác đen, tóc ngắn đỏ, đeo kính)..."
         onChange={(event) => onUpdate({ description: event.target.value })}
-        className="min-h-20 w-full resize-y rounded-md border border-zinc-700 bg-zinc-950 p-2 text-xs leading-5 text-zinc-300 focus:border-violet-500 focus:outline-none"
+        className="min-h-20 w-full resize-y rounded-md border border-border-main bg-background p-2 text-xs leading-5 text-text-secondary focus:border-primary focus:outline-none"
       />
       <button
         type="button"
-        className="mt-3 inline-flex h-8 items-center gap-2 rounded-md border border-zinc-700 px-2.5 text-xs text-zinc-300 hover:bg-zinc-900 transition-colors"
+        className="mt-3 inline-flex h-8 items-center gap-2 rounded-md border border-border-main bg-surface px-2.5 text-xs text-text-secondary hover:bg-surface-elevated transition-colors"
       >
         <Upload size={13} />
         Ảnh mẫu (Reference)

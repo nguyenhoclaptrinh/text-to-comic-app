@@ -20,7 +20,7 @@ export function PageSelector({
   onDeletePage: (pageId: string) => void;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-zinc-800/80 pb-3">
+    <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-border-main/80 pb-3">
       <div className="flex flex-wrap items-center gap-1.5">
         {pages
           .sort((a, b) => a.orderIndex - b.orderIndex)
@@ -36,8 +36,8 @@ export function PageSelector({
                 key={page.id}
                 className={`group relative flex items-center h-9 rounded-lg border text-sm font-medium transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? "border-violet-500/50 bg-violet-500/10 text-violet-100 shadow-[0_0_12px_rgba(139,92,246,0.15)]"
-                    : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/60 hover:text-zinc-200"
+                    ? "border-primary/50 bg-primary/10 text-primary dark:text-violet-100 shadow-[0_0_12px_rgba(139,92,246,0.08)]"
+                    : "border-border-main bg-surface-elevated/40 text-text-secondary hover:border-border-main hover:bg-surface-elevated hover:text-text-primary"
                 }`}
                 onClick={() => onSelectPage(page.id)}
               >
@@ -49,7 +49,7 @@ export function PageSelector({
                       e.stopPropagation();
                       onDeletePage(page.id);
                     }}
-                    className="absolute right-1.5 opacity-0 group-hover:opacity-100 flex items-center justify-center w-5 h-5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 transition-all duration-150"
+                    className="absolute right-1.5 opacity-0 group-hover:opacity-100 flex items-center justify-center w-5 h-5 rounded-md text-text-muted hover:text-text-primary hover:bg-surface transition-all duration-150"
                     title={`Xóa ${displayTitle}`}
                   >
                     <X size={12} />
@@ -63,7 +63,7 @@ export function PageSelector({
       <button
         type="button"
         onClick={onAddPage}
-        className="flex items-center justify-center w-9 h-9 rounded-lg border border-dashed border-zinc-800 hover:border-violet-500/50 hover:bg-violet-500/5 bg-zinc-900/10 text-zinc-500 hover:text-violet-300 transition-all duration-200"
+        className="flex items-center justify-center w-9 h-9 rounded-lg border border-dashed border-border-main hover:border-primary/50 hover:bg-primary/5 bg-surface/10 text-text-secondary hover:text-primary transition-all duration-200"
         title="Thêm trang mới"
       >
         <Plus size={16} />

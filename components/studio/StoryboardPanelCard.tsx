@@ -40,8 +40,8 @@ export function StoryboardPanelCard({
 }) {
   return (
     <article
-      className={`grid overflow-hidden rounded-xl border bg-[#18181b] shadow-lg lg:grid-cols-[minmax(0,1fr)_360px] ${
-        selected ? "border-violet-400/60" : "border-zinc-800"
+      className={`grid overflow-hidden rounded-xl border bg-surface shadow-lg transition-all duration-200 lg:grid-cols-[minmax(0,1fr)_360px] ${
+        selected ? "border-primary/60" : "border-border-main"
       }`}
     >
       <PanelTextEditor
@@ -92,9 +92,9 @@ function PanelTextEditor({
         <button
           type="button"
           onClick={onSelect}
-          className="inline-flex items-center gap-2 rounded-md text-left text-sm font-semibold text-white"
+          className="inline-flex items-center gap-2 rounded-md text-left text-sm font-semibold text-text-primary"
         >
-          <span className="rounded-md bg-zinc-900 px-2 py-1 text-xs text-zinc-300">
+          <span className="rounded-md bg-surface-elevated px-2 py-1 text-xs text-text-secondary border border-border-main">
             Khung {panel.orderIndex}
           </span>
           <StatusBadge status={panel.status} />
@@ -105,7 +105,7 @@ function PanelTextEditor({
             onClick={() => onMove("up")}
             disabled={!canMoveUp}
             aria-label={`Move panel ${panel.orderIndex} up`}
-            className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30 transition"
+            className="flex size-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-elevated hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-30 transition"
           >
             <ChevronUp size={16} />
           </button>
@@ -114,7 +114,7 @@ function PanelTextEditor({
             onClick={() => onMove("down")}
             disabled={!canMoveDown}
             aria-label={`Move panel ${panel.orderIndex} down`}
-            className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30 transition"
+            className="flex size-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-elevated hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-30 transition"
           >
             <ChevronDown size={16} />
           </button>
@@ -123,7 +123,7 @@ function PanelTextEditor({
             onClick={onDelete}
             disabled={!canDelete}
             aria-label={`Delete panel ${panel.orderIndex}`}
-            className="flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 transition"
+            className="flex size-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-elevated hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40 transition"
           >
             <Trash2 size={15} />
           </button>
