@@ -14,8 +14,9 @@ import type {
 export async function generatePanelImageFromProvider(
   input: GeneratePanelRequest,
   customHfToken?: string,
+  customGeminiApiKey?: string,
 ): Promise<GeneratePanelResponse> {
-  const response = await generateRawPanelImage(input, customHfToken);
+  const response = await generateRawPanelImage(input, customHfToken, customGeminiApiKey);
   const cloudUrl = await uploadToSupabaseStorage(
     input.panel.id,
     input.panel.seed,
@@ -35,13 +36,14 @@ export async function generatePanelImageFromProvider(
 async function generateRawPanelImage(
   input: GeneratePanelRequest,
   customHfToken?: string,
+  customGeminiApiKey?: string,
 ): Promise<GeneratePanelResponse> {
   if (input.panel.scenePrompt.toLowerCase().includes("[offline]")) {
     throw new Error("Image backend is offline.");
   }
 
   // 1. Thử dùng Google AI Studio Gemini 2.5 Flash Image nếu có GEMINI_API_KEY
-  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
   if (geminiApiKey) {
     try {
       const prompt = createImagePrompt(input);

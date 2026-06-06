@@ -26,10 +26,11 @@ export async function POST(request: Request) {
   }
 
   const customHfToken = request.headers.get("x-huggingface-token") || undefined;
+  const customGeminiKey = request.headers.get("x-gemini-api-key") || undefined;
   try {
     return NextResponse.json(
       GeneratePanelResponseSchema.parse(
-        await generatePanelImageFromProvider(parsedRequest.data, customHfToken),
+        await generatePanelImageFromProvider(parsedRequest.data, customHfToken, customGeminiKey),
       ),
     );
   } catch {

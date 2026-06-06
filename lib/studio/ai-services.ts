@@ -112,11 +112,18 @@ export async function generatePanelImage(
       typeof localStorage !== "undefined"
         ? localStorage.getItem("text-to-comic:huggingface-token") || ""
         : "";
+    const geminiKey =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("text-to-comic:gemini-key") || ""
+        : "";
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
     if (hfToken) {
       headers["x-huggingface-token"] = hfToken;
+    }
+    if (geminiKey) {
+      headers["x-gemini-api-key"] = geminiKey;
     }
 
     const response = await fetch("/api/generate-panel", {
