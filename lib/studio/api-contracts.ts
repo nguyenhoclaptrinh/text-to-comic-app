@@ -30,7 +30,7 @@ export const StoryboardAiPanelSchema = z.object({
   orderIndex: z.number().int().positive(),
   scenePrompt: z.string().trim().min(8).max(1200),
   characters: z.array(z.string().trim().min(1).max(80)).max(8),
-  dialogue: z.string().trim().min(1).max(800),
+  dialogue: z.string().trim().max(800),
 });
 
 export const StoryboardAiResponseSchema = z.object({
@@ -50,7 +50,7 @@ export const PanelSchema = z.object({
   id: z.string().min(1),
   orderIndex: z.number().int().positive(),
   scenePrompt: z.string().min(1),
-  dialogue: z.string().min(1),
+  dialogue: z.string(),
   characterIds: z.array(z.string().min(1)),
   status: z.enum(["draft", "generating", "success", "error"]),
   imageTone: z.string().min(1),

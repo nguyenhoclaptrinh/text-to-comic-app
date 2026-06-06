@@ -102,4 +102,29 @@ describe("studio API contracts", () => {
       /^data:image\/svg\+xml;charset=utf-8,/,
     );
   });
+
+  it("should accept storyboard and panel schemas with empty dialogue", () => {
+    const aiResponseParse = StoryboardAiResponseSchema.safeParse({
+      panels: [
+        {
+          orderIndex: 1,
+          scenePrompt: "A scenic snow-covered view with no characters speaking.",
+          characters: [],
+          dialogue: "",
+        },
+      ],
+    });
+    expect(aiResponseParse.success).toBe(true);
+
+    const emptyDialoguePanel = {
+      ...PANELS_SEED[0],
+      dialogue: "",
+    };
+    const generateRequestParse = GeneratePanelRequestSchema.safeParse({
+      panel: emptyDialoguePanel,
+      characters: [],
+    });
+    expect(generateRequestParse.success).toBe(true);
+  });
 });
+
