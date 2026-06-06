@@ -15,13 +15,17 @@ import {
 import { dialogueToBubble } from "@/lib/studio/utils";
 import type { Bubble, Character, Panel, Project } from "@/lib/studio/types";
 
-export function createProject(projectId: string, storyTitle: string): Project {
+export function createProject(
+  projectId: string,
+  storyTitle: string,
+  panelCount = 0,
+): Project {
   return {
     id: projectId || crypto.randomUUID(),
     title: storyTitle.trim(),
     status: "storyboard",
     updatedAt: "Just now",
-    panelCount: 3,
+    panelCount,
     style: "webtoon",
   };
 }

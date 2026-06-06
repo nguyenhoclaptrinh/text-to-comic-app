@@ -4,10 +4,13 @@
  */
 
 import {
-  INTERRUPTED_GENERATION_ERROR,
   STUDIO_SNAPSHOT_VERSION,
   STUDIO_STORAGE_KEY,
 } from "@/lib/studio/constants";
+import {
+  migrateStudioSnapshot,
+  normalizeCurrentSnapshot,
+} from "@/lib/studio/snapshot-migrations";
 import type {
   Character,
   Page,
@@ -26,6 +29,8 @@ export interface StudioRepository {
   loadSnapshot(): Promise<StudioSnapshot | null> | StudioSnapshot | null;
   saveSnapshot(snapshot: StudioSnapshot): Promise<void> | void;
   clearSnapshot(): Promise<void> | void;
+  exportSnapshot?(): Promise<StudioSnapshot | null> | StudioSnapshot | null;
+  importSnapshot?(snapshot: StudioSnapshot): Promise<void> | void;
 }
 
 export enum StudioPersistenceErrorCode {
@@ -56,7 +61,7 @@ export class LocalStorageStudioRepository implements StudioRepository {
         return null;
       }
 
-      return normalizeSnapshot(parsedSnapshot);
+      return migrateStudioSnapshot(parsedSnapshot);
     } catch (error) {
       warnPersistenceIssue(StudioPersistenceErrorCode.INVALID_JSON, error);
       return null;
@@ -78,6 +83,14 @@ export class LocalStorageStudioRepository implements StudioRepository {
   clearSnapshot() {
     this.storage.removeItem(this.key);
   }
+
+  exportSnapshot() {
+    return this.loadSnapshot();
+  }
+
+  importSnapshot(snapshot: StudioSnapshot) {
+    return this.saveSnapshot(normalizeSnapshot(snapshot));
+  }
 }
 
 export function createStudioSnapshot(
@@ -85,55 +98,13 @@ export function createStudioSnapshot(
 ): StudioSnapshot {
   return {
     version: STUDIO_SNAPSHOT_VERSION,
+    savedAt: new Date().toISOString(),
     ...snapshot,
   };
 }
 
 export function normalizeSnapshot(snapshot: StudioSnapshot): StudioSnapshot {
-  let pages = snapshot.pages;
-  let activePageId = snapshot.activePageId;
-
-  if ((!pages || pages.length === 0) && snapshot.panels) {
-    activePageId = `page-${snapshot.activeProjectId}-default`;
-    pages = [
-      {
-        id: activePageId,
-        projectId: snapshot.activeProjectId,
-        orderIndex: 1,
-        title: "Page 1",
-        panels: snapshot.panels,
-      },
-    ];
-  }
-
-  const normalizedPages = (pages || []).map((page) => ({
-    ...page,
-    panels: page.panels.map((panel) => {
-      const basePanel = {
-        ...panel,
-        style: panel.style || "inherit",
-      };
-      return panel.status === "generating" || panel.status === "queued"
-        ? {
-            ...basePanel,
-            status: "error" as const,
-            errorMessage: INTERRUPTED_GENERATION_ERROR,
-          }
-        : basePanel;
-    }),
-  }));
-
-  const normalizedProjects = (snapshot.projects || []).map((project) => ({
-    ...project,
-    style: project.style || "webtoon",
-  }));
-
-  return {
-    ...snapshot,
-    activePageId: activePageId || `page-${snapshot.activeProjectId}-default`,
-    pages: normalizedPages,
-    projects: normalizedProjects,
-  };
+  return normalizeCurrentSnapshot(snapshot);
 }
 
 function isStudioSnapshot(value: unknown): value is StudioSnapshot {
@@ -142,7 +113,9 @@ function isStudioSnapshot(value: unknown): value is StudioSnapshot {
   }
 
   return (
-    value.version === STUDIO_SNAPSHOT_VERSION &&
+    typeof value.version === "number" &&
+    value.version > 0 &&
+    value.version <= STUDIO_SNAPSHOT_VERSION &&
     isProjectArray(value.projects) &&
     typeof value.activeProjectId === "string" &&
     isCharacterArray(value.characters) &&

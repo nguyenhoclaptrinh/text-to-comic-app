@@ -24,14 +24,14 @@ import type { Panel } from "@/lib/studio/types";
 
 describe("studio factories", () => {
   it("should create a storyboard project with trimmed title", () => {
-    const project = createProject("project-1", "  Demo Story  ");
+    const project = createProject("project-1", "  Demo Story  ", 4);
 
     expect(project).toMatchObject({
       id: "project-1",
       title: "Demo Story",
       status: "storyboard",
       updatedAt: "Just now",
-      panelCount: 3,
+      panelCount: 4,
       style: "webtoon",
     });
   });

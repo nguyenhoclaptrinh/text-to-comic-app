@@ -85,6 +85,7 @@ export type GenerationSummary = {
 
 export type StudioSnapshot = {
   version: number;
+  savedAt?: string;
   projects: Project[];
   activeProjectId: string;
   activePageId: string;

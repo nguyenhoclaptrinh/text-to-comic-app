@@ -21,6 +21,13 @@ import {
   analyzeStoryToPages,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
+import {
+  countMissingImages,
+  countPanelsForProject,
+  getPanelsForProject,
+  summarizeGeneration,
+  syncProjectPanelCounts,
+} from "@/lib/studio/selectors";
 import { updatePanelBubble } from "@/lib/studio/utils";
 import type { Bubble, Page, Project } from "@/lib/studio/types";
 
@@ -59,28 +66,15 @@ export function useComicStudioState() {
     (bubble) => bubble.id === selectedBubbleId,
   );
 
-  const missingImages = pages.reduce(
-    (count, page) =>
-      count + page.panels.filter((panel) => panel.status !== "success").length,
-    0,
+  const missingImages = useMemo(
+    () => countMissingImages(pages, nav.activeProjectId),
+    [pages, nav.activeProjectId],
   );
 
-  const generationSummary = useMemo(() => {
-    let done = 0;
-    let errors = 0;
-    let total = 0;
-    pages.forEach((page) => {
-      page.panels.forEach((panel) => {
-        total++;
-        if (panel.status === "success") {
-          done++;
-        } else if (panel.status === "error") {
-          errors++;
-        }
-      });
-    });
-    return { done, errors, total };
-  }, [pages]);
+  const generationSummary = useMemo(
+    () => summarizeGeneration(pages, nav.activeProjectId),
+    [pages, nav.activeProjectId],
+  );
 
   // 3. Đồng bộ hóa Local & Cloud Persistence
   useComicStudioPersistence(
@@ -112,7 +106,6 @@ export function useComicStudioState() {
   const panelActions = usePanelActions({
     pages,
     characters: casting.characters,
-    activeProjectId: nav.activeProjectId,
     selectedPanelId,
     setProjects,
     setPages,
@@ -161,17 +154,25 @@ export function useComicStudioState() {
       });
 
       setImportError("");
-      setProjects((current) => [
-        { ...createProject(projectId, finalTitle), style },
-        ...current,
-      ]);
-      nav.setActiveProjectId(projectId);
-
       const pagesWithCorrectProjectId = generatedPages.map((page) => ({
         ...page,
         projectId,
         panels: page.panels.map((p) => ({ ...p, style: "inherit" as const })),
       }));
+
+      setProjects((current) => [
+        {
+          ...createProject(
+            projectId,
+            finalTitle,
+            countPanelsForProject(pagesWithCorrectProjectId, projectId),
+          ),
+          style,
+        },
+        ...current,
+      ]);
+      nav.setActiveProjectId(projectId);
+
       setPages(pagesWithCorrectProjectId);
 
       // Trích xuất nhân vật tự động từ các panels
@@ -248,7 +249,13 @@ export function useComicStudioState() {
       ],
     };
 
-    setPages((current) => [...current, newPage]);
+    setPages((current) => {
+      const nextPages = [...current, newPage];
+      setProjects((currentProjects) =>
+        syncProjectPanelCounts(currentProjects, nextPages),
+      );
+      return nextPages;
+    });
     nav.setActivePageId(newPageId);
     nav.setSelectedPanelId(newPage.panels[0].id);
     nav.setSelectedBubbleId("");
@@ -267,6 +274,9 @@ export function useComicStudioState() {
     }));
 
     setPages(reorderedPages);
+    setProjects((currentProjects) =>
+      syncProjectPanelCounts(currentProjects, reorderedPages),
+    );
 
     if (nav.activePageId === pageId) {
       const fallbackPage = reorderedPages[0];
@@ -329,12 +339,10 @@ export function useComicStudioState() {
   // 5. Phân rã Trạng thái Kéo thả Bong bóng thoại
   const drag = useBubbleDragState(updateBubble);
 
-  const allPanels = useMemo(() => {
-    const projectPages = pages.filter(
-      (p) => p.projectId === nav.activeProjectId,
-    );
-    return projectPages.flatMap((page) => page.panels);
-  }, [pages, nav.activeProjectId]);
+  const allPanels = useMemo(
+    () => getPanelsForProject(pages, nav.activeProjectId),
+    [pages, nav.activeProjectId],
+  );
 
   return {
     state: {

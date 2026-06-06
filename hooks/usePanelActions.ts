@@ -14,13 +14,13 @@ import {
   markPanelGenerating,
   markPanelQueued,
 } from "@/lib/studio/domain";
+import { syncProjectPanelCounts } from "@/lib/studio/selectors";
 import { dialogueToBubble } from "@/lib/studio/utils";
 import type { Character, Page, Panel, Project } from "@/lib/studio/types";
 
 export function usePanelActions({
   pages,
   characters,
-  activeProjectId,
   selectedPanelId,
   setProjects,
   setPages,
@@ -30,7 +30,6 @@ export function usePanelActions({
 }: {
   pages: Page[];
   characters: Character[];
-  activeProjectId: string;
   selectedPanelId: string;
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
   setPages: React.Dispatch<React.SetStateAction<Page[]>>;
@@ -94,22 +93,9 @@ export function usePanelActions({
         };
       });
 
+      setProjects((current) => syncProjectPanelCounts(current, updatedPages));
       return updatedPages;
     });
-
-    // Cập nhật tổng số panel của project
-    setProjects((current) =>
-      current.map((project) => {
-        if (project.id !== activeProjectId) return project;
-
-        // Tính toán lại tổng panel trên tất cả các trang
-        let totalCount = 0;
-        pages.forEach((p) => {
-          totalCount += p.panels.filter((pan) => pan.id !== panelId).length;
-        });
-        return { ...project, panelCount: totalCount };
-      }),
-    );
 
     if (selectedPanelId === panelId && nextSelectedPanel) {
       setSelectedPanelId(nextSelectedPanel.id);
