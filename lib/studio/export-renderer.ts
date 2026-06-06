@@ -239,6 +239,33 @@ function drawPanelMissingState(
   context.textAlign = "start";
 }
 
+function calculateWrappedTextHeight(
+  context: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  lineHeight: number,
+): number {
+  const words = text.split(/\s+/);
+  let line = "";
+  let lineCount = 0;
+
+  words.forEach((word) => {
+    const nextLine = line ? `${line} ${word}` : word;
+    if (context.measureText(nextLine).width > maxWidth && line) {
+      lineCount++;
+      line = word;
+      return;
+    }
+    line = nextLine;
+  });
+
+  if (line) {
+    lineCount++;
+  }
+
+  return lineCount * lineHeight;
+}
+
 function drawBubble(
   context: CanvasRenderingContext2D,
   panel: Panel,
@@ -249,8 +276,26 @@ function drawBubble(
   const x = panelX + (bubble.x / 100) * EXPORT_PANEL_WIDTH;
   const y = panelY + (bubble.y / 100) * EXPORT_PANEL_HEIGHT;
   const width = (bubble.width / 100) * EXPORT_PANEL_WIDTH;
-  const height = Math.max((bubble.height / 100) * EXPORT_PANEL_HEIGHT, 76);
 
+  // Cấu hình font trước khi đo text
+  context.font = "700 20px Arial";
+
+  const paddingX = 22;
+  const paddingY = 24;
+  const textLineHeight = 24;
+
+  const textHeight = calculateWrappedTextHeight(
+    context,
+    bubble.text,
+    width - paddingX * 2,
+    textLineHeight
+  );
+
+  const minBubbleHeight = (bubble.height / 100) * EXPORT_PANEL_HEIGHT;
+  const calculatedBubbleHeight = textHeight + paddingY * 2;
+  const height = Math.max(minBubbleHeight, calculatedBubbleHeight, 76);
+
+  // Vẽ hình chữ nhật bo góc của bong bóng thoại
   context.fillStyle = "#ffffff";
   context.strokeStyle = "#09090b";
   context.lineWidth = 4;
@@ -259,9 +304,30 @@ function drawBubble(
   context.fill();
   context.stroke();
 
+  // Vẽ đuôi bong bóng thoại (tail) ở góc dưới bên trái (giống với style rounded-bl-md trên UI)
+  context.fillStyle = "#ffffff";
+  context.beginPath();
+  context.moveTo(x + 30, y + height);
+  context.lineTo(x + 20, y + height + 16);
+  context.lineTo(x + 45, y + height);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  // Vẽ đè một hình chữ nhật nhỏ không viền để xóa đoạn stroke viền giữa bong bóng và đuôi
+  context.fillStyle = "#ffffff";
+  context.fillRect(x + 28, y + height - 3, 15, 6);
+
+  // Vẽ text bên trong bong bóng thoại
   context.fillStyle = "#09090b";
-  context.font = "700 20px Arial";
-  drawWrappedText(context, bubble.text, x + 22, y + 34, width - 44, 24);
+  drawWrappedText(
+    context,
+    bubble.text,
+    x + paddingX,
+    y + paddingY + 16, // Điều chỉnh baseline dòng đầu
+    width - paddingX * 2,
+    textLineHeight
+  );
 }
 
 function drawWrappedText(

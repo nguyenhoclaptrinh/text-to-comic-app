@@ -164,6 +164,38 @@ export function useComicStudioState() {
       }));
       setPages(pagesWithCorrectProjectId);
 
+      // Trích xuất nhân vật tự động từ các panels
+      const detectedIds = new Set<string>();
+      pagesWithCorrectProjectId.forEach((page) => {
+        page.panels.forEach((panel) => {
+          panel.characterIds.forEach((id) => {
+            if (id && id !== "unknown-character") {
+              detectedIds.add(id);
+            }
+          });
+        });
+      });
+
+      const colors = ["#8b5cf6", "#ef4444", "#10b981", "#f59e0b", "#3b82f6", "#ec4899"];
+      const newCharactersList = Array.from(detectedIds).map((id, idx) => {
+        const name = id
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+        
+        return {
+          id,
+          name,
+          role: idx === 0 ? "Main protagonist" : "Supporting role",
+          description: `Nhân vật trong truyện: ${name}.`,
+          color: colors[idx % colors.length],
+        };
+      });
+
+      if (newCharactersList.length > 0) {
+        casting.setCharacters(newCharactersList);
+      }
+
       const firstPage = pagesWithCorrectProjectId[0] || generatedPages[0];
       nav.setActivePageId(firstPage.id);
       nav.setSelectedPanelId(firstPage.panels[0].id);

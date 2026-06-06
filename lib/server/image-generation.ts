@@ -175,7 +175,7 @@ function createFallbackPanelImageResponse(
 }
 
 function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
-  const characterContext = panel.characterIds
+  const selectedCharacters = panel.characterIds
     .map((characterId) =>
       characters.find(
         (character) =>
@@ -183,9 +183,11 @@ function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
           slugifyCharacterName(character.name) === characterId,
       ),
     )
-    .filter(isDefined)
-    .map((character) => `${character.name}: ${character.description}`)
-    .join("\n");
+    .filter(isDefined);
+
+  const characterContext = selectedCharacters
+    .map((character) => `${character.name} (${character.description})`)
+    .join(", ");
 
   const resolvedStyle =
     panel.style && panel.style !== "inherit" ? panel.style : "webtoon";
@@ -194,13 +196,16 @@ function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
       resolvedStyle as keyof typeof COMIC_STYLE_MODIFIERS
     ] || COMIC_STYLE_MODIFIERS.webtoon;
 
+  const characterHeading = selectedCharacters.length > 0
+    ? `featuring character ${characterContext}`
+    : "";
+
   return [
-    "Create a clean comic panel illustration.",
-    `Style: ${styleModifier}`,
-    `Scene: ${panel.scenePrompt}`,
-    `Dialogue context: ${panel.dialogue}`,
-    characterContext ? `Characters:\n${characterContext}` : "",
-    `Seed: ${panel.seed}`,
+    `A high-quality comic panel illustration ${characterHeading}, in the style of ${styleModifier}`,
+    `Visual Scene: ${panel.scenePrompt}`,
+    `Story Dialogue Context: "${panel.dialogue}"`,
+    "Strict Quality: consistent character styling, same outfit, same face, highly detailed illustration, clear face, clear line art.",
+    `Rendering Seed: ${panel.seed}`,
   ]
     .filter(Boolean)
     .join("\n\n");

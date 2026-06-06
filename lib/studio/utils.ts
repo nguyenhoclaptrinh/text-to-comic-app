@@ -74,46 +74,53 @@ export function createMockPanels(storyText: string): Panel[] {
     .map((s) => s.trim())
     .filter((s) => s.length > 5);
 
-  const panelCount = 3;
-  const chunks: string[][] = [[], [], []];
+  if (sentences.length === 0) {
+    sentences.push("A quiet scene unfolds.");
+  }
 
-  if (sentences.length >= panelCount) {
-    const chunkSize = Math.ceil(sentences.length / panelCount);
-    for (let i = 0; i < panelCount; i++) {
-      chunks[i] = sentences.slice(i * chunkSize, (i + 1) * chunkSize);
-    }
-  } else {
-    for (let i = 0; i < panelCount; i++) {
-      const idx = Math.min(i, sentences.length - 1);
-      chunks[i] = [sentences[idx] || "A quiet scene unfolds."];
-    }
+  // Chia panel động: tối thiểu 3 panel, tối đa 8 panel tùy theo độ dài câu
+  const panelCount = clamp(Math.ceil(sentences.length / 2), 3, 8);
+  const chunks: string[][] = Array.from({ length: panelCount }, () => []);
+
+  const chunkSize = Math.ceil(sentences.length / panelCount);
+  for (let i = 0; i < panelCount; i++) {
+    chunks[i] = sentences.slice(i * chunkSize, (i + 1) * chunkSize);
   }
 
   const defaultTones = [
     "from-slate-900 via-zinc-800 to-indigo-950",
     "from-red-950 via-zinc-800 to-amber-950",
     "from-zinc-900 via-stone-800 to-slate-900",
+    "from-cyan-950 via-zinc-800 to-emerald-950",
   ];
 
   return chunks.map((chunkSentences, index) => {
-    const textFragment = chunkSentences.join(" ");
-    let dialogue = `Narrator: ${textFragment.slice(0, 60)}`;
-    let characterIds = ["protagonist"];
+    const textFragment = chunkSentences.join(" ") || "The story continues.";
+    let dialogue = "";
+    let characterIds: string[] = [];
 
-    const colonMatch = textFragment.match(/^([A-Za-z\s]+):\s*(.+)$/);
+    // Hỗ trợ trích xuất tiếng Việt có dấu dạng: "Tên nhân vật: Lời thoại"
+    const colonMatch = textFragment.match(/^([A-ZÀ-Ỹa-zà-ỹ\s]+):\s*(.+)$/ui);
     if (colonMatch) {
       dialogue = `${colonMatch[1].trim()}: ${colonMatch[2].trim()}`;
       characterIds = [
         colonMatch[1]
           .trim()
           .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-"),
+          .replace(/[^a-z0-9à-ỹ]+/gi, "-"),
       ];
     } else {
+      // Hỗ trợ trích xuất thoại trong dấu ngoặc kép "..." hoặc “...”
       const quoteMatch = textFragment.match(/["“]([^"”]+)["”]/);
       if (quoteMatch) {
-        dialogue = `Speaker: ${quoteMatch[1].trim()}`;
-        characterIds = ["speaker"];
+        const speechIndicator = textFragment.match(/([A-ZÀ-Ỹa-zà-ỹ\s]+)\s+(nói|hỏi|trả lời|thầm nghĩ|cười)/ui);
+        const speaker = speechIndicator ? speechIndicator[1].trim() : "Speaker";
+        dialogue = `${speaker}: ${quoteMatch[1].trim()}`;
+        characterIds = [
+          speaker
+            .toLowerCase()
+            .replace(/[^a-z0-9à-ỹ]+/gi, "-"),
+        ];
       }
     }
 
@@ -121,7 +128,7 @@ export function createMockPanels(storyText: string): Panel[] {
       dialogue = dialogue.slice(0, BUBBLE_TEXT_MAX_LENGTH - 3) + "...";
     }
 
-    const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 200)}. Highly detailed, comic book style.`;
+    const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 300)}. Highly detailed, comic book style.`;
 
     return {
       id: crypto.randomUUID(),
