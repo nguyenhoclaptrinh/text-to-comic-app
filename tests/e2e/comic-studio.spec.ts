@@ -8,14 +8,18 @@ import { expect, test } from "@playwright/test";
 test("creates, generates, edits, and exports a comic", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("button", { name: "Import" }).click();
+  await page.getByRole("button", { name: "Projects" }).click();
+
+  const newProjectButton = page.getByRole("button", { name: /Tạo dự án/ });
+  await newProjectButton.first().click();
+
   await page.getByLabel("Tiêu đề truyện tranh").fill("E2E Snow Road");
   await page
     .getByLabel("Nội dung câu chuyện chữ gốc")
     .fill(
       "Snow covered the mountain road while a quiet inn waited for guests. A young innkeeper watched the door. A cheerful traveler entered with a loud request for noodles.",
     );
-  await page.getByRole("button", { name: "Phân tích Kịch bản" }).click();
+  await page.getByRole("button", { name: "Bắt đầu Phân tích" }).click();
 
   await expect(
     page.getByRole("heading", { name: "Biên soạn Storyboard" }),
@@ -46,6 +50,7 @@ test("creates, generates, edits, and exports a comic", async ({ page }) => {
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Xuất bản & Tải về" }).click();
   const download = await downloadPromise;
-
+  const downloadPath = `./downloads/${download.suggestedFilename()}`;
+  await download.saveAs(downloadPath);
   expect(download.suggestedFilename()).toContain("e2e-snow-road");
 });

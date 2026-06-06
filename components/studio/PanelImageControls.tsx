@@ -51,7 +51,11 @@ export function PanelImageControls({
         </select>
       </div>
       <div className="mt-4 flex items-center justify-between gap-3">
-        <PanelImageMessage panel={panel} />
+        <PanelImageMessage
+          panel={panel}
+          disabled={disabled}
+          onGenerate={onGenerate}
+        />
         <GenerateButton
           panel={panel}
           disabled={disabled}
@@ -96,10 +100,31 @@ function GenerateIcon({ status }: { status: Panel["status"] }) {
   return <ImageIcon size={15} />;
 }
 
-function PanelImageMessage({ panel }: { panel: Panel }) {
-  if (panel.errorMessage) {
+function PanelImageMessage({
+  panel,
+  disabled,
+  onGenerate,
+}: {
+  panel: Panel;
+  disabled: boolean;
+  onGenerate: () => void;
+}) {
+  if (panel.status === "error" || panel.errorMessage) {
     return (
-      <div className="min-w-0 text-xs text-red-200">{panel.errorMessage}</div>
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <div className="min-w-0 text-xs text-red-400 font-medium break-words leading-tight">
+          Lỗi: {panel.errorMessage || "Không thể sinh ảnh. Vui lòng thử lại."}
+        </div>
+        <button
+          type="button"
+          onClick={onGenerate}
+          disabled={disabled || panel.status === "generating"}
+          className="inline-flex h-7 items-center justify-center gap-1 rounded bg-red-500/10 border border-red-500/30 px-2.5 text-[11px] font-semibold text-red-200 transition hover:bg-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-fit"
+        >
+          <RotateCw size={11} className={panel.status === "generating" ? "animate-spin" : ""} />
+          Thử lại nhanh
+        </button>
+      </div>
     );
   }
 

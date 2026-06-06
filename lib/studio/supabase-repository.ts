@@ -47,7 +47,11 @@ export class SupabaseStudioRepository implements StudioRepository {
   }
 
   private isConfigured(): boolean {
-    return Boolean(this.url && this.anonKey);
+    return (
+      Boolean(this.url && this.anonKey) &&
+      !this.url.includes("mock-supabase-url-here") &&
+      !this.anonKey.includes("mock-anon-key-here")
+    );
   }
 
   private async syncFromSupabase(): Promise<void> {

@@ -11,7 +11,6 @@ import { Dashboard } from "@/components/studio/Dashboard";
 import { ExportModal } from "@/components/studio/ExportModal";
 import { SideNavigation } from "@/components/studio/SideNavigation";
 import { StoryboardWorkspace } from "@/components/studio/StoryboardWorkspace";
-import { TextImport } from "@/components/studio/TextImport";
 import { TopBar } from "@/components/studio/TopBar";
 import { SettingsModal } from "@/components/studio/SettingsModal";
 import { useComicStudioState } from "@/hooks/useComicStudioState";
@@ -68,21 +67,9 @@ function ActiveView({
         projects={state.projects}
         activeProjectId={state.activeProjectId}
         onSelectProject={actions.selectProject}
-        onNewProject={() => actions.setView("import")}
-      />
-    );
-  }
-
-  if (state.view === "import") {
-    return (
-      <TextImport
-        title={state.storyTitle}
-        storyText={state.storyText}
-        error={state.importError}
+        onAnalyze={(title, text, style) => actions.analyzeStory(style, title, text)}
         isAnalyzing={state.isAnalyzingStory}
-        setTitle={actions.setStoryTitle}
-        setStoryText={actions.setStoryText}
-        onAnalyze={(style) => void actions.analyzeStory(style)}
+        importError={state.importError}
       />
     );
   }

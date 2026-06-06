@@ -140,19 +140,25 @@ export function useComicStudioState() {
     );
   }
 
-  async function analyzeStory(style: string = "webtoon") {
+  async function analyzeStory(style: string = "webtoon", overrideTitle?: string, overrideText?: string) {
     setIsAnalyzingStory(true);
+
+    const finalTitle = overrideTitle !== undefined ? overrideTitle : storyTitle;
+    const finalText = overrideText !== undefined ? overrideText : storyText;
+
+    if (overrideTitle !== undefined) setStoryTitle(overrideTitle);
+    if (overrideText !== undefined) setStoryText(overrideText);
 
     try {
       const projectId = crypto.randomUUID();
       const generatedPages = await analyzeStoryToPages({
-        storyTitle,
-        storyText,
+        storyTitle: finalTitle,
+        storyText: finalText,
       });
 
       setImportError("");
       setProjects((current) => [
-        { ...createProject(projectId, storyTitle), style },
+        { ...createProject(projectId, finalTitle), style },
         ...current,
       ]);
       nav.setActiveProjectId(projectId);
