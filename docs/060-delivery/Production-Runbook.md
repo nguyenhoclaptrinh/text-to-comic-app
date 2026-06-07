@@ -36,10 +36,22 @@ Optional AI:
 
 ```env
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.5-flash
+GEMINI_TEXT_MODELS=gemini-3.5-flash,gemini-3.1-flash-lite,gemini-2.5-flash,gemini-2.5-flash-lite
+AI_MODEL_TIMEOUT_MS=20000
 IMAGE_BACKEND_URL=
 HUGGINGFACE_API_TOKEN=
+GEMINI_IMAGE_MODELS=gemini-3.1-flash-image,gemini-2.5-flash-image,gemini-2.5-flash
+HF_IMAGE_MODEL=black-forest-labs/FLUX.1-dev:fastest
 ```
+
+AI routing:
+
+- `/api/storyboard` dùng pool `GEMINI_TEXT_MODELS`, xoay vòng khi gặp quota, timeout hoặc lỗi provider tạm thời.
+- `/api/generate-panel` thử Gemini image, `IMAGE_BACKEND_URL`, Hugging Face, rồi cached fallback.
+- Lỗi `400/401/403` dừng xoay vòng để tránh spam provider khi payload hoặc key sai.
+- Response API có thêm `usedProvider` và `usedModel` để Settings hiển thị lần gọi gần nhất.
+- Khi không có key, app vẫn tạo storyboard/ảnh fallback để buổi demo không bị chặn.
 
 Optional Supabase:
 
@@ -76,6 +88,7 @@ npm audit --audit-level=moderate
 Manual checks:
 
 - Settings hiển thị trạng thái AI provider.
+- Settings hiển thị pool model mặc định và provider/model đã dùng gần nhất.
 - Tạo project mới từ `Nhập truyện`.
 - Vẽ ít nhất một khung.
 - Thêm một bong bóng thoại.

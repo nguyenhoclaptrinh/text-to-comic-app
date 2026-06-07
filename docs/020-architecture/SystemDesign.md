@@ -62,8 +62,8 @@ graph TD
 | UI              | Tailwind CSS + shadcn/ui                                | Tốc độ triển khai nhanh, consistent components                      |
 | Auth/DB/Storage | Supabase                                                | Auth, Postgres, Storage có free tier phù hợp demo                   |
 | ORM             | Prisma hoặc Supabase client typed queries               | Prisma dễ quản schema; Supabase client thuận tiện RLS               |
-| Text AI         | Gemini Flash model hiện có                              | Free tier tốt cho demo, hỗ trợ structured JSON                      |
-| Image AI        | Hugging Face/Inference Providers hoặc Colab ComfyUI     | Basic path dễ tích hợp; Colab path hỗ trợ control/reference tốt hơn |
+| Text AI         | Gemini model pool qua AI Router                         | Xoay vòng model, hỗ trợ structured JSON, không khóa vào một model   |
+| Image AI        | Gemini image + Image Backend + Hugging Face Providers   | Có nhiều tầng fallback để demo không bị chặn bởi một provider       |
 | Validation      | Zod                                                     | Validate request body và AI JSON                                    |
 | Export          | html-to-image/canvas pipeline cho PNG dọc; PDF optional | PNG là MVP ít rủi ro hơn PDF                                        |
 
@@ -174,6 +174,8 @@ Error handling:
 - JSON invalid: retry once with repair prompt, then return validation error.
 - Quota/rate limit: return typed error `AI_TEXT_QUOTA`.
 - Safety block: return typed error `AI_TEXT_POLICY_BLOCK`.
+- Model lỗi tạm thời: AI Router rotate theo `GEMINI_TEXT_MODELS`, trả
+  `usedProvider` và `usedModel` khi thành công.
 
 ### 5.2. Panel Image Generation
 
@@ -202,6 +204,7 @@ Generation rules:
 - Nếu một panel lỗi, các panel thành công vẫn giữ nguyên.
 - Regenerate chỉ thay ảnh cũ sau khi ảnh mới upload thành công.
 - Nếu image backend offline, panel chuyển `ERROR` với message rõ ràng.
+- Provider order: Gemini image -> `IMAGE_BACKEND_URL` -> Hugging Face -> cached fallback.
 
 ### 5.3. Speech Bubble Editing
 
@@ -237,7 +240,9 @@ Response:
 {
   "pages": [],
   "source": "gemini",
-  "warning": "string"
+  "warning": "string",
+  "usedProvider": "gemini",
+  "usedModel": "gemini-3.5-flash"
 }
 ```
 
@@ -259,7 +264,9 @@ Response:
   "panelId": "string",
   "imageUrl": "string",
   "source": "image-backend",
-  "warning": "string"
+  "warning": "string",
+  "usedProvider": "gemini",
+  "usedModel": "gemini-3.1-flash-image"
 }
 ```
 

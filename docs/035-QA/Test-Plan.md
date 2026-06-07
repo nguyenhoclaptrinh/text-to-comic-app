@@ -13,6 +13,7 @@ created: 2026-05-17
 - SDD: client-side sequential generation is used to avoid serverless timeout; speech bubbles are persisted per panel; PNG export warns when panels are missing images.
 - Rewrite plan: studio flow is Vietnamese-first, status labels are user-facing, and mobile storyboard must remain usable.
 - Production hardening plan: local-first persistence is the baseline, backup/restore is the recovery path, and Docker DB remains optional.
+- AI rotation plan: model pools are env-configurable, timeout-bounded, and expose `usedProvider`/`usedModel` without breaking request contracts.
 - Implementation Plan: Definition of Done requires important data to be saved and reload-safe.
 
 ## Current Automated Scope
@@ -31,6 +32,7 @@ created: 2026-05-17
 | TC-UNIT-008 | `lib/studio/backup.ts`              | Backup payload creation, serialization, app-id validation                                                |
 | TC-UNIT-009 | `lib/studio/snapshot-migrations.ts` | Versioned snapshot migration and interrupted generation recovery                                         |
 | TC-UNIT-010 | `lib/studio/selectors.ts`           | Derived panel counts, missing images, generation summary                                                 |
+| TC-UNIT-011 | `lib/server/ai-router.ts`           | Model priority, disabled candidates, retryable rotation, terminal auth/validation errors, env parsing    |
 
 ### Manual Acceptance Checks
 
@@ -42,6 +44,7 @@ created: 2026-05-17
 | TC-UAT-004 | Delete a non-final storyboard panel    | Panel is removed and project panel count updates                                                |
 | TC-UAT-005 | Mobile storyboard viewport             | Header, bottom navigation, panel editor and character drawer remain usable without overlapping  |
 | TC-UAT-006 | Settings backup/restore                | User can download a backup JSON, clear local data, restore the backup, and continue the project |
+| TC-UAT-007 | Settings AI route status               | User can see configured AI providers, default model pools and the latest provider/model used     |
 
 ### E2E Tests
 
