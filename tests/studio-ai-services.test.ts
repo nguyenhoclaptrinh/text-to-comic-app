@@ -158,6 +158,7 @@ describe("studio AI services", () => {
           imageUrl: "data:image/svg+xml;charset=utf-8,%3Csvg%2F%3E",
           source: "fallback",
           warning: "Image backend is not configured.",
+          usedProvider: "fallback",
         }),
       }),
     );
@@ -166,6 +167,7 @@ describe("studio AI services", () => {
       status: "success",
       imageUrl: expect.stringMatching(/^data:image/),
       errorMessage: "Image backend is not configured.",
+      usedProvider: "fallback",
     });
   });
 
@@ -183,6 +185,7 @@ describe("studio AI services", () => {
     vi.stubGlobal("localStorage", {
       getItem: (key: string) =>
         key.includes("huggingface") ? "hf-token" : "gemini-key",
+      setItem: vi.fn(),
     });
     vi.stubGlobal("fetch", fetchMock);
 

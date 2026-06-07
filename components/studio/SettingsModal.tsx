@@ -6,6 +6,7 @@
 import { useRef, useState } from "react";
 import {
   CheckCircle2,
+  Cpu,
   Database,
   Download,
   Key,
@@ -23,6 +24,8 @@ import {
 } from "@/lib/studio/backup";
 import { STUDIO_STORAGE_KEY } from "@/lib/studio/constants";
 import {
+  getDefaultAiModelPools,
+  getLastAiRoute,
   getProviderStatuses,
   getPublicImageBackendUrl,
 } from "@/lib/studio/production-config";
@@ -62,6 +65,18 @@ export function SettingsModal({
   const [dataStatus, setDataStatus] = useState<
     "idle" | "exported" | "imported" | "cleared" | "error"
   >("idle");
+  const [lastTextRoute] = useState(() =>
+    getLastAiRoute(
+      typeof window !== "undefined" ? window.localStorage : undefined,
+      "text",
+    ),
+  );
+  const [lastImageRoute] = useState(() =>
+    getLastAiRoute(
+      typeof window !== "undefined" ? window.localStorage : undefined,
+      "image",
+    ),
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const providerStatuses = getProviderStatuses({
@@ -69,6 +84,7 @@ export function SettingsModal({
     huggingFaceToken: hfToken,
     imageBackendUrl: getPublicImageBackendUrl(),
   });
+  const modelPools = getDefaultAiModelPools();
 
   const handleSyncCloud = async () => {
     if (typeof window === "undefined" || typeof localStorage === "undefined") {
@@ -268,6 +284,54 @@ export function SettingsModal({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="mb-5 rounded-lg border border-zinc-900 bg-zinc-950 p-3.5">
+          <div className="mb-3 flex items-center gap-2">
+            <Cpu className="text-sky-400" size={16} />
+            <p className="text-xs font-semibold text-zinc-300">
+              Xoay vòng model AI
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {modelPools.map((pool) => (
+              <div
+                key={pool.label}
+                className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-2.5"
+              >
+                <div className="text-[11px] font-semibold text-zinc-300">
+                  {pool.label}
+                </div>
+                <div className="mt-1 text-[11px] leading-4 text-zinc-500">
+                  {pool.models.join(", ")}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-2.5">
+              <div className="text-[11px] font-semibold text-zinc-300">
+                Phân tích gần nhất
+              </div>
+              <div className="mt-1 text-[11px] text-zinc-500">
+                {lastTextRoute.model
+                  ? `${lastTextRoute.provider || "AI"} · ${lastTextRoute.model}`
+                  : "Chưa có lần gọi AI trong trình duyệt này"}
+              </div>
+            </div>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-2.5">
+              <div className="text-[11px] font-semibold text-zinc-300">
+                Vẽ ảnh gần nhất
+              </div>
+              <div className="mt-1 text-[11px] text-zinc-500">
+                {lastImageRoute.model || lastImageRoute.provider
+                  ? `${lastImageRoute.provider || "AI"} · ${
+                      lastImageRoute.model || "fallback demo"
+                    }`
+                  : "Chưa có lần vẽ ảnh trong trình duyệt này"}
+              </div>
+            </div>
           </div>
         </div>
 

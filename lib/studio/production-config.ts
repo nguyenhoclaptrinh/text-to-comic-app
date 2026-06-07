@@ -15,6 +15,26 @@ export type BrowserProviderConfig = {
   imageBackendUrl?: string;
 };
 
+export type AiModelPoolSummary = {
+  label: string;
+  models: string[];
+};
+
+export const DEFAULT_GEMINI_TEXT_MODEL_POOL = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+];
+
+export const DEFAULT_GEMINI_IMAGE_MODEL_POOL = [
+  "gemini-3.1-flash-image",
+  "gemini-2.5-flash-image",
+  "gemini-2.5-flash",
+];
+
+export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-dev:fastest";
+
 export function getProviderStatuses({
   geminiKey,
   huggingFaceToken,
@@ -41,4 +61,35 @@ export function getProviderStatuses({
 
 export function getPublicImageBackendUrl() {
   return process.env.NEXT_PUBLIC_IMAGE_BACKEND_URL || "";
+}
+
+export function getDefaultAiModelPools(): AiModelPoolSummary[] {
+  return [
+    {
+      label: "Phân tích truyện",
+      models: DEFAULT_GEMINI_TEXT_MODEL_POOL,
+    },
+    {
+      label: "Vẽ ảnh Gemini",
+      models: DEFAULT_GEMINI_IMAGE_MODEL_POOL,
+    },
+    {
+      label: "Ảnh Hugging Face",
+      models: [DEFAULT_HF_IMAGE_MODEL],
+    },
+  ];
+}
+
+export function getLastAiRoute(
+  storage: Pick<Storage, "getItem"> | undefined,
+  scope: "text" | "image",
+) {
+  if (!storage) {
+    return { provider: "", model: "" };
+  }
+
+  return {
+    provider: storage.getItem(`text-to-comic:last-${scope}-provider`) || "",
+    model: storage.getItem(`text-to-comic:last-${scope}-model`) || "",
+  };
 }

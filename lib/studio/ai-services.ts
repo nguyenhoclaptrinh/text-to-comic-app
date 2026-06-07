@@ -79,6 +79,11 @@ export async function analyzeStoryToPages({
 
     const parsedResponse = StoryboardResponseSchema.safeParse(body);
     if (parsedResponse.success) {
+      rememberLastAiRoute({
+        scope: "text",
+        provider: parsedResponse.data.usedProvider,
+        model: parsedResponse.data.usedModel,
+      });
       return parsedResponse.data.pages;
     }
 
@@ -150,10 +155,18 @@ export async function generatePanelImage(
       );
     }
 
+    rememberLastAiRoute({
+      scope: "image",
+      provider: parsedResponse.data.usedProvider,
+      model: parsedResponse.data.usedModel,
+    });
+
     return {
       status: "success",
       imageUrl: parsedResponse.data.imageUrl,
       errorMessage: parsedResponse.data.warning,
+      usedModel: parsedResponse.data.usedModel,
+      usedProvider: parsedResponse.data.usedProvider,
       bubbles:
         panel.bubbles.length > 0
           ? panel.bubbles
@@ -175,6 +188,28 @@ export async function generatePanelImage(
           ? [createGeneratedBubble(panel)]
           : [],
   };
+}
+
+function rememberLastAiRoute({
+  scope,
+  provider,
+  model,
+}: {
+  scope: "text" | "image";
+  provider?: string;
+  model?: string;
+}) {
+  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    return;
+  }
+
+  if (provider) {
+    localStorage.setItem(`text-to-comic:last-${scope}-provider`, provider);
+  }
+
+  if (model) {
+    localStorage.setItem(`text-to-comic:last-${scope}-model`, model);
+  }
 }
 
 export function getStudioAiErrorMessage(error: unknown) {
