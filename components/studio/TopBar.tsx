@@ -51,7 +51,11 @@ export function TopBar({
         <button
           type="button"
           onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+          aria-label={
+            theme === "dark"
+              ? "Chuyển sang giao diện sáng"
+              : "Chuyển sang giao diện tối"
+          }
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border-main bg-surface-elevated text-text-secondary hover:bg-surface hover:text-text-primary transition"
         >
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -89,4 +93,3 @@ export function TopBar({
     </header>
   );
 }
-

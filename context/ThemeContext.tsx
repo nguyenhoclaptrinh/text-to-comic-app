@@ -18,41 +18,16 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark"); // default to dark
+  const [theme, setThemeState] = useState<Theme>(() => readInitialTheme());
 
-  // Initialize theme from document element class or localStorage
   useEffect(() => {
-    const root = document.documentElement;
-    const isDark = root.classList.contains("dark") || localStorage.getItem("theme") === "dark";
-    const initialTheme: Theme = isDark ? "dark" : "light";
-    
-    // Use setTimeout to avoid synchronous cascading renders warning in React 19
-    const timer = setTimeout(() => {
-      setThemeState(initialTheme);
-    }, 0);
-    
-    // Sync the root element class
-    if (initialTheme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-
-    return () => clearTimeout(timer);
-  }, []);
+    applyThemeToDocument(theme);
+  }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
-    const root = document.documentElement;
     setThemeState(newTheme);
     localStorage.setItem("theme", newTheme);
-    
-    if (newTheme === "dark") {
-      root.classList.add("dark");
-      root.style.colorScheme = "dark";
-    } else {
-      root.classList.remove("dark");
-      root.style.colorScheme = "light";
-    }
+    applyThemeToDocument(newTheme);
   };
 
   const toggleTheme = () => {
@@ -64,6 +39,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ThemeContext.Provider>
   );
+}
+
+function readInitialTheme(): Theme {
+  if (typeof document === "undefined") {
+    return "dark";
+  }
+
+  const storedTheme = localStorage.getItem("theme");
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+function applyThemeToDocument(theme: Theme) {
+  const root = document.documentElement;
+
+  if (theme === "dark") {
+    root.classList.add("dark");
+    root.style.colorScheme = "dark";
+  } else {
+    root.classList.remove("dark");
+    root.style.colorScheme = "light";
+  }
 }
 
 export function useTheme() {
