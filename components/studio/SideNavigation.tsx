@@ -71,7 +71,9 @@ function BrandMark() {
         <Sparkles size={20} />
       </div>
       <div className="hidden lg:block">
-        <div className="text-sm font-semibold text-text-primary">ComicAI Studio</div>
+        <div className="text-sm font-semibold text-text-primary">
+          ComicAI Studio
+        </div>
         <div className="text-xs text-text-secondary">Xưởng tạo truyện</div>
       </div>
     </div>

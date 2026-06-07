@@ -191,13 +191,22 @@ export function Dashboard({
                   onChange={(event) => setStyle(event.target.value)}
                   className="h-11 w-full rounded-lg border border-border-main bg-background/40 px-3.5 text-sm text-text-primary focus:border-primary focus:outline-none"
                 >
-                  <option value="webtoon" className="bg-surface text-text-primary">
+                  <option
+                    value="webtoon"
+                    className="bg-surface text-text-primary"
+                  >
                     Modern Webtoon (Màu sắc sống động)
                   </option>
-                  <option value="manga" className="bg-surface text-text-primary">
+                  <option
+                    value="manga"
+                    className="bg-surface text-text-primary"
+                  >
                     Classic Manga (Đen trắng, nét mực Nhật Bản)
                   </option>
-                  <option value="western" className="bg-surface text-text-primary">
+                  <option
+                    value="western"
+                    className="bg-surface text-text-primary"
+                  >
                     Western Comic (Truyện tranh Mỹ cổ điển)
                   </option>
                 </select>

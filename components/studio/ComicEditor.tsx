@@ -238,7 +238,9 @@ function ComicEditorHeader() {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Chỉnh truyện</h1>
+        <h1 className="text-xl font-semibold text-text-primary">
+          Chỉnh truyện
+        </h1>
         <p className="mt-1 text-sm text-text-secondary">
           Đặt bong bóng thoại lên từng khung ảnh và kiểm tra bản truyện trước
           khi xuất.

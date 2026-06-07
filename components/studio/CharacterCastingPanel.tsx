@@ -19,7 +19,9 @@ export function CharacterCastingPanel({
   className?: string;
 }) {
   return (
-    <aside className={`border-r border-border-main bg-surface p-4 transition-colors duration-200 ${className}`}>
+    <aside
+      className={`border-r border-border-main bg-surface p-4 transition-colors duration-200 ${className}`}
+    >
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
           Casting Nhân vật
