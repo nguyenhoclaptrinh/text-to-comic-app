@@ -40,6 +40,8 @@ export async function POST(request: Request) {
       StoryboardResponseSchema.parse({
         pages: result.pages,
         source: result.source,
+        usedModel: result.usedModel,
+        usedProvider: result.usedProvider,
       }),
     );
   } catch {

@@ -19,6 +19,12 @@ export type PanelStatus =
   | "success"
   | "error";
 
+export type AiProvider =
+  | "gemini"
+  | "huggingface"
+  | "image-backend"
+  | "fallback";
+
 export type Character = {
   id: string;
   name: string;
@@ -57,6 +63,8 @@ export type Panel = {
   bubbles: Bubble[];
   seed: number;
   style?: "inherit" | "manga" | "webtoon" | "western";
+  usedModel?: string;
+  usedProvider?: AiProvider;
 };
 
 export type Project = {

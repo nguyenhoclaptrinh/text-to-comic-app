@@ -6,10 +6,26 @@
 import { createCachedPanelImage } from "@/lib/studio/cached-images";
 import { slugifyCharacterName } from "@/lib/studio/storyboard";
 import { COMIC_STYLE_MODIFIERS } from "@/lib/studio/constants";
+import {
+  createAiProviderErrorFromResponse,
+  createModelCandidates,
+  fetchWithTimeout,
+  getAiTimeoutMs,
+  parseModelList,
+  routeAiModels,
+} from "@/lib/server/ai-router";
 import type {
   GeneratePanelRequest,
   GeneratePanelResponse,
 } from "@/lib/studio/api-contracts";
+
+export const GEMINI_IMAGE_MODELS_POOL = [
+  "gemini-3.1-flash-image",
+  "gemini-2.5-flash-image",
+  "gemini-2.5-flash",
+];
+
+export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-dev:fastest";
 
 export async function generatePanelImageFromProvider(
   input: GeneratePanelRequest,
@@ -34,6 +50,8 @@ export async function generatePanelImageFromProvider(
       cloudUrl.startsWith("http") && !cloudUrl.startsWith("data:")
         ? "image-backend"
         : response.source,
+    usedModel: response.usedModel,
+    usedProvider: response.usedProvider,
   };
 }
 
@@ -46,59 +64,26 @@ async function generateRawPanelImage(
     throw new Error("Image backend is offline.");
   }
 
-  // 1. Thử dùng Google AI Studio Gemini 2.5 Flash Image nếu có GEMINI_API_KEY
+  // 1. Thử dùng Google AI Studio Gemini Image API với cơ chế xoay vòng
   const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
   if (geminiApiKey) {
     try {
       const prompt = createImagePrompt(input);
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiApiKey}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseModalities: ["IMAGE"],
-          },
-        }),
-      });
+      const { base64, mimeType, usedModel } =
+        await generateGeminiImageWithRotation({
+          apiKey: geminiApiKey,
+          prompt,
+        });
 
-      if (response.ok) {
-        const data: unknown = await response.json();
-        if (
-          isRecord(data) &&
-          Array.isArray(data.candidates) &&
-          data.candidates.length > 0 &&
-          isRecord(data.candidates[0]) &&
-          isRecord(data.candidates[0].content) &&
-          Array.isArray(data.candidates[0].content.parts) &&
-          data.candidates[0].content.parts.length > 0 &&
-          isRecord(data.candidates[0].content.parts[0]) &&
-          isRecord(data.candidates[0].content.parts[0].inlineData) &&
-          typeof data.candidates[0].content.parts[0].inlineData.data ===
-            "string"
-        ) {
-          const base64 = data.candidates[0].content.parts[0].inlineData.data;
-          const mimeType =
-            typeof data.candidates[0].content.parts[0].inlineData.mimeType ===
-            "string"
-              ? data.candidates[0].content.parts[0].inlineData.mimeType
-              : "image/png";
-          const imageUrl = `data:${mimeType};base64,${base64}`;
+      const imageUrl = `data:${mimeType};base64,${base64}`;
 
-          return {
-            panelId: input.panel.id,
-            imageUrl,
-            source: "image-backend",
-          };
-        }
-      } else {
-        const errText = await response.text().catch(() => "");
-        console.warn(
-          `[Gemini Image] API returned error status ${response.status}:`,
-          errText,
-        );
-      }
+      return {
+        panelId: input.panel.id,
+        imageUrl,
+        source: "image-backend",
+        usedModel,
+        usedProvider: "gemini",
+      };
     } catch (err) {
       console.warn("[Gemini Image] Failed, trying other backends...", err);
     }
@@ -108,15 +93,19 @@ async function generateRawPanelImage(
   const endpoint = process.env.IMAGE_BACKEND_URL;
   if (endpoint) {
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: createImagePrompt(input),
-          panel: input.panel,
-          characters: input.characters,
-        }),
-      });
+      const response = await fetchWithTimeout(
+        endpoint,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: createImagePrompt(input),
+            panel: input.panel,
+            characters: input.characters,
+          }),
+        },
+        getAiTimeoutMs(),
+      );
 
       if (response.ok) {
         const data: unknown = await response.json();
@@ -125,6 +114,7 @@ async function generateRawPanelImage(
             panelId: input.panel.id,
             imageUrl: data.imageUrl,
             source: "image-backend",
+            usedProvider: "image-backend",
           };
         }
       }
@@ -138,8 +128,9 @@ async function generateRawPanelImage(
   if (hfToken) {
     try {
       const prompt = createImagePrompt(input);
-      const response = await fetch(
-        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+      const hfModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
+      const response = await fetchWithTimeout(
+        `https://api-inference.huggingface.co/models/${hfModel}`,
         {
           method: "POST",
           headers: {
@@ -148,6 +139,7 @@ async function generateRawPanelImage(
           },
           body: JSON.stringify({ inputs: prompt }),
         },
+        getAiTimeoutMs(),
       );
 
       if (response.ok) {
@@ -160,6 +152,8 @@ async function generateRawPanelImage(
           panelId: input.panel.id,
           imageUrl,
           source: "image-backend",
+          usedModel: hfModel,
+          usedProvider: "huggingface",
         };
       }
     } catch (err) {
@@ -182,6 +176,7 @@ function createFallbackPanelImageResponse(
     imageUrl: createCachedPanelImage(input.panel),
     source: "fallback",
     warning,
+    usedProvider: "fallback",
   };
 }
 
@@ -221,6 +216,83 @@ function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+async function generateGeminiImageWithRotation({
+  apiKey,
+  prompt,
+}: {
+  apiKey: string;
+  prompt: string;
+}): Promise<{ base64: string; mimeType: string; usedModel: string }> {
+  const models = parseModelList(
+    process.env.GEMINI_IMAGE_MODELS,
+    GEMINI_IMAGE_MODELS_POOL,
+  );
+  const candidates = createModelCandidates({
+    provider: "gemini",
+    capability: "image",
+    models,
+  });
+
+  const routed = await routeAiModels({
+    candidates,
+    policy: { maxAttempts: models.length, timeoutMs: getAiTimeoutMs() },
+    run: async (candidate) => {
+      console.log(
+        `[Gemini Image Rotation] Attempting image generation with model: ${candidate.model}`,
+      );
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${candidate.model}:generateContent?key=${apiKey}`;
+      const response = await fetchWithTimeout(
+        url,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseModalities: ["IMAGE"],
+            },
+          }),
+        },
+        getAiTimeoutMs(),
+      );
+
+      if (response.ok) {
+        const data: unknown = await response.json();
+        if (
+          isRecord(data) &&
+          Array.isArray(data.candidates) &&
+          data.candidates.length > 0 &&
+          isRecord(data.candidates[0]) &&
+          isRecord(data.candidates[0].content) &&
+          Array.isArray(data.candidates[0].content.parts) &&
+          data.candidates[0].content.parts.length > 0 &&
+          isRecord(data.candidates[0].content.parts[0]) &&
+          isRecord(data.candidates[0].content.parts[0].inlineData) &&
+          typeof data.candidates[0].content.parts[0].inlineData.data ===
+            "string"
+        ) {
+          const base64 = data.candidates[0].content.parts[0].inlineData.data;
+          const mimeType =
+            typeof data.candidates[0].content.parts[0].inlineData.mimeType ===
+            "string"
+              ? data.candidates[0].content.parts[0].inlineData.mimeType
+              : "image/png";
+          return { base64, mimeType };
+        }
+      }
+
+      const errText = await response.text().catch(() => "");
+      throw createAiProviderErrorFromResponse(response, errText);
+    },
+  });
+
+  if (routed.ok) {
+    return { ...routed.value, usedModel: routed.model };
+  }
+
+  throw new Error(routed.warning);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -6,9 +6,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  GeneratePanelResponseSchema,
   GeneratePanelRequestSchema,
   StoryboardAiResponseSchema,
   StoryboardRequestSchema,
+  StoryboardResponseSchema,
 } from "@/lib/studio/api-contracts";
 import { createCachedPanelImage } from "@/lib/studio/cached-images";
 import { PANELS_SEED } from "@/lib/studio/mock-data";
@@ -126,5 +128,34 @@ describe("studio API contracts", () => {
       characters: [],
     });
     expect(generateRequestParse.success).toBe(true);
+  });
+
+  it("should accept non-breaking AI route telemetry fields", () => {
+    expect(
+      StoryboardResponseSchema.safeParse({
+        source: "gemini",
+        usedProvider: "gemini",
+        usedModel: "gemini-3.5-flash",
+        pages: [
+          {
+            id: "page-1",
+            projectId: "project-1",
+            orderIndex: 1,
+            title: "Page 1",
+            panels: PANELS_SEED,
+          },
+        ],
+      }).success,
+    ).toBe(true);
+
+    expect(
+      GeneratePanelResponseSchema.safeParse({
+        panelId: "panel-1",
+        imageUrl: "data:image/png;base64,test",
+        source: "image-backend",
+        usedProvider: "huggingface",
+        usedModel: "black-forest-labs/FLUX.1-dev:fastest",
+      }).success,
+    ).toBe(true);
   });
 });

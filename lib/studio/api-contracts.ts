@@ -60,6 +60,10 @@ export const PanelSchema = z.object({
   bubbles: z.array(BubbleSchema),
   seed: z.number(),
   style: z.enum(["inherit", "manga", "webtoon", "western"]).optional(),
+  usedModel: z.string().optional(),
+  usedProvider: z
+    .enum(["gemini", "huggingface", "image-backend", "fallback"])
+    .optional(),
 });
 
 export const PageSchema = z.object({
@@ -74,6 +78,8 @@ export const StoryboardResponseSchema = z.object({
   pages: z.array(PageSchema).min(1).max(24),
   source: z.enum(["gemini", "fallback"]),
   warning: z.string().optional(),
+  usedModel: z.string().optional(),
+  usedProvider: z.enum(["gemini", "fallback"]).optional(),
 });
 
 export const CharacterSchema = z.object({
@@ -94,6 +100,10 @@ export const GeneratePanelResponseSchema = z.object({
   imageUrl: z.string().min(1),
   source: z.enum(["image-backend", "fallback"]),
   warning: z.string().optional(),
+  usedModel: z.string().optional(),
+  usedProvider: z
+    .enum(["gemini", "huggingface", "image-backend", "fallback"])
+    .optional(),
 });
 
 export type StudioApiErrorCode = z.infer<typeof StudioApiErrorCodeSchema>;

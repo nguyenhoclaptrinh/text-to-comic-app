@@ -8,12 +8,20 @@ import {
   type StoryboardAiResponse,
   type StoryboardRequest,
 } from "@/lib/studio/api-contracts";
+import {
+  createAiProviderErrorFromResponse,
+  createModelCandidates,
+  fetchWithTimeout,
+  getAiTimeoutMs,
+  parseModelList,
+  routeAiModels,
+} from "@/lib/server/ai-router";
 import { chunkStoryText } from "@/lib/server/chunking-engine";
 import { normalizeStoryboardAiResponse } from "@/lib/studio/storyboard";
 import { createMockPanels } from "@/lib/studio/utils";
 import type { Page, Panel } from "@/lib/studio/types";
 
-const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
 
 const GEMINI_RESPONSE_SCHEMA = {
@@ -48,17 +56,30 @@ const GEMINI_RESPONSE_SCHEMA = {
   propertyOrdering: ["panels"],
 };
 
+export const GEMINI_TEXT_MODELS_POOL = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+];
+
 export async function generateMultiPageStoryboard(
   input: StoryboardRequest,
   projectId = crypto.randomUUID(),
   customApiKey?: string,
-): Promise<{ pages: Page[]; source: "gemini" | "fallback" }> {
+): Promise<{
+  pages: Page[];
+  source: "gemini" | "fallback";
+  usedModel?: string;
+  usedProvider?: "gemini" | "fallback";
+}> {
   const chunks = chunkStoryText(input.storyText, 4500);
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+  const preferredModel = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 
   const pages: Page[] = [];
   const source: "gemini" | "fallback" = apiKey ? "gemini" : "fallback";
+  let finalUsedModel: string | undefined = undefined;
 
   for (const [index, chunk] of chunks.entries()) {
     const pageId = crypto.randomUUID();
@@ -70,11 +91,12 @@ export async function generateMultiPageStoryboard(
         const geminiResponse = await generateStoryboardWithGemini(
           { storyTitle: input.storyTitle, storyText: chunk },
           apiKey,
-          model,
+          preferredModel,
         );
 
         if (geminiResponse) {
-          panels = normalizeStoryboardAiResponse(geminiResponse);
+          panels = normalizeStoryboardAiResponse(geminiResponse.storyboard);
+          finalUsedModel = geminiResponse.usedModel;
         }
       } catch (err) {
         console.warn(`[Gemini Sync] Error on page ${index + 1}:`, err);
@@ -94,31 +116,37 @@ export async function generateMultiPageStoryboard(
     });
   }
 
-  return { pages, source };
+  return {
+    pages,
+    source,
+    usedModel: finalUsedModel,
+    usedProvider: finalUsedModel ? "gemini" : "fallback",
+  };
 }
 
 export async function generateStoryboardWithGemini(
   input: StoryboardRequest,
   apiKey = process.env.GEMINI_API_KEY,
   model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL,
-) {
+): Promise<{ storyboard: StoryboardAiResponse; usedModel: string } | null> {
   if (!apiKey) {
     return null;
   }
 
-  const firstResponse = await requestGeminiJson({
+  const { text: firstResponse, usedModel } = await requestGeminiWithRotation({
     apiKey,
-    model,
+    preferredModel: model,
     prompt: createStoryboardPrompt(input),
   });
+
   const parsed = parseGeminiStoryboard(firstResponse);
   if (parsed) {
-    return parsed;
+    return { storyboard: parsed, usedModel };
   }
 
   const repairedResponse = await requestGeminiJson({
     apiKey,
-    model,
+    model: usedModel,
     prompt: createRepairPrompt(firstResponse),
   });
   const repaired = parseGeminiStoryboard(repairedResponse);
@@ -127,7 +155,48 @@ export async function generateStoryboardWithGemini(
     throw new Error("Gemini returned invalid storyboard JSON.");
   }
 
-  return repaired;
+  return { storyboard: repaired, usedModel };
+}
+
+async function requestGeminiWithRotation({
+  apiKey,
+  preferredModel,
+  prompt,
+}: {
+  apiKey: string;
+  preferredModel: string;
+  prompt: string;
+}): Promise<{ text: string; usedModel: string }> {
+  const models = parseModelList(process.env.GEMINI_TEXT_MODELS, [
+    preferredModel,
+    ...GEMINI_TEXT_MODELS_POOL.filter((m) => m !== preferredModel),
+  ]);
+  const candidates = createModelCandidates({
+    provider: "gemini",
+    capability: "storyboard",
+    models,
+  });
+
+  const routed = await routeAiModels({
+    candidates,
+    policy: { maxAttempts: models.length, timeoutMs: getAiTimeoutMs() },
+    run: async (candidate) => {
+      console.log(
+        `[Gemini Rotation] Attempting storyboard generation with model: ${candidate.model}`,
+      );
+      return requestGeminiJson({
+        apiKey,
+        model: candidate.model,
+        prompt,
+      });
+    },
+  });
+
+  if (routed.ok) {
+    return { text: routed.value, usedModel: routed.model };
+  }
+
+  throw new Error(routed.warning);
 }
 
 async function requestGeminiJson({
@@ -139,7 +208,7 @@ async function requestGeminiJson({
   model: string;
   prompt: string;
 }) {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${GEMINI_ENDPOINT}/models/${model}:generateContent`,
     {
       method: "POST",
@@ -155,10 +224,12 @@ async function requestGeminiJson({
         },
       }),
     },
+    getAiTimeoutMs(),
   );
 
   if (!response.ok) {
-    throw new Error(`Gemini request failed with status ${response.status}.`);
+    const detail = await response.text().catch(() => "");
+    throw createAiProviderErrorFromResponse(response, detail);
   }
 
   const data: unknown = await response.json();
