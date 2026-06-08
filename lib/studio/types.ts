@@ -22,6 +22,7 @@ export type PanelStatus =
 export type AiProvider =
   | "gemini"
   | "huggingface"
+  | "kaggle"
   | "image-backend"
   | "fallback";
 

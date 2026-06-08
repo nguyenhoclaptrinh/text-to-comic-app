@@ -27,6 +27,7 @@ import {
   getDefaultAiModelPools,
   getLastAiRoute,
   getProviderStatuses,
+  getPublicKaggleEnabled,
   getPublicImageBackendUrl,
 } from "@/lib/studio/production-config";
 import type { Project } from "@/lib/studio/types";
@@ -83,6 +84,7 @@ export function SettingsModal({
     geminiKey,
     huggingFaceToken: hfToken,
     imageBackendUrl: getPublicImageBackendUrl(),
+    kaggleEnabled: getPublicKaggleEnabled(),
   });
   const modelPools = getDefaultAiModelPools();
 
@@ -262,7 +264,7 @@ export function SettingsModal({
               Trạng thái dịch vụ AI
             </p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-4">
             {providerStatuses.map((provider) => (
               <div
                 key={provider.label}
@@ -294,7 +296,7 @@ export function SettingsModal({
               Xoay vòng model AI
             </p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-4">
             {modelPools.map((pool) => (
               <div
                 key={pool.label}

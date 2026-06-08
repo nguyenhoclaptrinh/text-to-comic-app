@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   analyzeStoryToPages,
   generatePanelImage,
+  generatePanelImageViaKaggleJob,
   getStudioAiErrorMessage,
   StudioAiError,
   StudioAiErrorCode,
@@ -199,6 +200,98 @@ describe("studio AI services", () => {
           "x-gemini-api-key": "gemini-key",
         }),
       }),
+    );
+  });
+
+  it("should poll Kaggle image jobs and return a successful panel patch", async () => {
+    vi.useFakeTimers();
+    const statuses: string[] = [];
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-1",
+          panelId: PANELS_SEED[0].id,
+          status: "queued",
+          usedProvider: "kaggle",
+          usedModel: "user/comic-panel-generator",
+          retryAfterMs: 2000,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-1",
+          panelId: PANELS_SEED[0].id,
+          status: "running",
+          usedProvider: "kaggle",
+          usedModel: "user/comic-panel-generator",
+          retryAfterMs: 2000,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-1",
+          panelId: PANELS_SEED[0].id,
+          status: "succeeded",
+          imageUrl: "https://example.test/panel.png",
+          usedProvider: "kaggle",
+          usedModel: "user/comic-panel-generator",
+        }),
+      });
+
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const promise = generatePanelImageViaKaggleJob(PANELS_SEED[0], [], (status) =>
+      statuses.push(status),
+    );
+    await vi.advanceTimersByTimeAsync(4000);
+
+    await expect(promise).resolves.toMatchObject({
+      status: "success",
+      imageUrl: "https://example.test/panel.png",
+      usedProvider: "kaggle",
+    });
+    expect(statuses).toEqual(["queued", "generating"]);
+    vi.useRealTimers();
+  });
+
+  it("should fall back to the sync image API when Kaggle jobs are unavailable", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: "Kaggle disabled." }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          panelId: PANELS_SEED[0].id,
+          imageUrl: "data:image/svg+xml;charset=utf-8,%3Csvg%2F%3E",
+          source: "fallback",
+          usedProvider: "fallback",
+        }),
+      });
+
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      generatePanelImageViaKaggleJob(PANELS_SEED[0]),
+    ).resolves.toMatchObject({
+      status: "success",
+      usedProvider: "fallback",
+    });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/generate-panel",
+      expect.any(Object),
     );
   });
 

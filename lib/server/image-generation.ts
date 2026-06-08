@@ -180,7 +180,7 @@ function createFallbackPanelImageResponse(
   };
 }
 
-function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
+export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
   const selectedCharacters = panel.characterIds
     .map((characterId) =>
       characters.find(
@@ -303,7 +303,7 @@ function isDefined<T>(value: T | undefined): value is T {
   return value !== undefined;
 }
 
-async function uploadToSupabaseStorage(
+export async function uploadToSupabaseStorage(
   panelId: string,
   seed: number,
   imageUrl: string,

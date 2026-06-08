@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import {
   generatePanelImage,
+  generatePanelImageViaKaggleJob,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
 import {
@@ -14,6 +15,7 @@ import {
   markPanelGenerating,
   markPanelQueued,
 } from "@/lib/studio/domain";
+import { getPublicKaggleEnabled } from "@/lib/studio/production-config";
 import { syncProjectPanelCounts } from "@/lib/studio/selectors";
 import { dialogueToBubble } from "@/lib/studio/utils";
 import type { Character, Page, Panel, Project } from "@/lib/studio/types";
@@ -114,7 +116,7 @@ export function usePanelActions({
       return;
     }
 
-    updatePanel(panelId, markPanelGenerating(target));
+    updatePanel(panelId, markPanelQueued(target));
 
     try {
       const resolvedStyle = (
@@ -123,9 +125,27 @@ export function usePanelActions({
           : projectStyle || "webtoon"
       ) as "manga" | "webtoon" | "western";
       const panelWithResolvedStyle = { ...target, style: resolvedStyle };
+      const kaggleEnabled = getPublicKaggleEnabled();
+      const generateImage = kaggleEnabled
+        ? generatePanelImageViaKaggleJob(
+            panelWithResolvedStyle,
+            characters,
+            (status) => {
+              updatePanel(
+                panelId,
+                status === "queued"
+                  ? markPanelQueued(panelWithResolvedStyle)
+                  : markPanelGenerating(panelWithResolvedStyle),
+              );
+            },
+          )
+        : generatePanelImage(panelWithResolvedStyle, characters);
+      if (!kaggleEnabled) {
+        updatePanel(panelId, markPanelGenerating(panelWithResolvedStyle));
+      }
       updatePanel(
         panelId,
-        await generatePanelImage(panelWithResolvedStyle, characters),
+        await generateImage,
       );
     } catch (error) {
       updatePanel(panelId, {

@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   GeneratePanelResponseSchema,
   GeneratePanelRequestSchema,
+  KaggleImageJobResponseSchema,
   StoryboardAiResponseSchema,
   StoryboardRequestSchema,
   StoryboardResponseSchema,
@@ -153,8 +154,30 @@ describe("studio API contracts", () => {
         panelId: "panel-1",
         imageUrl: "data:image/png;base64,test",
         source: "image-backend",
-        usedProvider: "huggingface",
+        usedProvider: "kaggle",
         usedModel: "black-forest-labs/FLUX.1-dev:fastest",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("should validate Kaggle image job responses", () => {
+    expect(
+      KaggleImageJobResponseSchema.safeParse({
+        jobId: "job-1",
+        panelId: "panel-1",
+        status: "queued",
+        usedProvider: "kaggle",
+        retryAfterMs: 2000,
+      }).success,
+    ).toBe(true);
+
+    expect(
+      KaggleImageJobResponseSchema.safeParse({
+        jobId: "job-1",
+        panelId: "panel-1",
+        status: "succeeded",
+        imageUrl: "https://example.test/output.png",
+        usedProvider: "kaggle",
       }).success,
     ).toBe(true);
   });

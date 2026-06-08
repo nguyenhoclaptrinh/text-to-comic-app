@@ -8,6 +8,7 @@ import { createGeneratedBubble } from "@/lib/studio/factories";
 import { createFallbackStoryboardResponse } from "@/lib/studio/storyboard";
 import {
   GeneratePanelResponseSchema,
+  KaggleImageJobResponseSchema,
   StoryboardRequestSchema,
   StoryboardResponseSchema,
 } from "@/lib/studio/api-contracts";
@@ -188,6 +189,140 @@ export async function generatePanelImage(
           ? [createGeneratedBubble(panel)]
           : [],
   };
+}
+
+export async function generatePanelImageViaKaggleJob(
+  panel: Panel,
+  characters: Character[] = [],
+  onStatus?: (status: "queued" | "generating") => void,
+): Promise<Partial<Panel>> {
+  if (typeof window === "undefined") {
+    return generatePanelImage(panel, characters);
+  }
+
+  const job = await startKagglePanelImageJob(panel, characters).catch(() => {
+    return null;
+  });
+
+  if (!job) {
+    onStatus?.("generating");
+    return generatePanelImage(panel, characters);
+  }
+
+  rememberLastAiRoute({
+    scope: "image",
+    provider: "kaggle",
+    model: job.usedModel,
+  });
+
+  onStatus?.(job.status === "queued" ? "queued" : "generating");
+
+  const completedJob = await pollKagglePanelImageJob(job.jobId, onStatus).catch(
+    () => null,
+  );
+  if (
+    !completedJob ||
+    completedJob.status !== "succeeded" ||
+    !completedJob.imageUrl
+  ) {
+    onStatus?.("generating");
+    return generatePanelImage(panel, characters);
+  }
+
+  rememberLastAiRoute({
+    scope: "image",
+    provider: completedJob.usedProvider,
+    model: completedJob.usedModel,
+  });
+
+  return {
+    status: "success",
+    imageUrl: completedJob.imageUrl,
+    errorMessage: undefined,
+    usedModel: completedJob.usedModel,
+    usedProvider: completedJob.usedProvider,
+    bubbles:
+      panel.bubbles.length > 0
+        ? panel.bubbles
+        : panel.dialogue.trim()
+          ? [createGeneratedBubble(panel)]
+          : [],
+  };
+}
+
+async function startKagglePanelImageJob(
+  panel: Panel,
+  characters: Character[],
+) {
+  const response = await fetch("/api/kaggle-panel-jobs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ panel, characters }),
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new StudioAiError(
+      StudioAiErrorCode.AI_IMAGE_OFFLINE,
+      getApiErrorMessage(body, "Kaggle image jobs are unavailable."),
+    );
+  }
+
+  const parsedResponse = KaggleImageJobResponseSchema.safeParse(body);
+  if (!parsedResponse.success) {
+    throw new StudioAiError(
+      StudioAiErrorCode.AI_IMAGE_INVALID_RESPONSE,
+      "Kaggle image job returned an invalid response.",
+    );
+  }
+
+  return parsedResponse.data;
+}
+
+async function pollKagglePanelImageJob(
+  jobId: string,
+  onStatus?: (status: "queued" | "generating") => void,
+) {
+  const maxAttempts = 60;
+  let lastRetryAfterMs = 2_000;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    await sleep(lastRetryAfterMs);
+    const response = await fetch(`/api/kaggle-panel-jobs/${jobId}`);
+    const body: unknown = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new StudioAiError(
+        StudioAiErrorCode.AI_IMAGE_OFFLINE,
+        getApiErrorMessage(body, "Kaggle image job status is unavailable."),
+      );
+    }
+
+    const parsedResponse = KaggleImageJobResponseSchema.safeParse(body);
+    if (!parsedResponse.success) {
+      throw new StudioAiError(
+        StudioAiErrorCode.AI_IMAGE_INVALID_RESPONSE,
+        "Kaggle image job returned an invalid response.",
+      );
+    }
+
+    const job = parsedResponse.data;
+    lastRetryAfterMs = job.retryAfterMs || lastRetryAfterMs;
+    if (job.status === "queued") {
+      onStatus?.("queued");
+    }
+    if (job.status === "running") {
+      onStatus?.("generating");
+    }
+    if (job.status === "succeeded" || job.status === "failed") {
+      return job;
+    }
+  }
+
+  throw new StudioAiError(
+    StudioAiErrorCode.AI_IMAGE_OFFLINE,
+    "Kaggle image job timed out.",
+  );
 }
 
 function rememberLastAiRoute({

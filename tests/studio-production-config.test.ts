@@ -18,6 +18,7 @@ describe("studio production config", () => {
         geminiKey: "gemini",
         huggingFaceToken: "",
         imageBackendUrl: "https://image.example.test",
+        kaggleEnabled: true,
       }),
     ).toEqual([
       {
@@ -32,6 +33,11 @@ describe("studio production config", () => {
       },
       {
         label: "Image backend riêng",
+        configured: true,
+        source: "environment",
+      },
+      {
+        label: "Kaggle vẽ ảnh async",
         configured: true,
         source: "environment",
       },
@@ -60,6 +66,10 @@ describe("studio production config", () => {
       {
         label: "Ảnh Hugging Face",
         models: ["black-forest-labs/FLUX.1-dev:fastest"],
+      },
+      {
+        label: "Ảnh Kaggle",
+        models: ["KAGGLE_KERNEL_REF"],
       },
     ]);
   });

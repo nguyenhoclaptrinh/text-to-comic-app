@@ -55,12 +55,28 @@ create table if not exists public.panels (
   unique (page_id, order_index)
 );
 
+create table if not exists public.ai_image_jobs (
+  id uuid primary key default gen_random_uuid(),
+  panel_id text not null,
+  status text not null default 'queued'
+    check (status in ('queued', 'running', 'succeeded', 'failed')),
+  prompt text not null,
+  result_image_url text,
+  error_message text,
+  provider text not null default 'kaggle',
+  model text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists projects_user_id_idx on public.projects(user_id);
 create index if not exists characters_project_id_idx on public.characters(project_id);
 create index if not exists pages_project_id_idx on public.pages(project_id);
 create index if not exists panels_project_id_idx on public.panels(project_id);
 create index if not exists panels_page_id_idx on public.panels(page_id);
 create index if not exists panels_page_order_idx on public.panels(page_id, order_index);
+create index if not exists ai_image_jobs_panel_id_idx on public.ai_image_jobs(panel_id);
+create index if not exists ai_image_jobs_status_idx on public.ai_image_jobs(status);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -92,10 +108,16 @@ create trigger pages_set_updated_at
 before update on public.pages
 for each row execute function public.set_updated_at();
 
+drop trigger if exists ai_image_jobs_set_updated_at on public.ai_image_jobs;
+create trigger ai_image_jobs_set_updated_at
+before update on public.ai_image_jobs
+for each row execute function public.set_updated_at();
+
 alter table public.projects enable row level security;
 alter table public.pages enable row level security;
 alter table public.characters enable row level security;
 alter table public.panels enable row level security;
+alter table public.ai_image_jobs enable row level security;
 
 drop policy if exists "Users can manage own projects" on public.projects;
 create policy "Users can manage own projects"

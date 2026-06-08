@@ -62,7 +62,7 @@ export const PanelSchema = z.object({
   style: z.enum(["inherit", "manga", "webtoon", "western"]).optional(),
   usedModel: z.string().optional(),
   usedProvider: z
-    .enum(["gemini", "huggingface", "image-backend", "fallback"])
+    .enum(["gemini", "huggingface", "kaggle", "image-backend", "fallback"])
     .optional(),
 });
 
@@ -102,8 +102,26 @@ export const GeneratePanelResponseSchema = z.object({
   warning: z.string().optional(),
   usedModel: z.string().optional(),
   usedProvider: z
-    .enum(["gemini", "huggingface", "image-backend", "fallback"])
+    .enum(["gemini", "huggingface", "kaggle", "image-backend", "fallback"])
     .optional(),
+});
+
+export const KaggleImageJobStatusSchema = z.enum([
+  "queued",
+  "running",
+  "succeeded",
+  "failed",
+]);
+
+export const KaggleImageJobResponseSchema = z.object({
+  jobId: z.string().min(1),
+  panelId: z.string().min(1),
+  status: KaggleImageJobStatusSchema,
+  imageUrl: z.string().min(1).optional(),
+  errorMessage: z.string().optional(),
+  usedModel: z.string().optional(),
+  usedProvider: z.literal("kaggle").optional(),
+  retryAfterMs: z.number().int().positive().optional(),
 });
 
 export type StudioApiErrorCode = z.infer<typeof StudioApiErrorCodeSchema>;
@@ -112,3 +130,9 @@ export type StoryboardAiResponse = z.infer<typeof StoryboardAiResponseSchema>;
 export type StoryboardResponse = z.infer<typeof StoryboardResponseSchema>;
 export type GeneratePanelRequest = z.infer<typeof GeneratePanelRequestSchema>;
 export type GeneratePanelResponse = z.infer<typeof GeneratePanelResponseSchema>;
+export type KaggleImageJobStatus = z.infer<
+  typeof KaggleImageJobStatusSchema
+>;
+export type KaggleImageJobResponse = z.infer<
+  typeof KaggleImageJobResponseSchema
+>;

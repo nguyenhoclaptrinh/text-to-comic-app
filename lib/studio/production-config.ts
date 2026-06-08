@@ -13,6 +13,7 @@ export type BrowserProviderConfig = {
   geminiKey?: string;
   huggingFaceToken?: string;
   imageBackendUrl?: string;
+  kaggleEnabled?: boolean;
 };
 
 export type AiModelPoolSummary = {
@@ -39,6 +40,7 @@ export function getProviderStatuses({
   geminiKey,
   huggingFaceToken,
   imageBackendUrl,
+  kaggleEnabled,
 }: BrowserProviderConfig): ProviderStatus[] {
   return [
     {
@@ -56,11 +58,20 @@ export function getProviderStatuses({
       configured: Boolean(imageBackendUrl),
       source: imageBackendUrl ? "environment" : "missing",
     },
+    {
+      label: "Kaggle vẽ ảnh async",
+      configured: Boolean(kaggleEnabled),
+      source: kaggleEnabled ? "environment" : "missing",
+    },
   ];
 }
 
 export function getPublicImageBackendUrl() {
   return process.env.NEXT_PUBLIC_IMAGE_BACKEND_URL || "";
+}
+
+export function getPublicKaggleEnabled() {
+  return process.env.NEXT_PUBLIC_KAGGLE_ENABLED === "true";
 }
 
 export function getDefaultAiModelPools(): AiModelPoolSummary[] {
@@ -76,6 +87,10 @@ export function getDefaultAiModelPools(): AiModelPoolSummary[] {
     {
       label: "Ảnh Hugging Face",
       models: [DEFAULT_HF_IMAGE_MODEL],
+    },
+    {
+      label: "Ảnh Kaggle",
+      models: ["KAGGLE_KERNEL_REF"],
     },
   ];
 }

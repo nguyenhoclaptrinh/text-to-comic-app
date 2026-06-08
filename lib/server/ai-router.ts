@@ -6,6 +6,7 @@
 export type AiProvider =
   | "gemini"
   | "huggingface"
+  | "kaggle"
   | "image-backend"
   | "fallback";
 export type AiCapability = "storyboard" | "image";
