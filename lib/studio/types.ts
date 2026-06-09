@@ -30,8 +30,12 @@ export type Character = {
   id: string;
   name: string;
   role: string;
+  /** Giới tính: Nam, Nữ, Khác */
+  gender?: "Nam" | "Nữ" | "Khác";
   description: string;
   color: string;
+  // optional priority for ordering / importance (lower = higher priority)
+  priority?: number;
 };
 
 export type Bubble = {
@@ -75,6 +79,8 @@ export type Project = {
   updatedAt: string;
   panelCount: number;
   style?: string;
+  genre?: string;
+  aspectRatio?: string;
 };
 
 export type DragState = {

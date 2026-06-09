@@ -24,7 +24,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: "projects", label: "Dự án", icon: <LayoutDashboard size={18} /> },
   { id: "storyboard", label: "Storyboard", icon: <PanelsTopLeft size={18} /> },
   { id: "comic", label: "Chỉnh truyện", icon: <MessageCircle size={18} /> },
-  { id: "export", label: "Xuất file", icon: <FileText size={18} /> },
+  // Removed explicit "Xuất file" nav item — export is available via topbar action
 ];
 
 export function SideNavigation({

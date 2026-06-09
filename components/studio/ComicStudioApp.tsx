@@ -68,10 +68,10 @@ function ActiveView({
       <Dashboard
         projects={state.projects}
         activeProjectId={state.activeProjectId}
-        onSelectProject={actions.selectProject}
-        onAnalyze={(title, text, style) =>
-          actions.analyzeStory(style, title, text)
-        }
+          onSelectProject={actions.selectProject}
+          onAnalyze={(title, text, style, genre, aspectRatio) =>
+            actions.analyzeStory(style, title, text, genre, aspectRatio)
+          }
         isAnalyzing={state.isAnalyzingStory}
         importError={state.importError}
       />
@@ -138,6 +138,7 @@ function ActiveView({
       selectedPanelId={state.selectedPanelId}
       isGeneratingAll={state.isGeneratingAll}
       onAddCharacter={actions.addCharacter}
+        onDeleteCharacter={actions.deleteCharacter}
       onSelectPage={actions.setActivePageId}
       onAddPage={actions.addPage}
       onDeletePage={actions.deletePage}
@@ -151,6 +152,9 @@ function ActiveView({
       onGoToComic={() => actions.setView("comic")}
       onUpdateCharacter={actions.updateCharacter}
       onMovePanel={actions.movePanel}
+      projectStyle={state.activeProject.style}
+      projectGenre={state.activeProject.genre}
+      projectAspectRatio={state.activeProject.aspectRatio}
     />
   );
 }
