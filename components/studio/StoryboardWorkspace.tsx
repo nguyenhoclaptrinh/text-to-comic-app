@@ -19,6 +19,7 @@ export function StoryboardWorkspace({
   selectedPanelId,
   isGeneratingAll,
   onAddCharacter,
+  onDeleteCharacter,
   onUpdateCharacter,
   onSelectPage,
   onAddPage,
@@ -29,6 +30,9 @@ export function StoryboardWorkspace({
   onDeletePanel,
   onGoToComic,
   onMovePanel,
+  projectStyle,
+  projectGenre,
+  projectAspectRatio,
 }: {
   characters: Character[];
   pages: Page[];
@@ -37,6 +41,7 @@ export function StoryboardWorkspace({
   selectedPanelId: string;
   isGeneratingAll: boolean;
   onAddCharacter: () => void;
+  onDeleteCharacter?: (characterId: string) => void;
   onUpdateCharacter: (characterId: string, patch: Partial<Character>) => void;
   onSelectPage: (pageId: string) => void;
   onAddPage: () => void;
@@ -47,6 +52,9 @@ export function StoryboardWorkspace({
   onDeletePanel: (panelId: string) => void;
   onGoToComic: () => void;
   onMovePanel: (panelId: string, direction: "up" | "down") => void;
+  projectStyle?: string;
+  projectGenre?: string;
+  projectAspectRatio?: string;
 }) {
   const [isCastingOpen, setIsCastingOpen] = useState(false);
   const hasBackendError = panels.some((panel) => panel.status === "error");
@@ -58,6 +66,7 @@ export function StoryboardWorkspace({
         characters={characters}
         onAddCharacter={onAddCharacter}
         onUpdateCharacter={onUpdateCharacter}
+        onDeleteCharacter={onDeleteCharacter}
         className="hidden lg:block"
       />
 
@@ -68,6 +77,9 @@ export function StoryboardWorkspace({
         <StoryboardHeader
           onGoToComic={onGoToComic}
           onOpenCasting={() => setIsCastingOpen(true)}
+          style={projectStyle}
+          genre={projectGenre}
+          aspectRatio={projectAspectRatio}
         />
 
         <PageSelector
@@ -123,6 +135,7 @@ export function StoryboardWorkspace({
                 characters={characters}
                 onAddCharacter={onAddCharacter}
                 onUpdateCharacter={onUpdateCharacter}
+                  onDeleteCharacter={onDeleteCharacter}
                 className="border-none bg-transparent p-0"
               />
             </div>
@@ -156,9 +169,15 @@ function ImageBackendAlert() {
 function StoryboardHeader({
   onGoToComic,
   onOpenCasting,
+  style,
+  genre,
+  aspectRatio,
 }: {
   onGoToComic: () => void;
   onOpenCasting: () => void;
+  style?: string;
+  genre?: string;
+  aspectRatio?: string;
 }) {
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -181,7 +200,19 @@ function StoryboardHeader({
           Kiểm tra mạch truyện, chỉnh mô tả cảnh và vẽ ảnh cho từng khung.
         </p>
       </div>
-      <button
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <div className="rounded-md border border-border-main bg-surface px-2 py-1 text-xs text-text-secondary">
+            Phong cách: {style ?? "webtoon"}
+          </div>
+          <div className="rounded-md border border-border-main bg-surface px-2 py-1 text-xs text-text-secondary">
+            Thể loại: {genre ?? "Chưa chọn"}
+          </div>
+          <div className="rounded-md border border-border-main bg-surface px-2 py-1 text-xs text-text-secondary">
+            Tỉ lệ: {aspectRatio ?? "1:1"}
+          </div>
+        </div>
+        <button
         type="button"
         onClick={onGoToComic}
         className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-4 text-sm font-semibold text-text-primary hover:bg-surface transition-colors"
@@ -189,6 +220,7 @@ function StoryboardHeader({
         <MessageCircle size={16} />
         Chỉnh lời thoại trên ảnh
       </button>
+      </div>
     </div>
   );
 }

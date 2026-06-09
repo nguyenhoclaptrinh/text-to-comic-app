@@ -19,6 +19,8 @@ export function createProject(
   projectId: string,
   storyTitle: string,
   panelCount = 0,
+  genre?: string,
+  aspectRatio?: string,
 ): Project {
   return {
     id: projectId || crypto.randomUUID(),
@@ -27,6 +29,8 @@ export function createProject(
     updatedAt: "Just now",
     panelCount,
     style: "webtoon",
+    genre,
+    aspectRatio,
   };
 }
 

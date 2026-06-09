@@ -23,7 +23,13 @@ export function Dashboard({
   projects: Project[];
   activeProjectId: string;
   onSelectProject: (projectId: string) => void;
-  onAnalyze: (title: string, text: string, style: string) => Promise<void>;
+  onAnalyze: (
+    title: string,
+    text: string,
+    style: string,
+    genre?: string,
+    aspectRatio?: string,
+  ) => Promise<void>;
   isAnalyzing: boolean;
   importError: string;
 }) {
@@ -33,6 +39,8 @@ export function Dashboard({
     "Outside the inn, snow covered the mountain road. A young man in a white fur coat sat by the window, counting the empty tables. Suddenly, the wooden door flew open and a red-robed teenager rushed inside with a bright grin.",
   );
   const [style, setStyle] = useState("webtoon");
+  const [genre, setGenre] = useState("");
+  const [aspectRatio, setAspectRatio] = useState("1:1");
 
   const templates = [
     {
@@ -57,7 +65,7 @@ export function Dashboard({
       return;
     }
     try {
-      await onAnalyze(title, storyText, style);
+      await onAnalyze(title, storyText, style, genre, aspectRatio);
       setIsOpen(false);
     } catch {
       // Giữ modal để hiển thị lỗi
@@ -144,10 +152,10 @@ export function Dashboard({
                     id="new-project-title"
                     className="text-lg font-semibold text-text-primary tracking-tight"
                   >
-                    Tạo Truyện tranh Mới bằng AI
+                    Tạo Truyện tranh bằng AI
                   </h2>
                   <p className="text-xs text-text-secondary mt-0.5">
-                    Nhập câu chuyện thô để app tách thành storyboard có thể
+                    Nhập câu chuyện để app tách thành storyboard có thể
                     chỉnh sửa.
                   </p>
                 </div>
@@ -183,7 +191,7 @@ export function Dashboard({
                   className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary"
                   htmlFor="project-style"
                 >
-                  Phong cách vẽ mặc định
+                  Phong cách vẽ 
                 </label>
                 <select
                   id="project-style"
@@ -209,6 +217,52 @@ export function Dashboard({
                   >
                     Western Comic (Truyện tranh Mỹ cổ điển)
                   </option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary"
+                  htmlFor="project-genre"
+                >
+                  Thể loại truyện
+                </label>
+                <select
+                  id="project-genre"
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  className="h-11 w-full rounded-lg border border-border-main bg-background/40 px-3.5 text-sm text-text-primary focus:border-primary focus:outline-none"
+                >
+                  <option value="">Chọn thể loại</option>
+                  <option value="Ngôn tình">Ngôn tình</option>
+                  <option value="Kinh dị">Kinh dị</option>
+                  <option value="Xuyên không">Xuyên không</option>
+                  <option value="Trọng sinh">Trọng sinh</option>
+                  <option value="Học đường">Học đường</option>
+                  <option value="Hành động">Hành động</option>
+                  <option value="Trinh thám">Trinh thám</option>
+                  <option value="Ma thuật">Ma thuật</option>
+                  <option value="Hài hước">Hài hước</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary"
+                  htmlFor="project-aspect"
+                >
+                  Tỉ lệ khung hình
+                </label>
+                <select
+                  id="project-aspect"
+                  value={aspectRatio}
+                  onChange={(e) => setAspectRatio(e.target.value)}
+                  className="h-11 w-full rounded-lg border border-border-main bg-background/40 px-3.5 text-sm text-text-primary focus:border-primary focus:outline-none"
+                >
+                  <option value="1:1">1:1</option>
+                  <option value="4:3">4:3</option>
+                  <option value="16:9">16:9</option>
+                  <option value="9:16">9:16</option>
                 </select>
               </div>
 

@@ -137,6 +137,8 @@ export function useComicStudioState() {
     style: string = "webtoon",
     overrideTitle?: string,
     overrideText?: string,
+    genre?: string,
+    aspectRatio?: string,
   ) {
     setIsAnalyzingStory(true);
 
@@ -166,6 +168,8 @@ export function useComicStudioState() {
             projectId,
             finalTitle,
             countPanelsForProject(pagesWithCorrectProjectId, projectId),
+            genre,
+            aspectRatio,
           ),
           style,
         },
@@ -385,6 +389,7 @@ export function useComicStudioState() {
       generateAll: panelActions.generateAll,
       movePanel: panelActions.movePanel,
       addCharacter: casting.addCharacter,
+        deleteCharacter: casting.deleteCharacter,
       updateCharacter: casting.updateCharacter,
       addPage,
       deletePage,

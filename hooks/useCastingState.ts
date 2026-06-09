@@ -26,10 +26,15 @@ export function useCastingState(initialCharacters: Character[]) {
     );
   }
 
+  function deleteCharacter(characterId: string) {
+    setCharacters((current) => current.filter((c) => c.id !== characterId));
+  }
+
   return {
     characters,
     setCharacters,
     addCharacter,
     updateCharacter,
+    deleteCharacter,
   };
 }
