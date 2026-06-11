@@ -14,6 +14,7 @@ import {
   parseModelList,
   routeAiModels,
 } from "@/lib/server/ai-router";
+import { isDemoFallbackEnabled } from "@/lib/server/runtime-config";
 import type {
   GeneratePanelRequest,
   GeneratePanelResponse,
@@ -150,6 +151,10 @@ function createFallbackPanelImageResponse(
   input: GeneratePanelRequest,
   warning: string,
 ): GeneratePanelResponse {
+  if (!isDemoFallbackEnabled()) {
+    throw new Error(warning);
+  }
+
   return {
     panelId: input.panel.id,
     imageUrl: createCachedPanelImage(input.panel),

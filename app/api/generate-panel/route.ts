@@ -38,7 +38,8 @@ export async function POST(request: Request) {
         ),
       ),
     );
-  } catch {
+  } catch (error) {
+    console.error("[API /api/generate-panel] Image generation failed:", error);
     return NextResponse.json(
       {
         code: "AI_IMAGE_OFFLINE",

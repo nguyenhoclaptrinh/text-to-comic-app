@@ -19,6 +19,7 @@ import {
 import { chunkStoryText } from "@/lib/server/chunking-engine";
 import { normalizeStoryboardAiResponse } from "@/lib/studio/storyboard";
 import { createMockPanels } from "@/lib/studio/utils";
+import { isDemoFallbackEnabled } from "@/lib/server/runtime-config";
 import type { Page, Panel } from "@/lib/studio/types";
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
@@ -103,8 +104,14 @@ export async function generateMultiPageStoryboard(
       }
     }
 
-    if (panels.length === 0) {
+    if (panels.length === 0 && isDemoFallbackEnabled()) {
       panels = createMockPanels(chunk);
+    }
+
+    if (panels.length === 0) {
+      throw new Error(
+        `Storyboard provider failed for page ${index + 1} and demo fallback is disabled.`,
+      );
     }
 
     pages.push({

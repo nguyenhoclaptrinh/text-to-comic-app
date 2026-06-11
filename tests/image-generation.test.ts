@@ -192,4 +192,22 @@ describe("server image generation", () => {
       "generativelanguage.googleapis.com",
     );
   });
+
+  it("should fail instead of returning a mock image when demo fallback is disabled", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    vi.stubEnv("HUGGINGFACE_API_TOKEN", "");
+    vi.stubEnv("GEMINI_API_KEY", "");
+    vi.stubEnv("IMAGE_BACKEND_URL", "");
+    vi.stubEnv("AI_DEMO_FALLBACK_ENABLED", "false");
+
+    await expect(
+      generatePanelImageFromProvider({
+        panel: PANELS_SEED[0],
+        characters: [],
+      }),
+    ).rejects.toThrow(
+      "HuggingFace/Imagen/Image backend is not configured or failed.",
+    );
+  });
 });

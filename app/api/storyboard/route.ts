@@ -11,6 +11,7 @@ import {
   StoryboardResponseSchema,
 } from "@/lib/studio/api-contracts";
 import { createFallbackStoryboardResponse } from "@/lib/studio/storyboard";
+import { isDemoFallbackEnabled } from "@/lib/server/runtime-config";
 
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null);
@@ -44,7 +45,20 @@ export async function POST(request: Request) {
         usedProvider: result.usedProvider,
       }),
     );
-  } catch {
+  } catch (error) {
+    console.error("[API /api/storyboard] Storyboard generation failed:", error);
+    if (!isDemoFallbackEnabled()) {
+      return NextResponse.json(
+        {
+          code: "AI_TEXT_UNAVAILABLE",
+          message:
+            "Storyboard AI provider failed and demo fallback is disabled.",
+          retryable: true,
+        },
+        { status: 503 },
+      );
+    }
+
     const fallback = createFallbackStoryboardResponse(
       parsedRequest.data.storyText,
       projectId,
