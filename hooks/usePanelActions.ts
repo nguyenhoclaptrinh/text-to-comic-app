@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import {
   generatePanelImage,
-  generatePanelImageViaKaggleJob,
+  generatePanelImageWithKaggleFallback,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
 import {
@@ -126,10 +126,12 @@ export function usePanelActions({
       ) as "manga" | "webtoon" | "western";
       const panelWithResolvedStyle = { ...target, style: resolvedStyle };
       const kaggleEnabled = getPublicKaggleEnabled();
+      updatePanel(panelId, markPanelGenerating(panelWithResolvedStyle));
       const generateImage = kaggleEnabled
-        ? generatePanelImageViaKaggleJob(
+        ? generatePanelImageWithKaggleFallback(
             panelWithResolvedStyle,
             characters,
+            kaggleEnabled,
             (status, route) => {
               updatePanel(
                 panelId,
@@ -143,9 +145,6 @@ export function usePanelActions({
             },
           )
         : generatePanelImage(panelWithResolvedStyle, characters);
-      if (!kaggleEnabled) {
-        updatePanel(panelId, markPanelGenerating(panelWithResolvedStyle));
-      }
       updatePanel(panelId, await generateImage);
     } catch (error) {
       updatePanel(panelId, {

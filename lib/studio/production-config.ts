@@ -29,9 +29,7 @@ export const DEFAULT_GEMINI_TEXT_MODEL_POOL = [
 ];
 
 export const DEFAULT_GEMINI_IMAGE_MODEL_POOL = [
-  "gemini-3.1-flash-image",
-  "gemini-2.5-flash-image",
-  "gemini-2.5-flash",
+  "imagen-4.0-generate-001",
 ];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-dev:fastest";
@@ -89,7 +87,7 @@ export function getDefaultAiModelPools(): AiModelPoolSummary[] {
       models: DEFAULT_GEMINI_TEXT_MODEL_POOL,
     },
     {
-      label: "Vẽ ảnh Gemini",
+      label: "Vẽ ảnh Imagen",
       models: DEFAULT_GEMINI_IMAGE_MODEL_POOL,
     },
     {

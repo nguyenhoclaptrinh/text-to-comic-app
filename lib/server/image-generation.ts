@@ -20,12 +20,11 @@ import type {
 } from "@/lib/studio/api-contracts";
 
 export const GEMINI_IMAGE_MODELS_POOL = [
-  "gemini-3.1-flash-image",
-  "gemini-2.5-flash-image",
-  "gemini-2.5-flash",
+  "imagen-4.0-generate-001",
 ];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-dev:fastest";
+export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
 
 export async function generatePanelImageFromProvider(
   input: GeneratePanelRequest,
@@ -64,13 +63,13 @@ async function generateRawPanelImage(
     throw new Error("Image backend is offline.");
   }
 
-  // 1. Thử dùng Google AI Studio Gemini Image API với cơ chế xoay vòng
+  // 1. Thử dùng Imagen 4 Generate trước cho ảnh panel.
   const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
   if (geminiApiKey) {
     try {
       const prompt = createImagePrompt(input);
       const { base64, mimeType, usedModel } =
-        await generateGeminiImageWithRotation({
+        await generateImagenImageWithRotation({
           apiKey: geminiApiKey,
           prompt,
         });
@@ -82,10 +81,10 @@ async function generateRawPanelImage(
         imageUrl,
         source: "image-backend",
         usedModel,
-        usedProvider: "gemini",
+        usedProvider: "imagen",
       };
     } catch (err) {
-      console.warn("[Gemini Image] Failed, trying other backends...", err);
+      console.warn("[Imagen Image] Failed, trying fallback backends...", err);
     }
   }
 
@@ -163,7 +162,7 @@ async function generateRawPanelImage(
 
   return createFallbackPanelImageResponse(
     input,
-    "Image backend/Gemini/HuggingFace is not configured or failed.",
+    "Imagen/Image backend/HuggingFace is not configured or failed.",
   );
 }
 
@@ -230,7 +229,7 @@ function compactPromptText(value: string, maxWords: number) {
   );
 }
 
-async function generateGeminiImageWithRotation({
+async function generateImagenImageWithRotation({
   apiKey,
   prompt,
 }: {
@@ -238,11 +237,11 @@ async function generateGeminiImageWithRotation({
   prompt: string;
 }): Promise<{ base64: string; mimeType: string; usedModel: string }> {
   const models = parseModelList(
-    process.env.GEMINI_IMAGE_MODELS,
+    process.env.IMAGEN_IMAGE_MODELS || process.env.GEMINI_IMAGE_MODELS,
     GEMINI_IMAGE_MODELS_POOL,
   );
   const candidates = createModelCandidates({
-    provider: "gemini",
+    provider: "imagen",
     capability: "image",
     models,
   });
@@ -252,18 +251,19 @@ async function generateGeminiImageWithRotation({
     policy: { maxAttempts: models.length, timeoutMs: getAiTimeoutMs() },
     run: async (candidate) => {
       console.log(
-        `[Gemini Image Rotation] Attempting image generation with model: ${candidate.model}`,
+        `[Imagen Image Rotation] Attempting image generation with model: ${candidate.model}`,
       );
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${candidate.model}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${candidate.model}:predict?key=${apiKey}`;
       const response = await fetchWithTimeout(
         url,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseModalities: ["IMAGE"],
+            instances: [{ prompt }],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: "3:4",
             },
           }),
         },
@@ -274,22 +274,16 @@ async function generateGeminiImageWithRotation({
         const data: unknown = await response.json();
         if (
           isRecord(data) &&
-          Array.isArray(data.candidates) &&
-          data.candidates.length > 0 &&
-          isRecord(data.candidates[0]) &&
-          isRecord(data.candidates[0].content) &&
-          Array.isArray(data.candidates[0].content.parts) &&
-          data.candidates[0].content.parts.length > 0 &&
-          isRecord(data.candidates[0].content.parts[0]) &&
-          isRecord(data.candidates[0].content.parts[0].inlineData) &&
-          typeof data.candidates[0].content.parts[0].inlineData.data ===
-            "string"
+          Array.isArray(data.predictions) &&
+          data.predictions.length > 0 &&
+          isRecord(data.predictions[0]) &&
+          typeof data.predictions[0].bytesBase64Encoded === "string"
         ) {
-          const base64 = data.candidates[0].content.parts[0].inlineData.data;
+          const prediction = data.predictions[0] as Record<string, unknown>;
+          const base64 = prediction.bytesBase64Encoded as string;
           const mimeType =
-            typeof data.candidates[0].content.parts[0].inlineData.mimeType ===
-            "string"
-              ? data.candidates[0].content.parts[0].inlineData.mimeType
+            typeof prediction.mimeType === "string"
+              ? prediction.mimeType
               : "image/png";
           return { base64, mimeType };
         }

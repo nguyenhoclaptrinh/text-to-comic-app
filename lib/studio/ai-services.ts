@@ -251,6 +251,29 @@ export async function generatePanelImageViaKaggleJob(
   };
 }
 
+export async function generatePanelImageWithKaggleFallback(
+  panel: Panel,
+  characters: Character[] = [],
+  kaggleEnabled: boolean,
+  onStatus?: (
+    status: "queued" | "generating",
+    route?: Pick<Panel, "usedModel" | "usedProvider">,
+  ) => void,
+): Promise<Partial<Panel>> {
+  try {
+    const image = await generatePanelImage(panel, characters);
+    if (image.usedProvider !== "fallback" || !kaggleEnabled) {
+      return image;
+    }
+  } catch (error) {
+    if (!kaggleEnabled) {
+      throw error;
+    }
+  }
+
+  return generatePanelImageViaKaggleJob(panel, characters, onStatus);
+}
+
 async function startKagglePanelImageJob(
   panel: Panel,
   characters: Character[],

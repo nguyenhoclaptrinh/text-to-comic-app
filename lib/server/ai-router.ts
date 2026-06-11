@@ -5,6 +5,7 @@
 
 export type AiProvider =
   | "gemini"
+  | "imagen"
   | "huggingface"
   | "kaggle"
   | "image-backend"

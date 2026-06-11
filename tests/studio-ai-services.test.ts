@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   analyzeStoryToPages,
   generatePanelImage,
+  generatePanelImageWithKaggleFallback,
   generatePanelImageViaKaggleJob,
   getStudioAiErrorMessage,
   StudioAiError,
@@ -170,6 +171,102 @@ describe("studio AI services", () => {
       errorMessage: "Image backend is not configured.",
       usedProvider: "fallback",
     });
+  });
+
+  it("should use Imagen panel generation before Kaggle fallback", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        panelId: PANELS_SEED[0].id,
+        imageUrl: "data:image/png;base64,aW1hZ2Vu",
+        source: "image-backend",
+        usedProvider: "imagen",
+        usedModel: "imagen-4.0-generate-001",
+      }),
+    });
+
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      generatePanelImageWithKaggleFallback(PANELS_SEED[0], [], true),
+    ).resolves.toMatchObject({
+      status: "success",
+      usedProvider: "imagen",
+      usedModel: "imagen-4.0-generate-001",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/generate-panel",
+      expect.any(Object),
+    );
+  });
+
+  it("should fall back to Kaggle when Imagen panel generation fails", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: "Imagen unavailable." }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-fallback",
+          panelId: PANELS_SEED[0].id,
+          status: "queued",
+          usedProvider: "kaggle",
+          usedModel: "Meina/MeinaMix_V11",
+          retryAfterMs: 2000,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-fallback",
+          panelId: PANELS_SEED[0].id,
+          status: "succeeded",
+          imageUrl: "https://example.test/kaggle-panel.png",
+          usedProvider: "kaggle",
+          usedModel: "Meina/MeinaMix_V11",
+        }),
+      });
+
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const promise = generatePanelImageWithKaggleFallback(
+      PANELS_SEED[0],
+      [],
+      true,
+    );
+    await vi.advanceTimersByTimeAsync(6000);
+
+    await expect(promise).resolves.toMatchObject({
+      status: "success",
+      imageUrl: "https://example.test/kaggle-panel.png",
+      usedProvider: "kaggle",
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/generate-panel",
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/kaggle-panel-jobs",
+      expect.any(Object),
+    );
+    vi.useRealTimers();
   });
 
   it("should forward local API tokens to browser image generation requests", async () => {

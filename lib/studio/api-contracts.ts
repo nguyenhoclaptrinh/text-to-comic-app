@@ -62,7 +62,14 @@ export const PanelSchema = z.object({
   style: z.enum(["inherit", "manga", "webtoon", "western"]).optional(),
   usedModel: z.string().optional(),
   usedProvider: z
-    .enum(["gemini", "huggingface", "kaggle", "image-backend", "fallback"])
+    .enum([
+      "gemini",
+      "imagen",
+      "huggingface",
+      "kaggle",
+      "image-backend",
+      "fallback",
+    ])
     .optional(),
 });
 
@@ -102,7 +109,14 @@ export const GeneratePanelResponseSchema = z.object({
   warning: z.string().optional(),
   usedModel: z.string().optional(),
   usedProvider: z
-    .enum(["gemini", "huggingface", "kaggle", "image-backend", "fallback"])
+    .enum([
+      "gemini",
+      "imagen",
+      "huggingface",
+      "kaggle",
+      "image-backend",
+      "fallback",
+    ])
     .optional(),
 });
 

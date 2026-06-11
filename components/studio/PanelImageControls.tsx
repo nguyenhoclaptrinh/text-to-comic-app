@@ -180,6 +180,8 @@ function formatAiRoute(panel: Panel) {
   const provider = panel.usedProvider
     ? panel.usedProvider === "kaggle"
       ? "Kaggle"
+      : panel.usedProvider === "imagen"
+        ? "Imagen"
       : panel.usedProvider
     : "AI";
   return panel.usedModel ? `${provider} · ${panel.usedModel}` : provider;

@@ -56,12 +56,8 @@ describe("studio production config", () => {
         ],
       },
       {
-        label: "Vẽ ảnh Gemini",
-        models: [
-          "gemini-3.1-flash-image",
-          "gemini-2.5-flash-image",
-          "gemini-2.5-flash",
-        ],
+        label: "Vẽ ảnh Imagen",
+        models: ["imagen-4.0-generate-001"],
       },
       {
         label: "Ảnh Hugging Face",
