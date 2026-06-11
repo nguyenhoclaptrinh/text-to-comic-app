@@ -200,10 +200,7 @@ export function useComicStudioState() {
         "#ec4899",
       ];
       const newCharactersList = Array.from(detectedIds).map((id, idx) => {
-        const name = id
-          .split("-")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ");
+        const name = prettifyCharacterId(id) || `Nhân vật ${idx + 1}`;
 
         return {
           id,
@@ -400,4 +397,12 @@ export function useComicStudioState() {
       handleBubbleMove: drag.handleBubbleMove,
     },
   };
+}
+
+function prettifyCharacterId(characterId: string) {
+  return characterId
+    .split("-")
+    .filter((word) => word.length > 1)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }

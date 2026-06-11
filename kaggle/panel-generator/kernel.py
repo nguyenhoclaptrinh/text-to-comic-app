@@ -121,20 +121,12 @@ def main():
             height=576,
         ).images[0]
     except Exception as error:
-        if device != "cuda" or "no kernel image" not in str(error).lower():
-            raise
-        print(f"CUDA is incompatible with this Kaggle GPU, retrying on CPU: {error}")
-        del pipe
-        torch.cuda.empty_cache()
-        pipe = load_pipeline("cpu", torch.float32)
-        image = pipe(
-            prompt=comic_prompt,
-            negative_prompt=NEGATIVE_PROMPT,
-            num_inference_steps=12,
-            guidance_scale=7.5,
-            width=256,
-            height=384,
-        ).images[0]
+        if device == "cuda" and "no kernel image" in str(error).lower():
+            raise RuntimeError(
+                "Kaggle GPU is incompatible with this diffusion runtime. "
+                "Switch GPU runtime or use Imagen instead of returning a low-quality CPU image."
+            ) from error
+        raise
     output_path = Path("/kaggle/working") / output_file
     output_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(output_path)

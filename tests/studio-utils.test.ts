@@ -139,6 +139,9 @@ describe("studio utils", () => {
 
   it("should slugify character names and return fallback for empty strings", () => {
     expect(slugifyCharacterName("  Xiao Se  ")).toBe("xiao-se");
+    expect(slugifyCharacterName("Lĩnh Nhạc Công Chúa")).toBe(
+      "linh-nhac-cong-chua",
+    );
     expect(slugifyCharacterName("!!!")).toBe("unknown-character");
     expect(slugifyCharacterName("")).toBe("unknown-character");
   });
