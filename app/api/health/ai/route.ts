@@ -16,6 +16,7 @@ import {
   getMaskedConfigValue,
   isDebugAiLoggingEnabled,
   isDemoFallbackEnabled,
+  isSupabaseRuntimeConfigured,
 } from "@/lib/server/runtime-config";
 
 export async function GET() {
@@ -77,11 +78,11 @@ export async function GET() {
         jobStore: process.env.KAGGLE_JOB_STORE || "supabase",
       },
       supabase: {
-        configured: Boolean(
-          process.env.NEXT_PUBLIC_SUPABASE_URL &&
-            (process.env.SUPABASE_SERVICE_ROLE_KEY ||
-              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-        ),
+        configured: isSupabaseRuntimeConfigured({
+          url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        }),
         url: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
         serviceRoleKey: getMaskedConfigValue(
           process.env.SUPABASE_SERVICE_ROLE_KEY,

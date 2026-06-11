@@ -12,12 +12,6 @@ import { useCastingState } from "@/hooks/useCastingState";
 import { useBubbleDragState } from "@/hooks/useBubbleDragState";
 import { createDefaultBubble, createProject } from "@/lib/studio/factories";
 import {
-  CHARACTERS_SEED,
-  PAGES_SEED,
-  PROJECTS_SEED,
-  SAMPLE_STORY,
-} from "@/lib/studio/mock-data";
-import {
   analyzeStoryToPages,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
@@ -31,19 +25,39 @@ import {
 import { updatePanelBubble } from "@/lib/studio/utils";
 import type { Bubble, Page, Project } from "@/lib/studio/types";
 
+const INITIAL_PROJECT_ID = "workspace-project";
+const INITIAL_PAGE_ID = "workspace-page";
+
+const INITIAL_PROJECT: Project = {
+  id: INITIAL_PROJECT_ID,
+  title: "Truyện mới",
+  status: "draft",
+  updatedAt: "Chưa tạo storyboard",
+  panelCount: 0,
+  style: "webtoon",
+};
+
+const INITIAL_PAGE: Page = {
+  id: INITIAL_PAGE_ID,
+  projectId: INITIAL_PROJECT_ID,
+  orderIndex: 1,
+  title: "Page 1",
+  panels: [],
+};
+
 export function useComicStudioState() {
-  const [projects, setProjects] = useState<Project[]>(PROJECTS_SEED);
-  const [pages, setPages] = useState<Page[]>(PAGES_SEED);
-  const [storyTitle, setStoryTitle] = useState("Snow Road Inn");
-  const [storyText, setStoryText] = useState(SAMPLE_STORY);
+  const [projects, setProjects] = useState<Project[]>([INITIAL_PROJECT]);
+  const [pages, setPages] = useState<Page[]>([INITIAL_PAGE]);
+  const [storyTitle, setStoryTitle] = useState("");
+  const [storyText, setStoryText] = useState("");
   const [importError, setImportError] = useState("");
   const [isAnalyzingStory, setIsAnalyzingStory] = useState(false);
 
   // 1. Phân rã Trạng thái Điều hướng & Lựa chọn
-  const nav = useStudioNavigation(PROJECTS_SEED[0].id, PAGES_SEED[0].id);
+  const nav = useStudioNavigation(INITIAL_PROJECT_ID, INITIAL_PAGE_ID);
 
   // 2. Phân rã Trạng thái Nhân vật & Casting
-  const casting = useCastingState(CHARACTERS_SEED);
+  const casting = useCastingState([]);
 
   const activeProject =
     projects.find((project) => project.id === nav.activeProjectId) ??

@@ -22,3 +22,29 @@ export function getMaskedConfigValue(value: string | undefined) {
   };
 }
 
+export function isPlaceholderConfigValue(value: string | undefined) {
+  if (!value) {
+    return true;
+  }
+
+  const normalized = value.toLowerCase();
+  return (
+    normalized.includes("mock-") ||
+    normalized.includes("-here") ||
+    normalized.includes("your-") ||
+    normalized.includes("example")
+  );
+}
+
+export function isSupabaseRuntimeConfigured({
+  url,
+  serviceKey,
+  anonKey,
+}: {
+  url: string | undefined;
+  serviceKey?: string | undefined;
+  anonKey?: string | undefined;
+}) {
+  const key = serviceKey || anonKey;
+  return !isPlaceholderConfigValue(url) && !isPlaceholderConfigValue(key);
+}

@@ -14,7 +14,10 @@ import {
   parseModelList,
   routeAiModels,
 } from "@/lib/server/ai-router";
-import { isDemoFallbackEnabled } from "@/lib/server/runtime-config";
+import {
+  isDemoFallbackEnabled,
+  isSupabaseRuntimeConfigured,
+} from "@/lib/server/runtime-config";
 import type {
   GeneratePanelRequest,
   GeneratePanelResponse,
@@ -406,7 +409,14 @@ export async function uploadToSupabaseStorage(
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !serviceKey) {
+  if (
+    !isSupabaseRuntimeConfigured({
+      url,
+      serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    }) ||
+    !serviceKey
+  ) {
     return imageUrl;
   }
 

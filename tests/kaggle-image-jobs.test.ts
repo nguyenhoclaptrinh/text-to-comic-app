@@ -23,7 +23,7 @@ describe("Kaggle image jobs", () => {
   });
 
   it("should map Supabase job rows to safe client responses", async () => {
-    vi.stubEnv("SUPABASE_URL", "https://supabase.example.test");
+    vi.stubEnv("SUPABASE_URL", "https://demo.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role");
     vi.stubGlobal(
       "fetch",

@@ -148,10 +148,11 @@ function ActiveView({
       }}
       onUpdatePanel={actions.updatePanel}
       onGeneratePanel={(panelId) => void actions.generatePanel(panelId)}
-      onDeletePanel={actions.deletePanel}
-      onGoToComic={() => actions.setView("comic")}
-      onUpdateCharacter={actions.updateCharacter}
-      onMovePanel={actions.movePanel}
+        onDeletePanel={actions.deletePanel}
+        onGoToComic={() => actions.setView("comic")}
+        onGoToImport={() => actions.setView("import")}
+        onUpdateCharacter={actions.updateCharacter}
+        onMovePanel={actions.movePanel}
       projectStyle={state.activeProject.style}
       projectGenre={state.activeProject.genre}
       projectAspectRatio={state.activeProject.aspectRatio}

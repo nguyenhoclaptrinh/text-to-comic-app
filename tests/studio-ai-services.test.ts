@@ -77,7 +77,7 @@ describe("studio AI services", () => {
     expect(pages[0].panels).toHaveLength(3);
   });
 
-  it("should fall back when the browser storyboard API returns an invalid body", async () => {
+  it("should reject when the browser storyboard API returns an invalid body", async () => {
     vi.stubGlobal("window", {});
     vi.stubGlobal(
       "fetch",
@@ -87,16 +87,15 @@ describe("studio AI services", () => {
       }),
     );
 
-    const pages = await analyzeStoryToPages({
-      storyTitle: "Snow Road Inn",
-      storyText: SAMPLE_STORY,
+    await expect(
+      analyzeStoryToPages({
+        storyTitle: "Snow Road Inn",
+        storyText: SAMPLE_STORY,
+      }),
+    ).rejects.toMatchObject({
+      code: StudioAiErrorCode.AI_TEXT_UNAVAILABLE,
+      message: "Storyboard backend returned an invalid response.",
     });
-
-    expect(pages).toHaveLength(1);
-    expect(pages[0].panels).toHaveLength(3);
-    expect(pages[0].panels[0].id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
   });
 
   it("should map browser storyboard API failures to typed errors", async () => {

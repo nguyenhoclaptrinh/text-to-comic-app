@@ -20,6 +20,7 @@ import {
   createImagePrompt,
   uploadToSupabaseStorage,
 } from "@/lib/server/image-generation";
+import { isSupabaseRuntimeConfigured } from "@/lib/server/runtime-config";
 import type {
   GeneratePanelRequest,
   KaggleImageJobResponse,
@@ -602,7 +603,14 @@ function getJobStoreConfig(): JobStoreConfig {
     process.env.SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !serviceKey) {
+  if (
+    !url ||
+    !serviceKey ||
+    !isSupabaseRuntimeConfigured({
+      url,
+      serviceKey,
+    })
+  ) {
     throw new KaggleImageJobError(
       "Supabase is required for Kaggle image jobs.",
       503,

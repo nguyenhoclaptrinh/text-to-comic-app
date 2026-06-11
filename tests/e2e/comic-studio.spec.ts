@@ -25,7 +25,7 @@ test("creates, generates, edits, and exports a comic", async ({ page }) => {
     .fill(
       "Snow covered the mountain road while a quiet inn waited for guests. A young innkeeper watched the door. A cheerful traveler entered with a loud request for noodles.",
     );
-  await page.getByRole("button", { name: "Tạo storyboard" }).click();
+  await page.getByRole("button", { name: "Tạo storyboard", exact: true }).click();
 
   await expect(
     page.getByRole("heading", { name: "Dựng storyboard" }),
@@ -67,6 +67,15 @@ test("keeps the storyboard workflow usable on mobile", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("button", { name: "Dự án" })).toBeVisible();
+  await page.getByLabel("Tiêu đề truyện tranh").fill("Mobile Demo");
+  await page
+    .getByLabel("Nội dung câu chuyện chữ gốc")
+    .fill(
+      "A student presents a clean comic pipeline. The classroom watches as each storyboard panel appears. The final page is ready for seminar.",
+    );
+  await page
+    .getByRole("button", { name: "Tạo storyboard", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Dựng storyboard" }),
   ).toBeVisible();

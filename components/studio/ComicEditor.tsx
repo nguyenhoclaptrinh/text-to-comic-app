@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { Save, MessageSquare, Layers } from "lucide-react";
+import { FileText, Save, MessageSquare, Layers } from "lucide-react";
 
 import { BubbleTools } from "@/components/studio/BubbleTools";
 import { ComicPanelCanvas } from "@/components/studio/ComicPanelCanvas";
@@ -63,6 +63,25 @@ export function ComicEditor({
 
   const selectedPanel =
     panels.find((panel) => panel.id === selectedPanelId) ?? panels[0];
+
+  if (!selectedPanel) {
+    return (
+      <section className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-8 pb-24 xl:pb-8">
+        <div className="flex max-w-md flex-col items-center rounded-lg border border-dashed border-border-main bg-surface/40 px-5 py-10 text-center">
+          <div className="flex size-12 items-center justify-center rounded-lg bg-primary/15 text-primary">
+            <FileText size={22} />
+          </div>
+          <h1 className="mt-4 text-lg font-semibold text-text-primary">
+            Chưa có khung để chỉnh
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">
+            Tạo storyboard từ truyện chữ trước, sau đó quay lại đây để đặt bong
+            bóng thoại lên ảnh.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="relative grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[280px_minmax(0,1fr)_260px]">

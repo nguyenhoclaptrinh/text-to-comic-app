@@ -5,7 +5,6 @@
 
 import { GENERATION_DELAY_MS } from "@/lib/studio/constants";
 import { createGeneratedBubble } from "@/lib/studio/factories";
-import { createFallbackStoryboardResponse } from "@/lib/studio/storyboard";
 import {
   GeneratePanelResponseSchema,
   KaggleImageJobResponseSchema,
@@ -91,7 +90,10 @@ export async function analyzeStoryToPages({
       return parsedResponse.data.pages;
     }
 
-    return createFallbackStoryboardResponse(parsedRequest.data.storyText).pages;
+    throw new StudioAiError(
+      StudioAiErrorCode.AI_TEXT_UNAVAILABLE,
+      "Storyboard backend returned an invalid response.",
+    );
   }
 
   await sleep(420);

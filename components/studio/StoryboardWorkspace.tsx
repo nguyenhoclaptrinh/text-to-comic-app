@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { AlertTriangle, MessageCircle, Users } from "lucide-react";
+import { AlertTriangle, FileText, MessageCircle, Users } from "lucide-react";
 
 import { CharacterCastingPanel } from "@/components/studio/CharacterCastingPanel";
 import { StoryboardPanelCard } from "@/components/studio/StoryboardPanelCard";
@@ -29,6 +29,7 @@ export function StoryboardWorkspace({
   onGeneratePanel,
   onDeletePanel,
   onGoToComic,
+  onGoToImport,
   onMovePanel,
   projectStyle,
   projectGenre,
@@ -51,6 +52,7 @@ export function StoryboardWorkspace({
   onGeneratePanel: (panelId: string) => void;
   onDeletePanel: (panelId: string) => void;
   onGoToComic: () => void;
+  onGoToImport: () => void;
   onMovePanel: (panelId: string, direction: "up" | "down") => void;
   projectStyle?: string;
   projectGenre?: string;
@@ -91,23 +93,27 @@ export function StoryboardWorkspace({
         />
 
         <div className="space-y-4 pb-8">
-          {panels.map((panel, index) => (
-            <StoryboardPanelCard
-              key={panel.id}
-              panel={panel}
-              characters={characters}
-              selected={panel.id === selectedPanelId}
-              disabled={isGeneratingAll}
-              canDelete={panels.length > 1}
-              canMoveUp={index > 0}
-              canMoveDown={index < panels.length - 1}
-              onSelect={() => onSelectPanel(panel.id)}
-              onUpdate={(patch) => onUpdatePanel(panel.id, patch)}
-              onGenerate={() => onGeneratePanel(panel.id)}
-              onDelete={() => onDeletePanel(panel.id)}
-              onMove={(direction) => onMovePanel(panel.id, direction)}
-            />
-          ))}
+          {panels.length > 0 ? (
+            panels.map((panel, index) => (
+              <StoryboardPanelCard
+                key={panel.id}
+                panel={panel}
+                characters={characters}
+                selected={panel.id === selectedPanelId}
+                disabled={isGeneratingAll}
+                canDelete={panels.length > 1}
+                canMoveUp={index > 0}
+                canMoveDown={index < panels.length - 1}
+                onSelect={() => onSelectPanel(panel.id)}
+                onUpdate={(patch) => onUpdatePanel(panel.id, patch)}
+                onGenerate={() => onGeneratePanel(panel.id)}
+                onDelete={() => onDeletePanel(panel.id)}
+                onMove={(direction) => onMovePanel(panel.id, direction)}
+              />
+            ))
+          ) : (
+            <EmptyStoryboardState onGoToImport={onGoToImport} />
+          )}
         </div>
       </section>
 
@@ -143,6 +149,31 @@ export function StoryboardWorkspace({
           <div className="flex-1" onClick={() => setIsCastingOpen(false)} />
         </div>
       )}
+    </div>
+  );
+}
+
+function EmptyStoryboardState({ onGoToImport }: { onGoToImport: () => void }) {
+  return (
+    <div className="flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed border-border-main bg-surface/40 px-5 py-10 text-center">
+      <div className="flex size-12 items-center justify-center rounded-lg bg-primary/15 text-primary">
+        <FileText size={22} />
+      </div>
+      <h2 className="mt-4 text-lg font-semibold text-text-primary">
+        Chưa có storyboard
+      </h2>
+      <p className="mt-2 max-w-md text-sm leading-6 text-text-secondary">
+        Nhập truyện chữ để hệ thống tạo các khung trước khi vẽ ảnh và xuất
+        webtoon.
+      </p>
+      <button
+        type="button"
+        onClick={onGoToImport}
+        className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+      >
+        <FileText size={16} />
+        Nhập truyện
+      </button>
     </div>
   );
 }
