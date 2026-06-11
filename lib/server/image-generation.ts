@@ -24,6 +24,7 @@ export const GEMINI_IMAGE_MODELS_POOL = [
 ];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
+export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
 export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
 
 export async function generatePanelImageFromProvider(
@@ -219,8 +220,13 @@ async function generateHuggingFaceImage({
   seed: number;
 }): Promise<GeneratePanelResponse> {
   const hfModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
+  const hfProvider =
+    process.env.HF_INFERENCE_PROVIDER || DEFAULT_HF_INFERENCE_PROVIDER;
+  const hfEndpoint =
+    process.env.HF_IMAGE_ENDPOINT ||
+    `https://router.huggingface.co/${hfProvider}/v1/images/generations`;
   const response = await fetchWithTimeout(
-    `https://api-inference.huggingface.co/models/${hfModel}`,
+    hfEndpoint,
     {
       method: "POST",
       headers: {
@@ -229,16 +235,15 @@ async function generateHuggingFaceImage({
         Accept: "image/png",
       },
       body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
+        model: hfModel,
+        prompt,
+        response_format: "b64_json",
+        extra_body: {
           width: 768,
           height: 1024,
           num_inference_steps: 8,
           guidance_scale: 3.5,
           seed,
-        },
-        options: {
-          wait_for_model: true,
         },
       }),
     },
@@ -246,9 +251,28 @@ async function generateHuggingFaceImage({
   );
 
   const contentType = response.headers.get("content-type") || "";
-  if (!response.ok || contentType.includes("application/json")) {
+  if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw createAiProviderErrorFromResponse(response, detail);
+  }
+
+  if (contentType.includes("application/json")) {
+    const data: unknown = await response.json();
+    const imageBase64 = getHuggingFaceBase64Image(data);
+    if (!imageBase64) {
+      throw createAiProviderErrorFromResponse(
+        response,
+        "Hugging Face response did not include an image.",
+      );
+    }
+
+    return {
+      panelId,
+      imageUrl: `data:image/png;base64,${imageBase64}`,
+      source: "image-backend",
+      usedModel: hfModel,
+      usedProvider: "huggingface",
+    };
   }
 
   if (!contentType.startsWith("image/")) {
@@ -268,6 +292,21 @@ async function generateHuggingFaceImage({
     usedModel: hfModel,
     usedProvider: "huggingface",
   };
+}
+
+function getHuggingFaceBase64Image(data: unknown) {
+  if (!isRecord(data) || !Array.isArray(data.data)) {
+    return undefined;
+  }
+
+  const firstImage = data.data[0];
+  if (!isRecord(firstImage)) {
+    return undefined;
+  }
+
+  return typeof firstImage.b64_json === "string"
+    ? firstImage.b64_json
+    : undefined;
 }
 
 async function generateImagenImageWithRotation({

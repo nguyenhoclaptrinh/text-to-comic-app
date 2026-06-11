@@ -33,6 +33,7 @@ export const DEFAULT_GEMINI_IMAGE_MODEL_POOL = [
 ];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
+export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
 export const DEFAULT_KAGGLE_IMAGE_MODEL = "Meina/MeinaMix_V11";
 
 export function getProviderStatuses({
@@ -96,7 +97,9 @@ export function getDefaultAiModelPools(): AiModelPoolSummary[] {
     },
     {
       label: "Ảnh Hugging Face",
-      models: [getPublicHuggingFaceImageModel()],
+      models: [
+        `${getPublicHuggingFaceImageModel()} (${DEFAULT_HF_INFERENCE_PROVIDER})`,
+      ],
     },
     {
       label: "Ảnh Kaggle",

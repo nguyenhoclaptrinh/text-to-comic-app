@@ -20,8 +20,10 @@ describe("server image generation", () => {
     vi.stubEnv("HF_IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell");
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      headers: new Headers({ "content-type": "image/png" }),
-      arrayBuffer: async () => Buffer.from("hf-image"),
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => ({
+        data: [{ b64_json: "aGYtaW1hZ2U=" }],
+      }),
       text: async () => "",
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -44,9 +46,20 @@ describe("server image generation", () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+      "https://router.huggingface.co/nscale/v1/images/generations",
       expect.objectContaining({
         method: "POST",
+        headers: expect.objectContaining({
+          Authorization: "Bearer hf-token",
+        }),
+        body: expect.stringContaining(
+          '"model":"black-forest-labs/FLUX.1-schnell"',
+        ),
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
         body: expect.stringContaining('"num_inference_steps":8'),
       }),
     );
@@ -97,7 +110,7 @@ describe("server image generation", () => {
     });
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+      "https://router.huggingface.co/nscale/v1/images/generations",
       expect.any(Object),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -117,6 +130,7 @@ describe("server image generation", () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       headers: new Headers({ "content-type": "application/json" }),
+      json: async () => ({ error: "quota exceeded" }),
       text: async () => '{"error":"quota exceeded"}',
     });
     vi.stubGlobal("fetch", fetchMock);

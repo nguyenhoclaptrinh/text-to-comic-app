@@ -61,7 +61,7 @@ describe("studio production config", () => {
       },
       {
         label: "Ảnh Hugging Face",
-        models: ["black-forest-labs/FLUX.1-schnell"],
+        models: ["black-forest-labs/FLUX.1-schnell (nscale)"],
       },
       {
         label: "Ảnh Kaggle",
