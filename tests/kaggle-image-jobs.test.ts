@@ -52,7 +52,7 @@ describe("Kaggle image jobs", () => {
       errorMessage: undefined,
       usedModel: "user/comic-panel-generator",
       usedProvider: "kaggle",
-      retryAfterMs: 2000,
+      retryAfterMs: 5000,
     });
   });
 });

@@ -252,7 +252,7 @@ describe("studio AI services", () => {
     const promise = generatePanelImageViaKaggleJob(PANELS_SEED[0], [], (status) =>
       statuses.push(status),
     );
-    await vi.advanceTimersByTimeAsync(4000);
+    await vi.advanceTimersByTimeAsync(7000);
 
     await expect(promise).resolves.toMatchObject({
       status: "success",
@@ -263,21 +263,12 @@ describe("studio AI services", () => {
     vi.useRealTimers();
   });
 
-  it("should fall back to the sync image API when Kaggle jobs are unavailable", async () => {
+  it("should surface Kaggle startup failures without silent fallback", async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValueOnce({
+      .mockResolvedValue({
         ok: false,
         json: async () => ({ message: "Kaggle disabled." }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          panelId: PANELS_SEED[0].id,
-          imageUrl: "data:image/svg+xml;charset=utf-8,%3Csvg%2F%3E",
-          source: "fallback",
-          usedProvider: "fallback",
-        }),
       });
 
     vi.stubGlobal("window", {});
@@ -285,14 +276,124 @@ describe("studio AI services", () => {
 
     await expect(
       generatePanelImageViaKaggleJob(PANELS_SEED[0]),
-    ).resolves.toMatchObject({
-      status: "success",
-      usedProvider: "fallback",
+    ).rejects.toMatchObject({
+      code: StudioAiErrorCode.AI_IMAGE_OFFLINE,
+      message: "Kaggle disabled.",
     });
-    expect(fetchMock).toHaveBeenLastCalledWith(
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("should keep polling long-running Kaggle jobs before falling back", async () => {
+    vi.useFakeTimers();
+    const runningResponse = {
+      ok: true,
+      json: async () => ({
+        jobId: "job-long",
+        panelId: PANELS_SEED[0].id,
+        status: "running",
+        usedProvider: "kaggle",
+        usedModel: "Meina/MeinaMix_V11",
+        retryAfterMs: 5000,
+      }),
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-long",
+          panelId: PANELS_SEED[0].id,
+          status: "queued",
+          usedProvider: "kaggle",
+          usedModel: "Meina/MeinaMix_V11",
+          retryAfterMs: 5000,
+        }),
+      })
+      .mockResolvedValueOnce(runningResponse)
+      .mockResolvedValueOnce(runningResponse)
+      .mockResolvedValueOnce(runningResponse)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-long",
+          panelId: PANELS_SEED[0].id,
+          status: "succeeded",
+          imageUrl: "https://example.test/kaggle-panel.png",
+          usedProvider: "kaggle",
+          usedModel: "Meina/MeinaMix_V11",
+        }),
+      });
+
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const promise = generatePanelImageViaKaggleJob(PANELS_SEED[0]);
+    await vi.advanceTimersByTimeAsync(20_000);
+
+    await expect(promise).resolves.toMatchObject({
+      status: "success",
+      imageUrl: "https://example.test/kaggle-panel.png",
+      usedModel: "Meina/MeinaMix_V11",
+    });
+    expect(fetchMock).not.toHaveBeenCalledWith(
       "/api/generate-panel",
       expect.any(Object),
     );
+    vi.useRealTimers();
+  });
+
+  it("should surface failed Kaggle jobs without silent fallback", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-failed",
+          panelId: PANELS_SEED[0].id,
+          status: "queued",
+          usedProvider: "kaggle",
+          usedModel: "Meina/MeinaMix_V11",
+          retryAfterMs: 5000,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          jobId: "job-failed",
+          panelId: PANELS_SEED[0].id,
+          status: "failed",
+          errorMessage: "Kaggle kernel failed.",
+          usedProvider: "kaggle",
+          usedModel: "Meina/MeinaMix_V11",
+        }),
+      });
+
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const promise = expect(
+      generatePanelImageViaKaggleJob(PANELS_SEED[0]),
+    ).rejects.toMatchObject({
+      code: StudioAiErrorCode.AI_IMAGE_OFFLINE,
+      message: "Kaggle kernel failed.",
+    });
+    await vi.advanceTimersByTimeAsync(5000);
+
+    await promise;
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/generate-panel",
+      expect.any(Object),
+    );
+    vi.useRealTimers();
   });
 
   it("should map browser image API failures without raw provider messages", async () => {

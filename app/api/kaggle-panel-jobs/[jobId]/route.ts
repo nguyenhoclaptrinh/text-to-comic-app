@@ -13,10 +13,11 @@ import { KaggleImageJobResponseSchema } from "@/lib/studio/api-contracts";
 
 export async function GET(
   _request: Request,
-  { params }: { params: { jobId: string } },
+  { params }: { params: Promise<{ jobId: string }> },
 ) {
   try {
-    const job = await getKagglePanelJob(params.jobId);
+    const { jobId } = await params;
+    const job = await getKagglePanelJob(jobId);
 
     if (!job) {
       return NextResponse.json(

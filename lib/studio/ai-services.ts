@@ -16,6 +16,9 @@ import { toUserFacingError } from "@/lib/studio/user-facing-errors";
 import { createMockPanels, sleep } from "@/lib/studio/utils";
 import type { Character, Page, Panel } from "@/lib/studio/types";
 
+const KAGGLE_JOB_MAX_POLL_ATTEMPTS = 180;
+const KAGGLE_JOB_DEFAULT_RETRY_AFTER_MS = 5_000;
+
 export enum StudioAiErrorCode {
   VALIDATION_ERROR = "VALIDATION_ERROR",
   AI_TEXT_UNAVAILABLE = "AI_TEXT_UNAVAILABLE",
@@ -194,20 +197,16 @@ export async function generatePanelImage(
 export async function generatePanelImageViaKaggleJob(
   panel: Panel,
   characters: Character[] = [],
-  onStatus?: (status: "queued" | "generating") => void,
+  onStatus?: (
+    status: "queued" | "generating",
+    route?: Pick<Panel, "usedModel" | "usedProvider">,
+  ) => void,
 ): Promise<Partial<Panel>> {
   if (typeof window === "undefined") {
     return generatePanelImage(panel, characters);
   }
 
-  const job = await startKagglePanelImageJob(panel, characters).catch(() => {
-    return null;
-  });
-
-  if (!job) {
-    onStatus?.("generating");
-    return generatePanelImage(panel, characters);
-  }
+  const job = await startKagglePanelImageJob(panel, characters);
 
   rememberLastAiRoute({
     scope: "image",
@@ -215,18 +214,20 @@ export async function generatePanelImageViaKaggleJob(
     model: job.usedModel,
   });
 
-  onStatus?.(job.status === "queued" ? "queued" : "generating");
+  onStatus?.(job.status === "queued" ? "queued" : "generating", {
+    usedModel: job.usedModel,
+    usedProvider: job.usedProvider,
+  });
 
-  const completedJob = await pollKagglePanelImageJob(job.jobId, onStatus).catch(
-    () => null,
-  );
+  const completedJob = await pollKagglePanelImageJob(job.jobId, onStatus);
   if (
-    !completedJob ||
     completedJob.status !== "succeeded" ||
     !completedJob.imageUrl
   ) {
-    onStatus?.("generating");
-    return generatePanelImage(panel, characters);
+    throw new StudioAiError(
+      StudioAiErrorCode.AI_IMAGE_OFFLINE,
+      completedJob.errorMessage || "Kaggle image job failed.",
+    );
   }
 
   rememberLastAiRoute({
@@ -281,12 +282,14 @@ async function startKagglePanelImageJob(
 
 async function pollKagglePanelImageJob(
   jobId: string,
-  onStatus?: (status: "queued" | "generating") => void,
+  onStatus?: (
+    status: "queued" | "generating",
+    route?: Pick<Panel, "usedModel" | "usedProvider">,
+  ) => void,
 ) {
-  const maxAttempts = 60;
-  let lastRetryAfterMs = 2_000;
+  let lastRetryAfterMs = KAGGLE_JOB_DEFAULT_RETRY_AFTER_MS;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+  for (let attempt = 0; attempt < KAGGLE_JOB_MAX_POLL_ATTEMPTS; attempt += 1) {
     await sleep(lastRetryAfterMs);
     const response = await fetch(`/api/kaggle-panel-jobs/${jobId}`);
     const body: unknown = await response.json().catch(() => null);
@@ -308,11 +311,15 @@ async function pollKagglePanelImageJob(
 
     const job = parsedResponse.data;
     lastRetryAfterMs = job.retryAfterMs || lastRetryAfterMs;
+    const route = {
+      usedModel: job.usedModel,
+      usedProvider: job.usedProvider,
+    };
     if (job.status === "queued") {
-      onStatus?.("queued");
+      onStatus?.("queued", route);
     }
     if (job.status === "running") {
-      onStatus?.("generating");
+      onStatus?.("generating", route);
     }
     if (job.status === "succeeded" || job.status === "failed") {
       return job;

@@ -9,6 +9,7 @@ build/
 coverage/
 playwright-report/
 test-results/
+*.tsbuildinfo
 
 # Environment files
 .env
@@ -27,6 +28,8 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+__pycache__/
+*.pyc
 
 # Local agent configuration
 .agents/
@@ -38,4 +41,3 @@ next-env.d.ts
 downloads/
 logs/
 prototype/*.js
-

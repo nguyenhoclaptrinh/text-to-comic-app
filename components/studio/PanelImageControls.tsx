@@ -102,11 +102,17 @@ function GenerateButton({
     <button
       type="button"
       onClick={onGenerate}
-      disabled={disabled || panel.status === "generating"}
+      disabled={
+        disabled || panel.status === "generating" || panel.status === "queued"
+      }
       className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-violet-500 px-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
     >
       <GenerateIcon status={panel.status} />
-      {panel.status === "success" ? "Vẽ lại" : "Vẽ ảnh"}
+      {panel.status === "queued" || panel.status === "generating"
+        ? "Đang vẽ"
+        : panel.status === "success"
+          ? "Vẽ lại"
+          : "Vẽ ảnh"}
     </button>
   );
 }
@@ -159,8 +165,22 @@ function PanelImageMessage({
   }
 
   return (
-    <div className="text-xs text-zinc-500">
-      Trạng thái ảnh: {STATUS_COPY[panel.status]}
+    <div className="min-w-0 text-xs text-zinc-500">
+      <div>Trạng thái ảnh: {STATUS_COPY[panel.status]}</div>
+      {panel.usedProvider || panel.usedModel ? (
+        <div className="mt-1 truncate text-[11px] text-zinc-600">
+          {formatAiRoute(panel)}
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function formatAiRoute(panel: Panel) {
+  const provider = panel.usedProvider
+    ? panel.usedProvider === "kaggle"
+      ? "Kaggle"
+      : panel.usedProvider
+    : "AI";
+  return panel.usedModel ? `${provider} · ${panel.usedModel}` : provider;
 }

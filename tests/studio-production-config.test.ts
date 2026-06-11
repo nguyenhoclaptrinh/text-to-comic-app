@@ -69,7 +69,7 @@ describe("studio production config", () => {
       },
       {
         label: "Ảnh Kaggle",
-        models: ["KAGGLE_KERNEL_REF"],
+        models: ["Meina/MeinaMix_V11"],
       },
     ]);
   });

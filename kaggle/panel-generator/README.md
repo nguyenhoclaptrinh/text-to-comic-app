@@ -17,6 +17,8 @@ Expected output:
 /kaggle/working/output.png
 ```
 
-The included script creates a placeholder image from the prompt. Replace the
-body of `kernel.py` with your real image model while preserving the input and
-output file contract.
+The included script uses `Meina/MeinaMix_V11` through Hugging Face Diffusers
+because it produces cleaner anime/comic panels than the older Waifu Diffusion
+default while still fitting Kaggle's regular GPU memory better than SDXL models.
+It requires internet access on the Kaggle kernel for dependency and model
+downloads unless you attach the model/dependencies as Kaggle inputs.

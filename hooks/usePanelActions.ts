@@ -130,12 +130,15 @@ export function usePanelActions({
         ? generatePanelImageViaKaggleJob(
             panelWithResolvedStyle,
             characters,
-            (status) => {
+            (status, route) => {
               updatePanel(
                 panelId,
-                status === "queued"
-                  ? markPanelQueued(panelWithResolvedStyle)
-                  : markPanelGenerating(panelWithResolvedStyle),
+                {
+                  ...(status === "queued"
+                    ? markPanelQueued(panelWithResolvedStyle)
+                    : markPanelGenerating(panelWithResolvedStyle)),
+                  ...route,
+                },
               );
             },
           )
@@ -143,10 +146,7 @@ export function usePanelActions({
       if (!kaggleEnabled) {
         updatePanel(panelId, markPanelGenerating(panelWithResolvedStyle));
       }
-      updatePanel(
-        panelId,
-        await generateImage,
-      );
+      updatePanel(panelId, await generateImage);
     } catch (error) {
       updatePanel(panelId, {
         ...markPanelGenerationFailed(target, getStudioAiErrorMessage(error)),

@@ -35,6 +35,7 @@ export const DEFAULT_GEMINI_IMAGE_MODEL_POOL = [
 ];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-dev:fastest";
+export const DEFAULT_KAGGLE_IMAGE_MODEL = "Meina/MeinaMix_V11";
 
 export function getProviderStatuses({
   geminiKey,
@@ -74,6 +75,13 @@ export function getPublicKaggleEnabled() {
   return process.env.NEXT_PUBLIC_KAGGLE_ENABLED === "true";
 }
 
+export function getPublicKaggleImageModel() {
+  return (
+    process.env.NEXT_PUBLIC_KAGGLE_DIFFUSION_MODEL ||
+    DEFAULT_KAGGLE_IMAGE_MODEL
+  );
+}
+
 export function getDefaultAiModelPools(): AiModelPoolSummary[] {
   return [
     {
@@ -90,7 +98,7 @@ export function getDefaultAiModelPools(): AiModelPoolSummary[] {
     },
     {
       label: "Ảnh Kaggle",
-      models: ["KAGGLE_KERNEL_REF"],
+      models: [getPublicKaggleImageModel()],
     },
   ];
 }

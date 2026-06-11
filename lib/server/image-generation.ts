@@ -192,7 +192,10 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
     .filter(isDefined);
 
   const characterContext = selectedCharacters
-    .map((character) => `${character.name} (${character.description})`)
+    .map(
+      (character) =>
+        `${character.name}, ${compactPromptText(character.description, 18)}`,
+    )
     .join(", ");
 
   const resolvedStyle =
@@ -208,14 +211,23 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
       : "";
 
   return [
-    `A high-quality comic panel illustration ${characterHeading}, in the style of ${styleModifier}`,
-    `Visual Scene: ${panel.scenePrompt}`,
-    `Story Dialogue Context: "${panel.dialogue}"`,
-    "Strict Quality: consistent character styling, same outfit, same face, highly detailed illustration, clear face, clear line art.",
-    `Rendering Seed: ${panel.seed}`,
+    `Comic panel, ${styleModifier}`,
+    characterHeading,
+    `Scene: ${compactPromptText(panel.scenePrompt, 34)}`,
+    panel.dialogue
+      ? `Dialogue mood/context: ${compactPromptText(panel.dialogue, 14)}`
+      : "",
+    "Quality: clean line art, clear face, consistent outfit, expressive pose, polished color",
+    `Seed: ${panel.seed}`,
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+function compactPromptText(value: string, maxWords: number) {
+  return value.replace(/\s+/g, " ").trim().split(" ").slice(0, maxWords).join(
+    " ",
+  );
 }
 
 async function generateGeminiImageWithRotation({
