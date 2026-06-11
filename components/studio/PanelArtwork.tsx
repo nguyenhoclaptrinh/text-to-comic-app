@@ -31,7 +31,7 @@ export function ComicPanelArt({ panel }: { panel: Panel }) {
   if (panel.imageUrl) {
     return (
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-contain bg-center bg-no-repeat"
         role="img"
         aria-label={`Ảnh đã vẽ cho khung ${panel.orderIndex}`}
         style={{ backgroundImage: `url("${panel.imageUrl}")` }}

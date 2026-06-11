@@ -25,6 +25,7 @@ export const GEMINI_IMAGE_MODELS_POOL = [
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
 export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
+export const DEFAULT_HF_IMAGE_SIZE = "1024x1024";
 export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
 
 export async function generatePanelImageFromProvider(
@@ -225,6 +226,7 @@ async function generateHuggingFaceImage({
   const hfEndpoint =
     process.env.HF_IMAGE_ENDPOINT ||
     `https://router.huggingface.co/${hfProvider}/v1/images/generations`;
+  const hfImageSize = process.env.HF_IMAGE_SIZE || DEFAULT_HF_IMAGE_SIZE;
   const response = await fetchWithTimeout(
     hfEndpoint,
     {
@@ -237,10 +239,10 @@ async function generateHuggingFaceImage({
       body: JSON.stringify({
         model: hfModel,
         prompt,
+        size: hfImageSize,
+        n: 1,
         response_format: "b64_json",
         extra_body: {
-          width: 768,
-          height: 1024,
           num_inference_steps: 8,
           guidance_scale: 3.5,
           seed,

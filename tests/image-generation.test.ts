@@ -60,6 +60,12 @@ describe("server image generation", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
+        body: expect.stringContaining('"size":"1024x1024"'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
         body: expect.stringContaining('"num_inference_steps":8'),
       }),
     );
