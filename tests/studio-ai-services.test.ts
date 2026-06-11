@@ -173,15 +173,15 @@ describe("studio AI services", () => {
     });
   });
 
-  it("should use Imagen panel generation before Kaggle fallback", async () => {
+  it("should use Hugging Face panel generation before Kaggle fallback", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         panelId: PANELS_SEED[0].id,
-        imageUrl: "data:image/png;base64,aW1hZ2Vu",
+        imageUrl: "data:image/png;base64,aGY=",
         source: "image-backend",
-        usedProvider: "imagen",
-        usedModel: "imagen-4.0-generate-001",
+        usedProvider: "huggingface",
+        usedModel: "black-forest-labs/FLUX.1-schnell",
       }),
     });
 
@@ -196,8 +196,8 @@ describe("studio AI services", () => {
       generatePanelImageWithKaggleFallback(PANELS_SEED[0], [], true),
     ).resolves.toMatchObject({
       status: "success",
-      usedProvider: "imagen",
-      usedModel: "imagen-4.0-generate-001",
+      usedProvider: "huggingface",
+      usedModel: "black-forest-labs/FLUX.1-schnell",
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -206,13 +206,13 @@ describe("studio AI services", () => {
     );
   });
 
-  it("should fall back to Kaggle when Imagen panel generation fails", async () => {
+  it("should fall back to Kaggle when Hugging Face and Imagen generation fail", async () => {
     vi.useFakeTimers();
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ message: "Imagen unavailable." }),
+        json: async () => ({ message: "Image providers unavailable." }),
       })
       .mockResolvedValueOnce({
         ok: true,

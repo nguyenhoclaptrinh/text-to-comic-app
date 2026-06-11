@@ -32,7 +32,7 @@ export const DEFAULT_GEMINI_IMAGE_MODEL_POOL = [
   "imagen-4.0-generate-001",
 ];
 
-export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-dev:fastest";
+export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
 export const DEFAULT_KAGGLE_IMAGE_MODEL = "Meina/MeinaMix_V11";
 
 export function getProviderStatuses({
@@ -80,6 +80,10 @@ export function getPublicKaggleImageModel() {
   );
 }
 
+export function getPublicHuggingFaceImageModel() {
+  return process.env.NEXT_PUBLIC_HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
+}
+
 export function getDefaultAiModelPools(): AiModelPoolSummary[] {
   return [
     {
@@ -92,7 +96,7 @@ export function getDefaultAiModelPools(): AiModelPoolSummary[] {
     },
     {
       label: "Ảnh Hugging Face",
-      models: [DEFAULT_HF_IMAGE_MODEL],
+      models: [getPublicHuggingFaceImageModel()],
     },
     {
       label: "Ảnh Kaggle",

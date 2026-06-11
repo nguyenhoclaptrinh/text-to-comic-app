@@ -154,8 +154,8 @@ describe("studio API contracts", () => {
         panelId: "panel-1",
         imageUrl: "data:image/png;base64,test",
         source: "image-backend",
-        usedProvider: "imagen",
-        usedModel: "imagen-4.0-generate-001",
+        usedProvider: "huggingface",
+        usedModel: "black-forest-labs/FLUX.1-schnell",
       }).success,
     ).toBe(true);
   });

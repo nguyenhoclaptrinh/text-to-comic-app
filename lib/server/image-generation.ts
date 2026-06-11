@@ -23,7 +23,7 @@ export const GEMINI_IMAGE_MODELS_POOL = [
   "imagen-4.0-generate-001",
 ];
 
-export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-dev:fastest";
+export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
 export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
 
 export async function generatePanelImageFromProvider(
@@ -63,7 +63,23 @@ async function generateRawPanelImage(
     throw new Error("Image backend is offline.");
   }
 
-  // 1. Thử dùng Imagen 4 Generate trước cho ảnh panel.
+  // 1. Thử dùng Hugging Face trước vì user có thể chọn model comic tốt hơn.
+  const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
+  if (hfToken) {
+    try {
+      const prompt = createImagePrompt(input);
+      return await generateHuggingFaceImage({
+        apiToken: hfToken,
+        prompt,
+        panelId: input.panel.id,
+        seed: input.panel.seed,
+      });
+    } catch (err) {
+      console.warn("[Hugging Face] Inference failed, trying Imagen...", err);
+    }
+  }
+
+  // 2. Thử dùng Imagen 4 Generate cho ảnh panel.
   const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
   if (geminiApiKey) {
     try {
@@ -88,7 +104,7 @@ async function generateRawPanelImage(
     }
   }
 
-  // 2. Thử dùng IMAGE_BACKEND_URL
+  // 3. Thử dùng IMAGE_BACKEND_URL
   const endpoint = process.env.IMAGE_BACKEND_URL;
   if (endpoint) {
     try {
@@ -122,47 +138,9 @@ async function generateRawPanelImage(
     }
   }
 
-  // 3. Thử dùng Hugging Face Inference API nếu có Token
-  const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
-  if (hfToken) {
-    try {
-      const prompt = createImagePrompt(input);
-      const hfModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
-      const response = await fetchWithTimeout(
-        `https://api-inference.huggingface.co/models/${hfModel}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${hfToken}`,
-          },
-          body: JSON.stringify({ inputs: prompt }),
-        },
-        getAiTimeoutMs(),
-      );
-
-      if (response.ok) {
-        const buffer = await response.arrayBuffer();
-        const base64 = Buffer.from(buffer).toString("base64");
-        const contentType = response.headers.get("content-type") || "image/png";
-        const imageUrl = `data:${contentType};base64,${base64}`;
-
-        return {
-          panelId: input.panel.id,
-          imageUrl,
-          source: "image-backend",
-          usedModel: hfModel,
-          usedProvider: "huggingface",
-        };
-      }
-    } catch (err) {
-      console.warn("[Hugging Face] Inference failed:", err);
-    }
-  }
-
   return createFallbackPanelImageResponse(
     input,
-    "Imagen/Image backend/HuggingFace is not configured or failed.",
+    "HuggingFace/Imagen/Image backend is not configured or failed.",
   );
 }
 
@@ -227,6 +205,69 @@ function compactPromptText(value: string, maxWords: number) {
   return value.replace(/\s+/g, " ").trim().split(" ").slice(0, maxWords).join(
     " ",
   );
+}
+
+async function generateHuggingFaceImage({
+  apiToken,
+  prompt,
+  panelId,
+  seed,
+}: {
+  apiToken: string;
+  prompt: string;
+  panelId: string;
+  seed: number;
+}): Promise<GeneratePanelResponse> {
+  const hfModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
+  const response = await fetchWithTimeout(
+    `https://api-inference.huggingface.co/models/${hfModel}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiToken}`,
+        Accept: "image/png",
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          width: 768,
+          height: 1024,
+          num_inference_steps: 8,
+          guidance_scale: 3.5,
+          seed,
+        },
+        options: {
+          wait_for_model: true,
+        },
+      }),
+    },
+    getAiTimeoutMs(),
+  );
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!response.ok || contentType.includes("application/json")) {
+    const detail = await response.text().catch(() => "");
+    throw createAiProviderErrorFromResponse(response, detail);
+  }
+
+  if (!contentType.startsWith("image/")) {
+    throw createAiProviderErrorFromResponse(
+      response,
+      `Unexpected Hugging Face response type: ${contentType || "unknown"}.`,
+    );
+  }
+
+  const buffer = await response.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+
+  return {
+    panelId,
+    imageUrl: `data:${contentType};base64,${base64}`,
+    source: "image-backend",
+    usedModel: hfModel,
+    usedProvider: "huggingface",
+  };
 }
 
 async function generateImagenImageWithRotation({
