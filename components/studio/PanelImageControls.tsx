@@ -182,9 +182,13 @@ function formatAiRoute(panel: Panel) {
       ? "Kaggle"
       : panel.usedProvider === "imagen"
         ? "Imagen"
-      : panel.usedProvider === "huggingface"
-        ? "Hugging Face"
-      : panel.usedProvider
+        : panel.usedProvider === "huggingface"
+          ? "Hugging Face"
+          : panel.usedProvider === "fallback"
+            ? "Ảnh fallback demo"
+            : panel.usedProvider === "image-backend"
+              ? "Image backend"
+              : panel.usedProvider
     : "AI";
   return panel.usedModel ? `${provider} · ${panel.usedModel}` : provider;
 }

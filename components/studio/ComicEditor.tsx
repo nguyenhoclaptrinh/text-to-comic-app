@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { FileText, Save, MessageSquare, Layers } from "lucide-react";
+import { FileText, Save, MessageSquare, Layers, X } from "lucide-react";
 
 import { BubbleTools } from "@/components/studio/BubbleTools";
 import { ComicPanelCanvas } from "@/components/studio/ComicPanelCanvas";
@@ -146,7 +146,7 @@ export function ComicEditor({
       {/* ============================================================== */}
 
       {/* Floating Action Dock cho tablet & mobile (< 1280px) */}
-      <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-border-main bg-surface/90 p-2 shadow-2xl backdrop-blur-md transition-colors duration-200 xl:hidden">
+      <div className="fixed bottom-20 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-border-main bg-surface/90 p-2 shadow-2xl backdrop-blur-md transition-colors duration-200 md:bottom-6 xl:hidden">
         <button
           type="button"
           onClick={() => setIsBubbleOpen(true)}
@@ -209,10 +209,12 @@ export function ComicEditor({
                 Danh sách khung
               </span>
               <button
+                type="button"
                 onClick={() => setIsPanelOpen(false)}
+                aria-label="Đóng danh sách khung"
                 className="rounded-lg p-1 text-text-secondary hover:bg-surface hover:text-text-primary"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">

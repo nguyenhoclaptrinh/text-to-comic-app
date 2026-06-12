@@ -10,7 +10,7 @@ export function useStudioNavigation(
   initialProjectId: string,
   initialPageId: string,
 ) {
-  const [view, setView] = useState<View>("import");
+  const [view, setView] = useState<View>("projects");
   const [activeProjectId, setActiveProjectId] = useState(initialProjectId);
   const [activePageId, setActivePageId] = useState(initialPageId);
   const [selectedPanelId, setSelectedPanelId] = useState("");

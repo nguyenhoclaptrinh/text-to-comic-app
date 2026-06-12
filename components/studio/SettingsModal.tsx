@@ -66,6 +66,7 @@ export function SettingsModal({
   const [dataStatus, setDataStatus] = useState<
     "idle" | "exported" | "imported" | "cleared" | "error"
   >("idle");
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [lastTextRoute] = useState(() =>
     getLastAiRoute(
       typeof window !== "undefined" ? window.localStorage : undefined,
@@ -95,7 +96,7 @@ export function SettingsModal({
 
     const rawSnapshot = localStorage.getItem(STUDIO_STORAGE_KEY);
     if (!rawSnapshot) {
-      alert("Không tìm thấy dữ liệu truyện để đồng bộ!");
+      setDataStatus("error");
       return;
     }
 
@@ -206,13 +207,13 @@ export function SettingsModal({
       return;
     }
 
-    const confirmed = window.confirm(
-      "Xóa dữ liệu truyện đang lưu trên trình duyệt này? API key vẫn được giữ lại.",
-    );
-    if (!confirmed) {
+    setClearConfirmOpen(true);
+  };
+
+  const confirmClearLocalData = () => {
+    if (typeof window === "undefined") {
       return;
     }
-
     window.localStorage.removeItem(STUDIO_STORAGE_KEY);
     setDataStatus("cleared");
     setTimeout(() => window.location.reload(), 600);
@@ -220,22 +221,24 @@ export function SettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl transition-all">
-        {/* Decorative background gradients */}
-        <div className="absolute -left-16 -top-16 h-32 w-32 rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
-        <div className="absolute -right-16 -bottom-16 h-32 w-32 rounded-full bg-emerald-600/10 blur-3xl pointer-events-none" />
-
+      <div
+        className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl transition-all"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-900">
           <div className="flex items-center gap-2">
             <Key className="text-violet-400" size={20} />
-            <h2 className="text-lg font-bold text-zinc-100">
+            <h2 id="settings-title" className="text-lg font-bold text-zinc-100">
               Cấu hình API Keys
             </h2>
           </div>
           <button
             onClick={onClose}
             type="button"
+            aria-label="Đóng cấu hình"
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 transition-colors"
           >
             <X size={16} />
@@ -406,7 +409,7 @@ export function SettingsModal({
             <Database className="mt-0.5 shrink-0 text-violet-400" size={16} />
             <div>
               <p className="text-xs font-semibold text-zinc-300">
-                Dữ liệu của bạn
+                Dữ liệu demo
               </p>
               <p className="mt-0.5 text-[11px] leading-5 text-zinc-500">
                 Dự án được lưu local-first trên trình duyệt. Hãy tải backup
@@ -466,17 +469,45 @@ export function SettingsModal({
                     : "Không thể xử lý dữ liệu. Hãy kiểm tra file backup."}
             </p>
           ) : null}
+          {clearConfirmOpen ? (
+            <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+              <p className="text-xs font-semibold text-red-200">
+                Xóa dữ liệu truyện đang lưu trên trình duyệt này?
+              </p>
+              <p className="mt-1 text-[11px] leading-5 text-zinc-400">
+                API key vẫn được giữ lại. Hành động này chỉ xóa snapshot dự án
+                local-first của demo.
+              </p>
+              <div className="mt-3 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setClearConfirmOpen(false)}
+                  className="h-8 rounded-lg border border-zinc-800 px-3 text-xs font-semibold text-zinc-300 hover:bg-zinc-900"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmClearLocalData}
+                  className="h-8 rounded-lg bg-red-500 px-3 text-xs font-semibold text-white hover:bg-red-400"
+                >
+                  Xóa dữ liệu
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Supabase Cloud Sync Section */}
-        <div className="my-5 rounded-lg border border-zinc-900 bg-zinc-950 p-3.5">
-          <div className="flex items-center justify-between gap-3">
+        <details className="my-5 rounded-lg border border-zinc-900 bg-zinc-950 p-3.5">
+          <summary className="cursor-pointer text-xs font-semibold text-zinc-300">
+            Nâng cao: Đồng bộ đám mây Supabase
+          </summary>
+          <div className="mt-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-zinc-300">
-                Đồng bộ Đám mây (Supabase)
-              </p>
-              <p className="mt-0.5 text-[11px] text-zinc-500">
-                Lưu dự án hiện tại lên database cloud.
+              <p className="text-[11px] text-zinc-500">
+                Tùy chọn sau demo: lưu snapshot hiện tại lên database cloud nếu
+                Supabase đã được cấu hình.
               </p>
             </div>
             <button
@@ -500,7 +531,7 @@ export function SettingsModal({
                     : "Đồng bộ ngay"}
             </button>
           </div>
-        </div>
+        </details>
 
         {/* Actions */}
         <div className="mt-6 flex items-center justify-between gap-3 border-t border-zinc-900 pt-4">

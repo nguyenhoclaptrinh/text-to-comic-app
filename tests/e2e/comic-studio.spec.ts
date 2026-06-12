@@ -14,8 +14,6 @@ test.beforeEach(async ({ page }) => {
 test("creates, generates, edits, and exports a comic", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("button", { name: "Dự án" }).click();
-
   const newProjectButton = page.getByRole("button", { name: /Tạo dự án/ });
   await newProjectButton.first().click();
 
@@ -25,7 +23,9 @@ test("creates, generates, edits, and exports a comic", async ({ page }) => {
     .fill(
       "Snow covered the mountain road while a quiet inn waited for guests. A young innkeeper watched the door. A cheerful traveler entered with a loud request for noodles.",
     );
-  await page.getByRole("button", { name: "Tạo storyboard", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Tạo storyboard", exact: true })
+    .click();
 
   await expect(
     page.getByRole("heading", { name: "Dựng storyboard" }),
@@ -55,7 +55,7 @@ test("creates, generates, edits, and exports a comic", async ({ page }) => {
     .getByRole("button", { name: "Xuất file" })
     .click();
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Tải file" }).click();
+  await page.getByRole("button", { name: /Tải file|Xuất phần đã có/ }).click();
   const download = await downloadPromise;
   const downloadPath = `./downloads/${download.suggestedFilename()}`;
   await download.saveAs(downloadPath);
@@ -66,7 +66,13 @@ test("keeps the storyboard workflow usable on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
-  await expect(page.getByRole("button", { name: "Dự án" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Dự án", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: /Tạo dự án/ })
+    .first()
+    .click();
   await page.getByLabel("Tiêu đề truyện tranh").fill("Mobile Demo");
   await page
     .getByLabel("Nội dung câu chuyện chữ gốc")

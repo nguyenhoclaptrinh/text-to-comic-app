@@ -4,7 +4,14 @@
  */
 
 import { useState } from "react";
-import { AlertTriangle, FileText, MessageCircle, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  BadgeCheck,
+  FileText,
+  MessageCircle,
+  Users,
+  X,
+} from "lucide-react";
 
 import { CharacterCastingPanel } from "@/components/studio/CharacterCastingPanel";
 import { StoryboardPanelCard } from "@/components/studio/StoryboardPanelCard";
@@ -123,17 +130,25 @@ export function StoryboardWorkspace({
 
       {/* Slide-out Drawer cho Casting Panel trên di động (< 1024px) */}
       {isCastingOpen && (
-        <div className="fixed inset-0 z-40 flex bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-200">
-          <div className="relative flex h-full w-[288px] flex-col border-r border-border-main bg-surface-elevated p-4 shadow-2xl animate-in slide-in-from-left duration-300">
+        <div className="fixed inset-0 z-40 flex animate-in fade-in bg-black/60 backdrop-blur-sm duration-200 lg:hidden">
+          <div
+            className="relative flex h-full w-[288px] flex-col border-r border-border-main bg-surface-elevated p-4 shadow-2xl animate-in slide-in-from-left duration-300"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Casting nhân vật"
+          >
             <div className="mb-4 flex items-center justify-between border-b border-border-main pb-3">
-              <span className="font-semibold text-text-primary">
-                👥 Casting Nhân vật
+              <span className="inline-flex items-center gap-2 font-semibold text-text-primary">
+                <Users size={16} />
+                Casting Nhân vật
               </span>
               <button
+                type="button"
                 onClick={() => setIsCastingOpen(false)}
-                className="rounded-lg p-1 text-text-secondary hover:bg-surface hover:text-text-primary transition-colors"
+                aria-label="Đóng bảng nhân vật"
+                className="rounded-lg p-1 text-text-secondary transition-colors hover:bg-surface hover:text-text-primary"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
@@ -141,7 +156,7 @@ export function StoryboardWorkspace({
                 characters={characters}
                 onAddCharacter={onAddCharacter}
                 onUpdateCharacter={onUpdateCharacter}
-                  onDeleteCharacter={onDeleteCharacter}
+                onDeleteCharacter={onDeleteCharacter}
                 className="border-none bg-transparent p-0"
               />
             </div>
@@ -163,7 +178,7 @@ function EmptyStoryboardState({ onGoToImport }: { onGoToImport: () => void }) {
         Chưa có storyboard
       </h2>
       <p className="mt-2 max-w-md text-sm leading-6 text-text-secondary">
-        Nhập truyện chữ để hệ thống tạo các khung trước khi vẽ ảnh và xuất
+        Quay lại Dashboard để tạo dự án từ truyện chữ trước khi vẽ ảnh và xuất
         webtoon.
       </p>
       <button
@@ -172,7 +187,7 @@ function EmptyStoryboardState({ onGoToImport }: { onGoToImport: () => void }) {
         className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
       >
         <FileText size={16} />
-        Nhập truyện
+        Về Dashboard
       </button>
     </div>
   );
@@ -188,9 +203,9 @@ function ImageBackendAlert() {
       <div>
         <div className="font-semibold">Hệ thống vẽ ảnh cần lưu ý</div>
         <div className="mt-1 text-red-750 dark:text-red-100/80">
-          Các khung hình bị lỗi vẽ ảnh vẫn giữ nguyên văn bản mô tả bối cảnh và
-          lời thoại. Bạn có thể thử vẽ lại riêng từng khung mà không mất phần đã
-          chỉnh.
+          Các khung hình bị lỗi vẫn giữ nguyên mô tả và lời thoại. Nếu backend
+          ảnh offline, bạn có thể thử lại hoặc dùng ảnh fallback demo để tiếp
+          tục chỉnh truyện và export phần đã có.
         </div>
       </div>
     </div>
@@ -211,7 +226,7 @@ function StoryboardHeader({
   aspectRatio?: string;
 }) {
   return (
-    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <div>
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-text-primary">
@@ -231,8 +246,8 @@ function StoryboardHeader({
           Kiểm tra mạch truyện, chỉnh mô tả cảnh và vẽ ảnh cho từng khung.
         </p>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <div className="rounded-md border border-border-main bg-surface px-2 py-1 text-xs text-text-secondary">
             Phong cách: {style ?? "webtoon"}
           </div>
@@ -242,15 +257,19 @@ function StoryboardHeader({
           <div className="rounded-md border border-border-main bg-surface px-2 py-1 text-xs text-text-secondary">
             Tỉ lệ: {aspectRatio ?? "1:1"}
           </div>
+          <div className="inline-flex items-center gap-1.5 rounded-md border border-success/30 bg-success/10 px-2 py-1 text-xs text-text-secondary">
+            <BadgeCheck size={12} className="text-success" />
+            Có thể export phần đã có
+          </div>
         </div>
         <button
-        type="button"
-        onClick={onGoToComic}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-4 text-sm font-semibold text-text-primary hover:bg-surface transition-colors"
-      >
-        <MessageCircle size={16} />
-        Chỉnh lời thoại trên ảnh
-      </button>
+          type="button"
+          onClick={onGoToComic}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-surface"
+        >
+          <MessageCircle size={16} />
+          Chỉnh lời thoại trên ảnh
+        </button>
       </div>
     </div>
   );

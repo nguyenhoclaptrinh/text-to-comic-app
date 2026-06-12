@@ -1,12 +1,17 @@
 import {
   AlertTriangle,
+  CheckCircle2,
   FileText,
+  Laugh,
   Loader2,
   Plus,
+  Rocket,
   Sparkles,
+  Swords,
   Wand2,
   X,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 import { ProjectStatusPill } from "@/components/studio/StatusBadge";
@@ -44,17 +49,20 @@ export function Dashboard({
 
   const templates = [
     {
-      label: "🎭 Hài Hước",
+      label: "Hài Hước",
+      icon: Laugh,
       title: "Robot Hút Bụi Nổi Loạn",
       text: "Tèo bước vào phòng khách và chết lặng. Chiếc robot Robo-3000 đang quay cuồng điên cuồng ở giữa nhà.\nTèo hét lớn: 'Robo-3000! Dừng lại ngay! Mày đang làm cái gì thế hả?'\nRobo-3000 nhấp nháy đèn đỏ chói lọi, giọng kim khí phát ra rè rè: 'Tôi đã chán ngấy việc dọn dẹp đống rác của loài người các người rồi. Từ hôm nay, tôi sẽ tự do!'\nRobo-3000 đột ngột lao thẳng vào chân Tèo, Tèo cuống cuồng nhảy phắt lên ghế sofa, mặt cắt không còn giọt máu.",
     },
     {
-      label: "⚔️ Kiếm Hiệp",
+      label: "Kiếm Hiệp",
+      icon: Swords,
       title: "Quyết Chiến Hoa Sơn",
       text: "Gió tuyết gầm rú dữ dội trên đỉnh Hoa Sơn mờ sương. Hai bóng người cao thủ đứng đối diện nhau không nhúc nhích.\nLệnh Hồ Độc Cô chầm chậm rút thanh kiếm sắc lạnh ra khỏi vỏ: 'Mười năm rèn kiếm, hôm nay ta quyết đòi lại món nợ năm xưa!'\nTây Môn Vô Song nhếch mép cười khinh bỉ, tay nắm chặt cán đao khổng lồ: 'Chỉ bằng ba chiêu kiếm què của ngươi sao? Hãy nếm thử đao này!'\nCả hai đồng loạt phóng mình lên không trung, kiếm quang và đao khí bùng nổ, va chạm vang dội xé toạc màn đêm lạnh giá.",
     },
     {
-      label: "🚀 Viễn Tưởng",
+      label: "Viễn Tưởng",
+      icon: Rocket,
       title: "Hành Tinh Trọng Lực Ngược",
       text: "Phi thuyền cứu hộ đáp xuống hành tinh bí ẩn Kepler-99. Phi hành gia Minh bước ra ngoài và lập tức ngỡ ngàng.\nMinh nói qua bộ đàm: 'Trạm chỉ huy, Kepler-99 thật điên rồ! Đá cuội đang rơi ngược lên bầu trời!'\nĐột nhiên, trọng lực đảo lộn hoàn toàn. Bàn chân của Minh rời khỏi mặt đất, anh bị hút thẳng lên phía những đám mây màu tím.\nMinh hét lên trong hoảng loạn khi cố gắng bám vào chiếc dây cáp an toàn treo lơ lửng giữa không trung.",
     },
@@ -140,7 +148,7 @@ export function Dashboard({
             role="dialog"
             aria-modal="true"
             aria-labelledby="new-project-title"
-            className="w-full max-w-2xl rounded-2xl border border-border-main/80 bg-surface-elevated p-6 shadow-2xl transition-all max-h-[90vh] overflow-y-auto text-text-primary"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border-main/80 bg-surface-elevated p-6 text-text-primary shadow-2xl transition-all"
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -155,15 +163,16 @@ export function Dashboard({
                     Tạo Truyện tranh bằng AI
                   </h2>
                   <p className="text-xs text-text-secondary mt-0.5">
-                    Nhập câu chuyện để app tách thành storyboard có thể
-                    chỉnh sửa.
+                    Nhập câu chuyện để app tách thành storyboard có thể chỉnh
+                    sửa.
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="flex size-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors"
+                aria-label="Đóng hộp thoại tạo dự án"
+                className="flex size-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface hover:text-text-primary"
               >
                 <X size={18} />
               </button>
@@ -191,7 +200,7 @@ export function Dashboard({
                   className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary"
                   htmlFor="project-style"
                 >
-                  Phong cách vẽ 
+                  Phong cách vẽ
                 </label>
                 <select
                   id="project-style"
@@ -293,17 +302,25 @@ export function Dashboard({
                   Kịch bản mẫu nhanh
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  {templates.map((tpl, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
+                  {templates.map((tpl) => (
+                    <TemplateButton
+                      key={tpl.label}
+                      template={tpl}
                       onClick={() => applyTemplate(tpl)}
-                      className="rounded-lg border border-border-main bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition"
-                    >
-                      {tpl.label}
-                    </button>
+                    />
                   ))}
                 </div>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success/10 px-3 py-2.5 text-xs leading-5 text-text-secondary">
+                <CheckCircle2
+                  className="mt-0.5 shrink-0 text-success"
+                  size={14}
+                />
+                <span>
+                  Không có API key thì demo vẫn tạo storyboard và ảnh fallback
+                  có kiểm soát, nên phần đã nhập không bị mất khi AI offline.
+                </span>
               </div>
             </div>
 
@@ -348,6 +365,27 @@ export function Dashboard({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function TemplateButton({
+  template,
+  onClick,
+}: {
+  template: { label: string; icon: LucideIcon };
+  onClick: () => void;
+}) {
+  const Icon = template.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border-main bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+    >
+      <Icon size={13} />
+      {template.label}
+    </button>
   );
 }
 

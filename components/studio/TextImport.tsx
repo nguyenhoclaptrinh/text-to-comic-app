@@ -6,11 +6,16 @@
 import { useState } from "react";
 import {
   AlertTriangle,
+  Code2,
   FileText,
+  Laugh,
   Loader2,
+  Rocket,
   Sparkles,
+  Swords,
   Wand2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import { StoryboardJsonPreview } from "@/components/studio/StoryboardJsonPreview";
 
@@ -31,6 +36,8 @@ export function TextImport({
   setStoryText: (value: string) => void;
   onAnalyze: (style: string) => void;
 }) {
+  const [showTechnicalPreview, setShowTechnicalPreview] = useState(false);
+
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-8 lg:px-8">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -43,7 +50,20 @@ export function TextImport({
           setStoryText={setStoryText}
           onAnalyze={onAnalyze}
         />
-        <StoryboardJsonPreview />
+        <aside className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowTechnicalPreview((value) => !value)}
+            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-3 text-sm font-semibold text-text-primary transition hover:bg-surface"
+            aria-expanded={showTechnicalPreview}
+          >
+            <Code2 size={16} />
+            {showTechnicalPreview
+              ? "Ẩn dữ liệu kỹ thuật"
+              : "Xem dữ liệu kỹ thuật"}
+          </button>
+          {showTechnicalPreview ? <StoryboardJsonPreview /> : null}
+        </aside>
       </div>
     </div>
   );
@@ -69,17 +89,20 @@ function StoryInputForm({
   const [style, setStyle] = useState("webtoon");
   const templates = [
     {
-      label: "🎭 Hài Hước",
+      label: "Hài Hước",
+      icon: Laugh,
       title: "Robot Hút Bụi Nổi Loạn",
       text: "Tèo bước vào phòng khách và chết lặng. Chiếc robot Robo-3000 đang quay cuồng điên cuồng ở giữa nhà.\nTèo hét lớn: 'Robo-3000! Dừng lại ngay! Mày đang làm cái gì thế hả?'\nRobo-3000 nhấp nháy đèn đỏ chói lọi, giọng kim khí phát ra rè rè: 'Tôi đã chán ngấy việc dọn dẹp đống rác của loài người các người rồi. Từ hôm nay, tôi sẽ tự do!'\nRobo-3000 đột ngột lao thẳng vào chân Tèo, Tèo cuống cuồng nhảy phắt lên ghế sofa, mặt cắt không còn giọt máu.",
     },
     {
-      label: "⚔️ Kiếm Hiệp",
+      label: "Kiếm Hiệp",
+      icon: Swords,
       title: "Quyết Chiến Hoa Sơn",
       text: "Gió tuyết gầm rú dữ dội trên đỉnh Hoa Sơn mờ sương. Hai bóng người cao thủ đứng đối diện nhau không nhúc nhích.\nLệnh Hồ Độc Cô chầm chậm rút thanh kiếm sắc lạnh ra khỏi vỏ: 'Mười năm rèn kiếm, hôm nay ta quyết đòi lại món nợ năm xưa!'\nTây Môn Vô Song nhếch mép cười khinh bỉ, tay nắm chặt cán đao khổng lồ: 'Chỉ bằng ba chiêu kiếm què của ngươi sao? Hãy nếm thử đao này!'\nCả hai đồng loạt phóng mình lên không trung, kiếm quang và đao khí bùng nổ, va chạm vang dội xé toạc màn đêm lạnh giá.",
     },
     {
-      label: "🚀 Viễn Tưởng",
+      label: "Viễn Tưởng",
+      icon: Rocket,
       title: "Hành Tinh Trọng Lực Ngược",
       text: "Phi thuyền cứu hộ đáp xuống hành tinh bí ẩn Kepler-99. Phi hành gia Minh bước ra ngoài và lập tức ngỡ ngàng.\nMinh nói qua bộ đàm: 'Trạm chỉ huy, Kepler-99 thật điên rồ! Đá cuội đang rơi ngược lên bầu trời!'\nĐột nhiên, trọng lực đảo lộn hoàn toàn. Bàn chân của Minh rời khỏi mặt đất, anh bị hút thẳng lên phía những đám mây màu tím.\nMinh hét lên trong hoảng loạn khi cố gắng bám vào chiếc dây cáp an toàn treo lơ lửng giữa không trung.",
     },
@@ -188,15 +211,12 @@ function StoryInputForm({
           Gợi ý kịch bản mẫu nhanh
         </span>
         <div className="flex flex-wrap gap-2">
-          {templates.map((tpl, idx) => (
-            <button
-              key={idx}
-              type="button"
+          {templates.map((tpl) => (
+            <TemplateButton
+              key={tpl.label}
+              template={tpl}
               onClick={() => applyTemplate(tpl)}
-              className="rounded-lg border border-zinc-800 bg-[#18181b] px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-violet-500/50 hover:bg-violet-500/10 hover:text-violet-300 transition"
-            >
-              {tpl.label}
-            </button>
+            />
           ))}
         </div>
       </div>
@@ -230,5 +250,26 @@ function StoryInputForm({
         </div>
       ) : null}
     </section>
+  );
+}
+
+function TemplateButton({
+  template,
+  onClick,
+}: {
+  template: { label: string; icon: LucideIcon };
+  onClick: () => void;
+}) {
+  const Icon = template.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-[#18181b] px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-violet-500/50 hover:bg-violet-500/10 hover:text-violet-300"
+    >
+      <Icon size={13} />
+      {template.label}
+    </button>
   );
 }

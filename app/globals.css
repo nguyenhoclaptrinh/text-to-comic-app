@@ -70,7 +70,7 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #f4f4f5;
+  color: var(--text-primary);
 }
 
 button,
