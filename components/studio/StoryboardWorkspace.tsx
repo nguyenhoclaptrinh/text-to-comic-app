@@ -11,11 +11,15 @@ import {
   MessageCircle,
   Users,
   X,
+  Download,
+  Wand2,
+  Loader2,
 } from "lucide-react";
 
 import { CharacterCastingPanel } from "@/components/studio/CharacterCastingPanel";
 import { StoryboardPanelCard } from "@/components/studio/StoryboardPanelCard";
 import { PageSelector } from "@/components/studio/PageSelector";
+import type { GenerationSummary } from "@/lib/studio/types";
 import type { Character, Page, Panel } from "@/lib/studio/types";
 
 export function StoryboardWorkspace({
@@ -24,7 +28,6 @@ export function StoryboardWorkspace({
   activePageId,
   panels,
   selectedPanelId,
-  isGeneratingAll,
   onAddCharacter,
   onDeleteCharacter,
   onUpdateCharacter,
@@ -38,6 +41,11 @@ export function StoryboardWorkspace({
   onGoToComic,
   onGoToImport,
   onMovePanel,
+  onGenerateAll,
+  onOpenExport,
+  isGeneratingAll = false,
+  projectTitle,
+  generationSummary,
   projectStyle,
   projectGenre,
   projectAspectRatio,
@@ -47,7 +55,6 @@ export function StoryboardWorkspace({
   activePageId: string;
   panels: Panel[];
   selectedPanelId: string;
-  isGeneratingAll: boolean;
   onAddCharacter: () => void;
   onDeleteCharacter?: (characterId: string) => void;
   onUpdateCharacter: (characterId: string, patch: Partial<Character>) => void;
@@ -61,6 +68,11 @@ export function StoryboardWorkspace({
   onGoToComic: () => void;
   onGoToImport: () => void;
   onMovePanel: (panelId: string, direction: "up" | "down") => void;
+  onGenerateAll?: () => void;
+  onOpenExport?: () => void;
+  isGeneratingAll?: boolean;
+  projectTitle: string;
+  generationSummary: GenerationSummary;
   projectStyle?: string;
   projectGenre?: string;
   projectAspectRatio?: string;
@@ -84,8 +96,13 @@ export function StoryboardWorkspace({
         {hasBackendError ? <ImageBackendAlert /> : null}
 
         <StoryboardHeader
+          projectTitle={projectTitle}
+          generationSummary={generationSummary}
           onGoToComic={onGoToComic}
           onOpenCasting={() => setIsCastingOpen(true)}
+          onGenerateAll={onGenerateAll}
+          onOpenExport={onOpenExport}
+          isGeneratingAll={isGeneratingAll}
           style={projectStyle}
           genre={projectGenre}
           aspectRatio={projectAspectRatio}
@@ -213,41 +230,90 @@ function ImageBackendAlert() {
 }
 
 function StoryboardHeader({
+  projectTitle,
+  generationSummary,
   onGoToComic,
   onOpenCasting,
+  onGenerateAll,
+  onOpenExport,
+  isGeneratingAll,
   style,
   genre,
   aspectRatio,
 }: {
+  projectTitle: string;
+  generationSummary: GenerationSummary;
   onGoToComic: () => void;
   onOpenCasting: () => void;
+  onGenerateAll?: () => void;
+  onOpenExport?: () => void;
+  isGeneratingAll?: boolean;
   style?: string;
   genre?: string;
   aspectRatio?: string;
 }) {
   return (
-    <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-      <div>
-        <div className="flex items-center gap-3">
+    <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      {/* Left: Project title + generation badges */}
+      <div className="order-1 mb-2 md:order-1 md:mb-0 md:w-1/2">
+        <div className="flex flex-col items-start md:items-start">
           <h1 className="text-xl font-semibold text-text-primary">
-            Dựng storyboard
+            {projectTitle}
           </h1>
-          {/* Nút mở Casting nhanh trên mobile (< 1024px) */}
+          <div className="mt-2 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border-main bg-surface-elevated px-2.5 py-0.5 text-[10px] font-semibold text-text-secondary shadow-[0_1px_2px_rgba(0,0,0,0.15)]">
+              Đã vẽ {generationSummary.done}/{generationSummary.total} khung hình
+            </span>
+            {generationSummary.errors > 0 ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-red-500 dark:text-red-300">
+                {generationSummary.errors} khung hình lỗi cần vẽ lại
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-1 flex items-center gap-3">
           <button
             type="button"
             onClick={onOpenCasting}
-            className="inline-flex h-7 items-center gap-1.5 rounded-full bg-primary/20 px-2.5 text-xs font-medium text-primary hover:bg-primary/30 transition-colors lg:hidden"
+            className="inline-flex h-7 items-center gap-1.5 rounded-full bg-primary/20 px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary/30 lg:hidden"
           >
             <Users size={12} />
             <span>Nhân vật</span>
           </button>
         </div>
-        <p className="mt-1 text-sm text-text-secondary">
-          Kiểm tra mạch truyện, chỉnh mô tả cảnh và vẽ ảnh cho từng khung.
-        </p>
       </div>
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+
+      {/* Right: Actions + below them project meta */}
+      <div className="order-2 md:order-2 md:w-1/2">
+        <div className="flex justify-end items-center gap-3">
+          <button
+            type="button"
+            onClick={onOpenExport}
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-3 text-sm font-medium text-text-primary transition hover:bg-surface"
+          >
+            <Download size={16} />
+            Xuất file
+          </button>
+          <button
+            type="button"
+            onClick={onGenerateAll}
+            disabled={isGeneratingAll}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGeneratingAll ? <Loader2 className="animate-spin" size={16} /> : <Wand2 size={16} />}
+            Vẽ tất cả
+          </button>
+          <button
+            type="button"
+            onClick={onGoToComic}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-surface"
+          >
+            <MessageCircle size={16} />
+            Chỉnh lời thoại trên ảnh
+          </button>
+        </div>
+
+        <div className="mt-3 flex justify-end flex-wrap items-center gap-2">
           <div className="rounded-md border border-border-main bg-surface px-2 py-1 text-xs text-text-secondary">
             Phong cách: {style ?? "webtoon"}
           </div>
@@ -257,19 +323,7 @@ function StoryboardHeader({
           <div className="rounded-md border border-border-main bg-surface px-2 py-1 text-xs text-text-secondary">
             Tỉ lệ: {aspectRatio ?? "1:1"}
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-md border border-success/30 bg-success/10 px-2 py-1 text-xs text-text-secondary">
-            <BadgeCheck size={12} className="text-success" />
-            Có thể export phần đã có
-          </div>
         </div>
-        <button
-          type="button"
-          onClick={onGoToComic}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-surface"
-        >
-          <MessageCircle size={16} />
-          Chỉnh lời thoại trên ảnh
-        </button>
       </div>
     </div>
   );
