@@ -11,10 +11,13 @@ import type { Character } from "@/lib/studio/types";
 export function useCastingState(initialCharacters: Character[]) {
   const [characters, setCharacters] = useState<Character[]>(initialCharacters);
 
-  function addCharacter() {
+  function addCharacter(projectId?: string) {
     setCharacters((current) => [
       ...current,
-      createCharacter(current.length + 1),
+      {
+        ...createCharacter(current.length + 1),
+        projectId,
+      },
     ]);
   }
 

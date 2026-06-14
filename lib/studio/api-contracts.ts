@@ -91,6 +91,7 @@ export const StoryboardResponseSchema = z.object({
 
 export const CharacterSchema = z.object({
   id: z.string().min(1),
+  projectId: z.string().optional(),
   name: z.string().min(1),
   role: z.string().min(1),
   description: z.string().min(1),

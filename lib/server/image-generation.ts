@@ -204,7 +204,7 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
     panel.dialogue
       ? `Dialogue mood/context: ${compactPromptText(panel.dialogue, 14)}`
       : "",
-    "Quality: clean line art, clear face, consistent outfit, expressive pose, polished color",
+    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color",
     `Seed: ${panel.seed}`,
   ]
     .filter(Boolean)

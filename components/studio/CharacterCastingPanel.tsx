@@ -1,10 +1,5 @@
-/**
- * @file CharacterCastingPanel.tsx
- * @description Editable character casting panel for prompt consistency.
- */
-
-import { Plus, Trash } from "lucide-react";
-import { useState } from "react";
+import { Plus, Trash, Save } from "lucide-react";
+import { useState, useEffect } from "react";
 
 import type { Character } from "@/lib/studio/types";
 
@@ -73,6 +68,39 @@ function CharacterCard({
   const [loading, setLoading] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
 
+  // Local draft states
+  const [name, setName] = useState(character.name);
+  const [role, setRole] = useState(character.role);
+  const [gender, setGender] = useState(character.gender ?? "");
+  const [priority, setPriority] = useState(character.priority ?? "");
+  const [description, setDescription] = useState(character.description);
+
+  // Sync internal state when character prop changes
+  useEffect(() => {
+    setName(character.name);
+    setRole(character.role);
+    setGender(character.gender ?? "");
+    setPriority(character.priority ?? "");
+    setDescription(character.description);
+  }, [character]);
+
+  const isDirty =
+    name !== character.name ||
+    role !== character.role ||
+    gender !== (character.gender ?? "") ||
+    String(priority) !== String(character.priority ?? "") ||
+    description !== character.description;
+
+  const handleSave = () => {
+    onUpdate({
+      name,
+      role,
+      gender: isCharacterGender(gender) ? gender : undefined,
+      priority: priority !== "" ? Number(priority) : undefined,
+      description,
+    });
+  };
+
   const handleGenerate = async () => {
     if (!onGenerateImage) return;
     try {
@@ -83,6 +111,7 @@ function CharacterCard({
       setLoading(false);
     }
   };
+
   return (
     <>
       <article className="rounded-lg border border-border-main bg-surface-elevated p-3 transition-colors duration-200">
@@ -98,27 +127,27 @@ function CharacterCard({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={avatarUrl}
-                  alt={character.name}
+                  alt={name}
                   className="h-full w-full object-cover"
                 />
               ) : (
-                character.name.slice(0, 1) || "C"
+                name.slice(0, 1) || "C"
               )}
             </button>
           </div>
           <div className="min-w-0 flex-1 space-y-2">
             <input
               aria-label="Tên nhân vật"
-              value={character.name}
+              value={name}
               placeholder="Tên nhân vật..."
-              onChange={(event) => onUpdate({ name: event.target.value })}
+              onChange={(event) => setName(event.target.value)}
               className="h-8 w-full rounded-md border border-border-main bg-background px-2 text-sm font-semibold text-text-primary focus:border-primary focus:outline-none"
             />
             <div className="flex flex-col gap-2">
               <select
                 aria-label="Vai trò nhân vật"
-                value={character.role}
-                onChange={(e) => onUpdate({ role: e.target.value })}
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
                 className="h-8 rounded-md border border-border-main bg-background px-2 text-sm text-text-primary focus:border-primary focus:outline-none"
               >
                 <option value="">Vai trò</option>
@@ -130,14 +159,8 @@ function CharacterCard({
 
               <select
                 aria-label="Giới tính"
-                value={character.gender ?? ""}
-                onChange={(e) =>
-                  onUpdate({
-                    gender: isCharacterGender(e.target.value)
-                      ? e.target.value
-                      : undefined,
-                  })
-                }
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
                 className="h-8 rounded-md border border-border-main bg-background px-2 text-sm text-text-primary focus:border-primary focus:outline-none"
               >
                 <option value="">Giới tính</option>
@@ -149,26 +172,19 @@ function CharacterCard({
               <input
                 aria-label="Độ ưu tiên"
                 type="number"
-                value={character.priority ?? ""}
-                onChange={(e) =>
-                  onUpdate({
-                    priority: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
-                  })
-                }
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
                 placeholder="Ưu tiên"
                 className="h-8 w-28 rounded-md border border-border-main bg-background px-2 text-sm text-text-primary focus:border-primary focus:outline-none"
               />
             </div>
           </div>
-          {/* buttons moved below description */}
         </div>
         <textarea
           aria-label="Mô tả ngoại hình nhân vật"
-          value={character.description}
+          value={description}
           placeholder="Mô tả ngoại hình (vd: Mặc áo khoác đen, tóc ngắn đỏ, đeo kính)..."
-          onChange={(event) => onUpdate({ description: event.target.value })}
+          onChange={(event) => setDescription(event.target.value)}
           className="min-h-20 w-full resize-y rounded-md border border-border-main bg-background p-2 text-xs leading-5 text-text-secondary focus:border-primary focus:outline-none"
         />
         {onGenerateImage || avatarUrl ? (
@@ -194,15 +210,30 @@ function CharacterCard({
             ) : null}
           </div>
         ) : null}
-        <div className="mt-2 flex justify-center">
+        
+        {/* Save and Delete actions */}
+        <div className="mt-3 flex items-center gap-2 border-t border-border-main/50 pt-2.5">
           <button
             type="button"
             onClick={() => onDelete?.()}
             aria-label="Xóa nhân vật"
             title="Xóa nhân vật"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border-main bg-surface text-danger transition-colors hover:bg-surface-elevated"
+            className="flex-1 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 text-xs font-semibold text-red-400 transition hover:border-red-500/50 hover:bg-red-500/20 hover:text-red-300 cursor-pointer"
           >
-            <Trash size={14} />
+            <Trash size={13} />
+            Xóa
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!isDirty}
+            aria-label="Lưu nhân vật"
+            title="Lưu nhân vật"
+            className="flex-1 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-violet-600 text-xs font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer animate-in fade-in"
+          >
+            <Save size={13} />
+            Lưu
           </button>
         </div>
       </article>
