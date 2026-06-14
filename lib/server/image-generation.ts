@@ -202,9 +202,9 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
     characterHeading,
     `Scene: ${compactPromptText(panel.scenePrompt, 34)}`,
     panel.dialogue
-      ? `Dialogue mood/context: ${compactPromptText(panel.dialogue, 14)}`
+      ? `Dialogue context: character is speaking with expression matching the scene. Do not draw any text or speech bubbles.`
       : "",
-    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color",
+    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color, no text, no words, no speech bubbles, no dialogue bubbles, no captions",
     `Seed: ${panel.seed}`,
   ]
     .filter(Boolean)

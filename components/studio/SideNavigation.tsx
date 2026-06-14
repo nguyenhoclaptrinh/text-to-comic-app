@@ -41,10 +41,15 @@ export function SideNavigation({
 }) {
   const { theme, toggleTheme } = useTheme();
   return (
-    <aside className="fixed inset-x-0 bottom-0 z-40 flex h-15 shrink-0 items-center border-t border-border-main bg-surface/95 px-2 backdrop-blur transition-colors duration-200 md:fixed md:top-0 md:bottom-auto md:inset-x-0 md:w-full md:flex md:h-15 md:flex-row md:items-center md:justify-between md:px-4 md:py-2 lg:items-center lg:px-5">
-      <BrandMark />
+    <aside className="fixed inset-x-0 bottom-0 z-40 flex h-16 shrink-0 items-center border-t border-border-main/60 bg-surface/90 px-4 backdrop-blur-md transition-colors duration-200 md:top-0 md:bottom-auto md:border-t-0 md:border-b md:h-16 md:w-full md:px-6">
+      {/* Cột trái: Brand logo (căn trái) */}
+      <div className="hidden md:flex md:flex-1 md:items-center md:justify-start">
+        <BrandMark />
+      </div>
+
+      {/* Cột giữa: Thanh điều hướng chuyển màn hình (căn giữa màn hình) */}
       <nav
-        className="flex flex-1 items-center justify-start gap-2 md:gap-3 lg:gap-4"
+        className="flex flex-1 items-center justify-center gap-3 md:flex-initial md:gap-5 lg:gap-6"
         aria-label="Luồng tạo truyện"
       >
         {NAVIGATION_ITEMS.map((item) => (
@@ -53,34 +58,35 @@ export function SideNavigation({
             type="button"
             aria-label={item.label}
             onClick={() => setView(item.id)}
-            className={`flex h-8 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs transition-all md:gap-2 md:px-3 md:text-sm lg:justify-start ${
+            className={`flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs md:text-sm transition-all duration-200 active:scale-95 ${
               currentView === item.id
-                ? "border-primary/40 bg-primary/15 text-primary dark:text-white font-semibold"
-                : "border-transparent text-text-secondary hover:border-border-main hover:bg-surface-elevated hover:text-text-primary"
+                ? "border-primary/30 bg-primary/10 text-primary dark:text-violet-200 dark:bg-primary/20 shadow-[0_0_12px_rgba(139,92,246,0.12)] font-semibold"
+                : "border-transparent text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
             }`}
           >
             {item.icon}
-            <span className="hidden md:inline">{item.label}</span>
+            <span className="font-medium">{item.label}</span>
           </button>
         ))}
       </nav>
-      {/* Controls: theme, settings */}
-      <div className="hidden md:ml-2 md:flex md:items-center md:gap-1.5 lg:gap-2">
+
+      {/* Cột phải: Cấu hình hệ thống (căn phải) */}
+      <div className="hidden md:flex md:flex-1 md:items-center md:justify-end md:gap-2">
         <button
           type="button"
           onClick={toggleTheme}
           aria-label={theme === "dark" ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-main bg-surface-elevated text-text-secondary transition hover:bg-surface hover:text-text-primary"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border-main bg-surface-elevated/50 text-text-secondary transition-all hover:bg-surface-elevated hover:text-text-primary active:scale-95"
         >
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <button
           type="button"
           onClick={onOpenSettings}
           aria-label="Cấu hình dịch vụ AI"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-main bg-surface-elevated text-text-secondary transition hover:bg-surface hover:text-text-primary"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border-main bg-surface-elevated/50 text-text-secondary transition-all hover:bg-surface-elevated hover:text-text-primary active:scale-95"
         >
-          <Settings size={16} />
+          <Settings size={18} />
         </button>
       </div>
     </aside>
@@ -89,13 +95,13 @@ export function SideNavigation({
 
 function BrandMark() {
   return (
-    <div className="hidden md:flex md:items-center md:gap-3 md:px-2 lg:px-4">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+    <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white shadow-md shadow-primary/20">
         <Sparkles size={18} />
       </div>
-      <div className="hidden md:block">
-        <div className="text-sm font-semibold text-text-primary">ComicAI Studio</div>
-        <div className="text-xs text-text-secondary">Xưởng tạo truyện</div>
+      <div>
+        <div className="text-sm font-semibold tracking-wide text-text-primary">ComicAI Studio</div>
+        <div className="text-xs text-text-secondary leading-none mt-0.5">Xưởng tạo truyện</div>
       </div>
     </div>
   );
