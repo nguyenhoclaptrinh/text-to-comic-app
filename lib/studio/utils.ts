@@ -136,7 +136,18 @@ export function createMockPanels(storyText: string): Panel[] {
       characterIds,
       status: "draft",
       imageTone: defaultTones[index % defaultTones.length],
-      bubbles: [],
+      bubbles: dialogue && dialogue.trim()
+        ? [
+            {
+              id: crypto.randomUUID(),
+              text: dialogueToBubble(dialogue),
+              x: 35,
+              y: 15,
+              width: 30,
+              height: 12,
+            },
+          ]
+        : [],
       seed: Math.floor(Math.random() * 1000000),
       style: "inherit",
     };

@@ -29,6 +29,7 @@ export type AiProvider =
 
 export type Character = {
   id: string;
+  projectId?: string;
   name: string;
   role: string;
   /** Giới tính: Nam, Nữ, Khác */
