@@ -176,22 +176,39 @@ export function useComicStudioState() {
         panels: page.panels.map((p) => ({ ...p, style: "inherit" as const })),
       }));
 
-      setProjects((current) => [
-        {
-          ...createProject(
-            projectId,
-            finalTitle,
-            countPanelsForProject(pagesWithCorrectProjectId, projectId),
-            genre,
-            aspectRatio,
-          ),
-          style,
-        },
-        ...current,
-      ]);
+      setProjects((current) => {
+        const next = [
+          {
+            ...createProject(
+              projectId,
+              finalTitle,
+              countPanelsForProject(pagesWithCorrectProjectId, projectId),
+              genre,
+              aspectRatio,
+            ),
+            style,
+          },
+          ...current,
+        ];
+        return current.length === 1 && current[0].id === INITIAL_PROJECT_ID && current[0].panelCount === 0
+          ? next.filter((p) => p.id !== INITIAL_PROJECT_ID)
+          : next;
+      });
       nav.setActiveProjectId(projectId);
 
-      setPages(pagesWithCorrectProjectId);
+      setPages((current) => {
+        const isInitialEmpty =
+          current.length === 1 &&
+          current[0].id === INITIAL_PAGE_ID &&
+          (current[0].panels.length === 0 ||
+            (current[0].panels.length === 1 &&
+              current[0].panels[0].scenePrompt.startsWith("Blank panel")));
+        
+        if (isInitialEmpty) {
+          return pagesWithCorrectProjectId;
+        }
+        return [...pagesWithCorrectProjectId, ...current];
+      });
 
       // Trích xuất nhân vật tự động từ các panels
       const detectedIds = new Set<string>();
