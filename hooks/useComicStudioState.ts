@@ -351,6 +351,57 @@ export function useComicStudioState() {
     nav.setSelectedBubbleId("");
   }
 
+  function deleteProject(projectId: string) {
+    const remainingProjects = projects.filter((p) => p.id !== projectId);
+    const nextProject = remainingProjects[0] || INITIAL_PROJECT;
+
+    let newActivePageId = "";
+    let newActivePanelId = "";
+
+    if (nav.activeProjectId === projectId) {
+      const nextProjectPages = pages.filter((page) => page.projectId === nextProject.id);
+      if (nextProjectPages.length > 0) {
+        newActivePageId = nextProjectPages[0].id;
+        newActivePanelId = nextProjectPages[0].panels[0]?.id ?? "";
+      } else if (nextProject.id === INITIAL_PROJECT_ID) {
+        newActivePageId = crypto.randomUUID();
+      }
+    }
+
+    setProjects((current) => {
+      const updated = current.filter((p) => p.id !== projectId);
+      return updated.length > 0 ? updated : [INITIAL_PROJECT];
+    });
+
+    setPages((currentPages) => {
+      const updated = currentPages.filter((page) => page.projectId !== projectId);
+      if (nav.activeProjectId === projectId && nextProject.id === INITIAL_PROJECT_ID) {
+        const nextProjectPages = updated.filter((page) => page.projectId === INITIAL_PROJECT_ID);
+        if (nextProjectPages.length === 0) {
+          const defaultPage = {
+            ...INITIAL_PAGE,
+            id: newActivePageId || crypto.randomUUID(),
+          };
+          return [defaultPage, ...updated];
+        }
+      }
+      return updated;
+    });
+
+    if (nav.activeProjectId === projectId) {
+      nav.setActiveProjectId(nextProject.id);
+      if (newActivePageId) {
+        nav.setActivePageId(newActivePageId);
+        nav.setSelectedPanelId(newActivePanelId);
+        nav.setSelectedBubbleId("");
+      } else {
+        nav.setActivePageId("");
+        nav.setSelectedPanelId("");
+        nav.setSelectedBubbleId("");
+      }
+    }
+  }
+
   // 5. Phân rã Trạng thái Kéo thả Bong bóng thoại
   const drag = useBubbleDragState(updateBubble);
 
@@ -400,10 +451,11 @@ export function useComicStudioState() {
       generateAll: panelActions.generateAll,
       movePanel: panelActions.movePanel,
       addCharacter: casting.addCharacter,
-        deleteCharacter: casting.deleteCharacter,
+      deleteCharacter: casting.deleteCharacter,
       updateCharacter: casting.updateCharacter,
       addPage,
       deletePage,
+      deleteProject,
       setActivePageId: nav.setActivePageId,
       addBubble,
       updateBubble,

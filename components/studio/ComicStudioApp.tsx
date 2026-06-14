@@ -64,6 +64,7 @@ function ActiveView({
         projects={state.projects}
         activeProjectId={state.activeProjectId}
         onSelectProject={actions.selectProject}
+        onDeleteProject={actions.deleteProject}
         onAnalyze={(title, text, style, genre, aspectRatio) =>
           actions.analyzeStory(style, title, text, genre, aspectRatio)
         }
