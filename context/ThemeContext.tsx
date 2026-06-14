@@ -18,7 +18,18 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => readInitialTheme());
+  const [theme, setThemeState] = useState<Theme>("light");
+
+  useEffect(() => {
+    const storedTheme = readStoredTheme();
+    if (storedTheme) {
+      setThemeState(storedTheme);
+      applyThemeToDocument(storedTheme);
+      return;
+    }
+
+    applyThemeToDocument("light");
+  }, []);
 
   useEffect(() => {
     applyThemeToDocument(theme);
@@ -41,9 +52,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function readInitialTheme(): Theme {
-  if (typeof document === "undefined") {
-    return "dark";
+function readStoredTheme(): Theme | null {
+  if (typeof window === "undefined") {
+    return null;
   }
 
   const storedTheme = localStorage.getItem("theme");
@@ -51,7 +62,7 @@ function readInitialTheme(): Theme {
     return storedTheme;
   }
 
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  return null;
 }
 
 function applyThemeToDocument(theme: Theme) {

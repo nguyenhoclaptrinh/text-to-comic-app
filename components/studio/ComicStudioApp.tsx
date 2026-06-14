@@ -12,7 +12,6 @@ import { Dashboard } from "@/components/studio/Dashboard";
 import { ExportModal } from "@/components/studio/ExportModal";
 import { SideNavigation } from "@/components/studio/SideNavigation";
 import { StoryboardWorkspace } from "@/components/studio/StoryboardWorkspace";
-import { TopBar } from "@/components/studio/TopBar";
 import { SettingsModal } from "@/components/studio/SettingsModal";
 import { TextImport } from "@/components/studio/TextImport";
 import { useComicStudioState } from "@/hooks/useComicStudioState";
@@ -23,16 +22,12 @@ export function ComicStudioApp() {
 
   return (
     <main className="flex min-h-dvh bg-background text-text-primary font-sans transition-colors duration-200">
-      <SideNavigation currentView={state.view} setView={actions.setView} />
-      <section className="flex min-w-0 flex-1 flex-col">
-        <TopBar
-          projectTitle={state.activeProject.title}
-          generationSummary={state.generationSummary}
-          onGenerateAll={() => void actions.generateAll()}
-          onExport={() => actions.setExportOpen(true)}
-          isGeneratingAll={state.isGeneratingAll}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        />
+      <SideNavigation
+        currentView={state.view}
+        setView={actions.setView}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+      <section className="flex min-w-0 flex-1 flex-col pt-14 md:pt-14 pb-16 md:pb-0">
         <ActiveView state={state} actions={actions} />
       </section>
       {state.exportOpen ? (
@@ -137,6 +132,8 @@ function ActiveView({
       panels={state.panels}
       selectedPanelId={state.selectedPanelId}
       isGeneratingAll={state.isGeneratingAll}
+      projectTitle={state.activeProject.title}
+      generationSummary={state.generationSummary}
       onAddCharacter={actions.addCharacter}
       onDeleteCharacter={actions.deleteCharacter}
       onSelectPage={actions.setActivePageId}
@@ -149,6 +146,8 @@ function ActiveView({
       onUpdatePanel={actions.updatePanel}
       onGeneratePanel={(panelId) => void actions.generatePanel(panelId)}
       onDeletePanel={actions.deletePanel}
+      onGenerateAll={() => void actions.generateAll()}
+      onOpenExport={() => actions.setExportOpen(true)}
       onGoToComic={() => actions.setView("comic")}
       onGoToImport={() => actions.setView("projects")}
       onUpdateCharacter={actions.updateCharacter}
