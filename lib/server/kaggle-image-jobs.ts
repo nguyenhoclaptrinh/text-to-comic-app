@@ -18,6 +18,7 @@ import { promisify } from "node:util";
 
 import {
   createImagePrompt,
+  translateRequestToEnglish,
   uploadToSupabaseStorage,
 } from "@/lib/server/image-generation";
 import { isSupabaseRuntimeConfigured } from "@/lib/server/runtime-config";
@@ -86,14 +87,24 @@ export async function createKagglePanelJob(
 ): Promise<KaggleImageJobResponse> {
   const kaggle = getKaggleConfig();
   const jobStore = getJobStoreConfig();
-  const prompt = createImagePrompt(input);
+  
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const translatedInput = await translateRequestToEnglish(input, geminiApiKey);
+  
+  const prompt = createImagePrompt(translatedInput);
   const job = await insertJob(jobStore, {
     panelId: input.panel.id,
     prompt,
     model: kaggle.diffusionModel,
   });
 
-  void runKagglePanelJob({ jobId: job.id, input, prompt, kaggle, jobStore });
+  void runKagglePanelJob({
+    jobId: job.id,
+    input: translatedInput,
+    prompt,
+    kaggle,
+    jobStore,
+  });
 
   return toJobResponse(job, DEFAULT_POLL_MS);
 }

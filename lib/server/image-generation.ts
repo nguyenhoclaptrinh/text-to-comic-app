@@ -32,13 +32,115 @@ export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
 export const DEFAULT_HF_IMAGE_SIZE = "1024x1024";
 export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
 
+export async function translateRequestToEnglish(
+  input: GeneratePanelRequest,
+  apiKey?: string,
+): Promise<GeneratePanelRequest> {
+  if (!apiKey) {
+    return input;
+  }
+
+  try {
+    const translatedScenePrompt = await translateToEnglish(input.panel.scenePrompt, apiKey);
+    const translatedCharacters = await Promise.all(
+      input.characters.map(async (char) => ({
+        ...char,
+        description: await translateToEnglish(char.description, apiKey),
+      }))
+    );
+
+    return {
+      ...input,
+      panel: {
+        ...input.panel,
+        scenePrompt: translatedScenePrompt,
+      },
+      characters: translatedCharacters,
+    };
+  } catch (err) {
+    console.warn("[Translate Request] Failed to translate inputs:", err);
+    return input;
+  }
+}
+
+async function translateToEnglish(text: string, apiKey: string): Promise<string> {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return text;
+  }
+
+  // Skip translation if the text is already strictly English (ASCII alphanumeric and punctuation)
+  if (/^[a-zA-Z0-9\s,.:;?!"'()_/\-\\#$£€%&*+=|<>~`@]*$/.test(trimmed)) {
+    return text;
+  }
+
+  const modelsPool = [
+    process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
+  ];
+
+  const uniqueModels = Array.from(new Set(modelsPool));
+
+  for (const model of uniqueModels) {
+    try {
+      const response = await fetchWithTimeout(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Translate the following character appearance description or visual comic scene description into descriptive English suitable for an AI image generator. Do not translate proper names unless necessary. Return ONLY the English translation. Do not include any explanations, introduction, quotes or other text:\n\n${trimmed}`
+              }]
+            }],
+          }),
+        },
+        8000,
+      );
+
+      if (response.ok) {
+        const data: unknown = await response.json();
+        const translated = extractGeminiTextLocal(data).trim();
+        if (translated) {
+          return translated;
+        }
+      } else {
+        const statusText = await response.text().catch(() => "");
+        console.warn(`[Translate to English] Model ${model} returned status ${response.status}: ${statusText}`);
+      }
+    } catch (err) {
+      console.warn(`[Translate to English] Model ${model} failed:`, err);
+    }
+  }
+
+  return text;
+}
+
+function extractGeminiTextLocal(data: any): string {
+  try {
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  } catch {
+    return "";
+  }
+}
+
 export async function generatePanelImageFromProvider(
   input: GeneratePanelRequest,
   customHfToken?: string,
   customGeminiApiKey?: string,
 ): Promise<GeneratePanelResponse> {
+  const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
+  const translatedInput = await translateRequestToEnglish(input, geminiApiKey);
+
   const response = await generateRawPanelImage(
-    input,
+    translatedInput,
     customHfToken,
     customGeminiApiKey,
   );

@@ -173,9 +173,7 @@ export function usePanelActions({
     const panelsToGenerate: string[] = [];
     pages.forEach((page) => {
       page.panels.forEach((panel) => {
-        if (panel.status !== "success") {
-          panelsToGenerate.push(panel.id);
-        }
+        panelsToGenerate.push(panel.id);
       });
     });
 
