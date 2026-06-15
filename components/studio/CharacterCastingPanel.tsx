@@ -1,7 +1,10 @@
 import { Plus, Trash, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 
-import { type DisplayLanguage, getCharacterDescriptionDisplay } from "@/lib/studio/display";
+import {
+  type DisplayLanguage,
+  getCharacterDescriptionDisplay,
+} from "@/lib/studio/display";
 import type { Character } from "@/lib/studio/types";
 
 export function CharacterCastingPanel({
@@ -90,7 +93,7 @@ function CharacterCard({
     setGender(character.gender ?? "");
     setPriority(character.priority ?? "");
     setDescription(getCharacterDescriptionDisplay(character, outputLanguage));
-    }, [character, outputLanguage]);
+  }, [character, outputLanguage]);
 
   const isDirty =
     name !== character.name ||
@@ -220,7 +223,7 @@ function CharacterCard({
             ) : null}
           </div>
         ) : null}
-        
+
         {/* Save and Delete actions */}
         <div className="mt-3 flex items-center gap-2 border-t border-border-main/50 pt-2.5">
           <button
@@ -233,7 +236,7 @@ function CharacterCard({
             <Trash size={13} />
             Xóa
           </button>
-          
+
           <button
             type="button"
             onClick={handleSave}

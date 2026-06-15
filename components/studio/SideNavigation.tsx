@@ -108,7 +108,11 @@ export function SideNavigation({
         <button
           type="button"
           onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+          aria-label={
+            theme === "dark"
+              ? "Chuyển sang giao diện sáng"
+              : "Chuyển sang giao diện tối"
+          }
           className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border-main bg-surface-elevated/50 text-text-secondary transition-all hover:bg-surface-elevated hover:text-text-primary active:scale-95"
         >
           {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
@@ -133,8 +137,12 @@ function BrandMark() {
         <Sparkles size={18} />
       </div>
       <div>
-        <div className="text-sm font-semibold tracking-wide text-text-primary">ComicAI Studio</div>
-        <div className="text-xs text-text-secondary leading-none mt-0.5">Xưởng tạo truyện</div>
+        <div className="text-sm font-semibold tracking-wide text-text-primary">
+          ComicAI Studio
+        </div>
+        <div className="text-xs text-text-secondary leading-none mt-0.5">
+          Xưởng tạo truyện
+        </div>
       </div>
     </div>
   );

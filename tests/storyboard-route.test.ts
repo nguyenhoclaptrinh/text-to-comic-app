@@ -63,7 +63,8 @@ describe("storyboard route", () => {
                       panels: [
                         {
                           orderIndex: 1,
-                          scenePrompt: "Xiao Se is sitting in a snow-covered inn.",
+                          scenePrompt:
+                            "Xiao Se is sitting in a snow-covered inn.",
                           characters: ["Xiao Se"],
                           dialogue: "Xiao Se: The snow is so beautiful.",
                         },
@@ -91,7 +92,8 @@ describe("storyboard route", () => {
         method: "POST",
         body: JSON.stringify({
           storyTitle: "Seminar demo",
-          storyText: "A hero enters a bright classroom and explains the comic pipeline.",
+          storyText:
+            "A hero enters a bright classroom and explains the comic pipeline.",
         }),
       }),
     );

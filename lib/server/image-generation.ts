@@ -23,9 +23,7 @@ import type {
   GeneratePanelResponse,
 } from "@/lib/studio/api-contracts";
 
-export const GEMINI_IMAGE_MODELS_POOL = [
-  "imagen-4.0-generate-001",
-];
+export const GEMINI_IMAGE_MODELS_POOL = ["imagen-4.0-generate-001"];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
 export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
@@ -41,12 +39,15 @@ export async function translateRequestToEnglish(
   }
 
   try {
-    const translatedScenePrompt = await translateToEnglish(input.panel.scenePrompt, apiKey);
+    const translatedScenePrompt = await translateToEnglish(
+      input.panel.scenePrompt,
+      apiKey,
+    );
     const translatedCharacters = await Promise.all(
       input.characters.map(async (char) => ({
         ...char,
         description: await translateToEnglish(char.description, apiKey),
-      }))
+      })),
     );
 
     return {
@@ -63,7 +64,10 @@ export async function translateRequestToEnglish(
   }
 }
 
-async function translateToEnglish(text: string, apiKey: string): Promise<string> {
+async function translateToEnglish(
+  text: string,
+  apiKey: string,
+): Promise<string> {
   const trimmed = text.trim();
   if (!trimmed) {
     return text;
@@ -95,11 +99,15 @@ async function translateToEnglish(text: string, apiKey: string): Promise<string>
             "x-goog-api-key": apiKey,
           },
           body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `Translate the following character appearance description or visual comic scene description into descriptive English suitable for an AI image generator. Do not translate proper names unless necessary. Return ONLY the English translation. Do not include any explanations, introduction, quotes or other text:\n\n${trimmed}`
-              }]
-            }],
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `Translate the following character appearance description or visual comic scene description into descriptive English suitable for an AI image generator. Do not translate proper names unless necessary. Return ONLY the English translation. Do not include any explanations, introduction, quotes or other text:\n\n${trimmed}`,
+                  },
+                ],
+              },
+            ],
           }),
         },
         8000,
@@ -113,7 +121,9 @@ async function translateToEnglish(text: string, apiKey: string): Promise<string>
         }
       } else {
         const statusText = await response.text().catch(() => "");
-        console.warn(`[Translate to English] Model ${model} returned status ${response.status}: ${statusText}`);
+        console.warn(
+          `[Translate to English] Model ${model} returned status ${response.status}: ${statusText}`,
+        );
       }
     } catch (err) {
       console.warn(`[Translate to English] Model ${model} failed:`, err);
@@ -319,9 +329,12 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
 }
 
 function compactPromptText(value: string, maxWords: number) {
-  return value.replace(/\s+/g, " ").trim().split(" ").slice(0, maxWords).join(
-    " ",
-  );
+  return value
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .slice(0, maxWords)
+    .join(" ");
 }
 
 async function generateHuggingFaceImage({

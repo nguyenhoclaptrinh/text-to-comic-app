@@ -36,8 +36,10 @@ export function useBubbleDragState(
       const bubbleLeftInStage = bubbleBox.left - stage.left;
       const bubbleTopInStage = bubbleBox.top - stage.top;
 
-      const newWidth = ((currentMouseXInStage - bubbleLeftInStage) / stage.width) * 100;
-      const newHeight = ((currentMouseYInStage - bubbleTopInStage) / stage.height) * 100;
+      const newWidth =
+        ((currentMouseXInStage - bubbleLeftInStage) / stage.width) * 100;
+      const newHeight =
+        ((currentMouseYInStage - bubbleTopInStage) / stage.height) * 100;
 
       updateBubble(panelId, dragging.bubbleId, {
         width: Math.max(10, Math.min(100, Math.round(newWidth))),

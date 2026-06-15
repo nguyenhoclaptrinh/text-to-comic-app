@@ -89,7 +89,7 @@ export function ComicPanelCanvas({
             }}
           >
             <span className="block pr-2 pb-2">{bubble.text}</span>
-            
+
             {/* Đuôi bong bóng thoại phong cách truyện tranh */}
             <svg
               className="absolute -bottom-[15px] left-6 h-[16px] w-[25px] pointer-events-none"
@@ -97,17 +97,10 @@ export function ComicPanelCanvas({
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                d="M 12,-3 L 2,14 L 22,-3 Z"
-                fill="white"
-              />
-              <path
-                d="M 12,0 L 2,14 L 22,0"
-                stroke="black"
-                strokeWidth="2"
-              />
+              <path d="M 12,-3 L 2,14 L 22,-3 Z" fill="white" />
+              <path d="M 12,0 L 2,14 L 22,0" stroke="black" strokeWidth="2" />
             </svg>
-            
+
             {selectedBubbleId === bubble.id && (
               <span
                 role="button"
@@ -116,7 +109,8 @@ export function ComicPanelCanvas({
                 onPointerDown={(event) => {
                   event.stopPropagation();
                   event.preventDefault();
-                  const bubbleBox = event.currentTarget.parentElement!.getBoundingClientRect();
+                  const bubbleBox =
+                    event.currentTarget.parentElement!.getBoundingClientRect();
                   onSelectPanel(panel.id);
                   onSelectBubble(bubble.id);
                   onStartDrag({
@@ -130,7 +124,16 @@ export function ComicPanelCanvas({
                   });
                 }}
               >
-                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-zinc-400 hover:text-violet-500">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 10 10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  className="text-zinc-400 hover:text-violet-500"
+                >
                   <line x1="8" y1="2" x2="2" y2="8" />
                   <line x1="8" y1="5" x2="5" y2="8" />
                 </svg>

@@ -95,6 +95,27 @@ export function createMockPanels(storyText: string): Panel[] {
     "from-red-950 via-zinc-800 to-amber-950",
     "from-zinc-900 via-stone-800 to-slate-900",
     "from-cyan-950 via-zinc-800 to-emerald-950",
+    "from-purple-950 via-zinc-800 to-violet-950",
+    "from-blue-950 via-zinc-800 to-sky-950",
+  ];
+
+  const fallbackStyles = [
+    {
+      en: "Close up shot, intense action pose, high contrast shading.",
+      vi: "Cận cảnh, tư thế hành động kịch tính, đổ bóng tương phản cao.",
+    },
+    {
+      en: "Wide angle view, cinematic composition, soft atmospheric lighting.",
+      vi: "Góc rộng, bố cục điện ảnh, ánh sáng môi trường dịu nhẹ.",
+    },
+    {
+      en: "Character focal point, detailed background, rich graphic novel ink.",
+      vi: "Nhân vật làm trọng tâm, bối cảnh chi tiết, nét mực tiểu thuyết đồ họa sắc nét.",
+    },
+    {
+      en: "Medium shot, dynamic perspective, vibrant colors.",
+      vi: "Góc trung cảnh, góc nhìn động, màu sắc rực rỡ.",
+    },
   ];
 
   return chunks.map((chunkSentences, index) => {
@@ -135,8 +156,12 @@ export function createMockPanels(storyText: string): Panel[] {
       dialogue = dialogue.slice(0, BUBBLE_TEXT_MAX_LENGTH - 3) + "...";
     }
 
-    const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 300)}. Highly detailed, comic book style.`;
-    const scenePromptVi = `Một khung truyện tranh minh họa: ${textFragment.slice(0, 300)}. Phong cách chi tiết, đậm chất truyện tranh.`;
+    const styleIdx = index % fallbackStyles.length;
+    const styleEn = fallbackStyles[styleIdx].en;
+    const styleVi = fallbackStyles[styleIdx].vi;
+
+    const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 300)}. ${styleEn} Highly detailed, comic book style.`;
+    const scenePromptVi = `Một khung truyện tranh minh họa: ${textFragment.slice(0, 300)}. ${styleVi} Phong cách chi tiết, đậm chất truyện tranh.`;
     const dialogueVi = dialogue ? `[VI] ${dialogue}` : "";
 
     return {
@@ -153,18 +178,19 @@ export function createMockPanels(storyText: string): Panel[] {
       characterIds,
       status: "draft",
       imageTone: defaultTones[index % defaultTones.length],
-      bubbles: dialogue && dialogue.trim()
-        ? [
-            {
-              id: crypto.randomUUID(),
-              text: dialogueToBubble(dialogue),
-              x: 35,
-              y: 15,
-              width: 30,
-              height: 12,
-            },
-          ]
-        : [],
+      bubbles:
+        dialogue && dialogue.trim()
+          ? [
+              {
+                id: crypto.randomUUID(),
+                text: dialogueToBubble(dialogue),
+                x: 35,
+                y: 15,
+                width: 30,
+                height: 12,
+              },
+            ]
+          : [],
       seed: Math.floor(Math.random() * 1000000),
       style: "inherit",
     };

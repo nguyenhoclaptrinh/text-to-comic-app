@@ -39,7 +39,8 @@ export function TopBar({
             aria-live="polite"
           >
             <span>
-              Đã vẽ {generationSummary.done}/{generationSummary.total} khung hình
+              Đã vẽ {generationSummary.done}/{generationSummary.total} khung
+              hình
             </span>
             {generationSummary.errors > 0 ? (
               <span className="font-medium text-red-500 dark:text-red-300">
@@ -53,7 +54,6 @@ export function TopBar({
       )}
 
       <div className="flex shrink-0 items-center gap-1.5">
-
         {showActions ? (
           <>
             <button

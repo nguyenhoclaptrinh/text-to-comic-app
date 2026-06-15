@@ -357,8 +357,10 @@ describe("studio AI services", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const promise = generatePanelImageViaKaggleJob(PANELS_SEED[0], [], (status) =>
-      statuses.push(status),
+    const promise = generatePanelImageViaKaggleJob(
+      PANELS_SEED[0],
+      [],
+      (status) => statuses.push(status),
     );
     await vi.advanceTimersByTimeAsync(7000);
 
@@ -372,12 +374,10 @@ describe("studio AI services", () => {
   });
 
   it("should surface Kaggle startup failures without silent fallback", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({
-        ok: false,
-        json: async () => ({ message: "Kaggle disabled." }),
-      });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({ message: "Kaggle disabled." }),
+    });
 
     vi.stubGlobal("window", {});
     vi.stubGlobal("fetch", fetchMock);

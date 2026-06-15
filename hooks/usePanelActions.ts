@@ -62,7 +62,10 @@ export function usePanelActions({
 
           if (shouldReseedBubble) {
             const previousSeedText = getPanelBubbleSeed(panel, displayLanguage);
-            const nextSeedText = getPanelBubbleSeed(updatedPanel, displayLanguage);
+            const nextSeedText = getPanelBubbleSeed(
+              updatedPanel,
+              displayLanguage,
+            );
             const canSyncSeedBubble =
               panel.bubbles.length === 1 &&
               isSeedBubbleText(panel, panel.bubbles[0]?.text || "");
@@ -73,7 +76,11 @@ export function usePanelActions({
                     idx === 0 ? { ...bubble, text: nextSeedText } : bubble,
                   )
                 : [];
-            } else if (panel.bubbles.length === 0 && nextSeedText && previousSeedText !== nextSeedText) {
+            } else if (
+              panel.bubbles.length === 0 &&
+              nextSeedText &&
+              previousSeedText !== nextSeedText
+            ) {
               updatedPanel.bubbles = [
                 {
                   id: crypto.randomUUID(),
@@ -156,15 +163,12 @@ export function usePanelActions({
             characters,
             kaggleEnabled,
             (status, route) => {
-              updatePanel(
-                panelId,
-                {
-                  ...(status === "queued"
-                    ? markPanelQueued(panelWithResolvedStyle)
-                    : markPanelGenerating(panelWithResolvedStyle)),
-                  ...route,
-                },
-              );
+              updatePanel(panelId, {
+                ...(status === "queued"
+                  ? markPanelQueued(panelWithResolvedStyle)
+                  : markPanelGenerating(panelWithResolvedStyle)),
+                ...route,
+              });
             },
           )
         : generatePanelImage(panelWithResolvedStyle, characters);

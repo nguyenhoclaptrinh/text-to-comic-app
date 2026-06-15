@@ -7,14 +7,18 @@ import { Download, Image as ImageIcon, Loader2, X } from "lucide-react";
 import { useState } from "react";
 
 import { ComicPanelArt } from "@/components/studio/PanelArtwork";
-import { type DisplayLanguage, getPanelScenePromptDisplay } from "@/lib/studio/display";
+import {
+  type DisplayLanguage,
+  getPanelScenePromptDisplay,
+} from "@/lib/studio/display";
 import { exportComicPng } from "@/lib/studio/export-renderer";
-import type { Panel } from "@/lib/studio/types";
+import type { Panel, Page } from "@/lib/studio/types";
 
 type ExportStatus = "idle" | "rendering" | "done" | "error";
 
 export function ExportModal({
   panels,
+  pages,
   projectTitle,
   missingImages,
   onClose,
@@ -22,6 +26,7 @@ export function ExportModal({
   outputLanguage = "en",
 }: {
   panels: Panel[];
+  pages: Page[];
   projectTitle: string;
   missingImages: number;
   onClose: () => void;
@@ -30,6 +35,7 @@ export function ExportModal({
 }) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<ExportStatus>("idle");
+  const [exportMode, setExportMode] = useState<"combined" | "per-page">("combined");
 
   const generatedPanels = panels
     .filter((panel) => panel.status === "success")
@@ -44,13 +50,31 @@ export function ExportModal({
 
     try {
       await waitForPaint();
-      setProgress(50);
+      setProgress(55);
 
-      await exportComicPng({
-        projectTitle,
-        panels,
-        includeMissingPanels: false,
-      });
+      if (exportMode === "combined") {
+        await exportComicPng({
+          projectTitle,
+          panels,
+          includeMissingPanels: false,
+        });
+      } else {
+        // Render each page as a separate vertical image
+        let exportedCount = 0;
+        const validPages = pages.filter(
+          (page) => page.panels.some((p) => p.status === "success")
+        );
+
+        for (const page of validPages) {
+          await exportComicPng({
+            projectTitle: `${projectTitle} - Trang ${page.orderIndex}`,
+            panels: page.panels,
+            includeMissingPanels: false,
+          });
+          exportedCount++;
+          setProgress(55 + Math.round((exportedCount / validPages.length) * 40));
+        }
+      }
 
       setProgress(100);
       setStatus("done");
@@ -75,7 +99,9 @@ export function ExportModal({
         {status === "rendering" && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
             <Loader2 className="animate-spin text-violet-500 mb-4" size={40} />
-            <p className="text-sm font-medium text-zinc-200">Đang chuẩn bị file truyện...</p>
+            <p className="text-sm font-medium text-zinc-200">
+              Đang chuẩn bị file truyện...
+            </p>
             <div className="w-64 bg-zinc-800 rounded-full h-1.5 mt-2 overflow-hidden">
               <div
                 className="bg-violet-500 h-full rounded-full transition-all duration-300"
@@ -90,12 +116,42 @@ export function ExportModal({
         <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/40 px-6 py-4">
           <div className="flex items-center gap-2">
             <ImageIcon className="text-violet-400" size={20} />
-            <h2 id="preview-title" className="text-base font-semibold text-white">
-              Tổng cộng: <span className="text-violet-400">{generatedCount}</span> hình
+            <h2
+              id="preview-title"
+              className="text-base font-semibold text-white"
+            >
+              Tổng cộng:{" "}
+              <span className="text-violet-400">{generatedCount}</span> hình
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Mode selection toggle */}
+            <div className="flex items-center gap-1 rounded-lg bg-zinc-950 p-1 border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setExportMode("combined")}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition duration-200 ${
+                  exportMode === "combined"
+                    ? "bg-zinc-800 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                Tất cả vào 1 ảnh
+              </button>
+              <button
+                type="button"
+                onClick={() => setExportMode("per-page")}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition duration-200 ${
+                  exportMode === "per-page"
+                    ? "bg-zinc-800 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                Mỗi trang 1 ảnh
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={handleExport}
@@ -128,9 +184,12 @@ export function ExportModal({
           {generatedCount === 0 ? (
             <div className="flex h-full flex-col items-center justify-center py-20 text-center">
               <ImageIcon className="text-zinc-650 mb-4" size={48} />
-              <h3 className="text-base font-semibold text-zinc-200">Chưa có hình ảnh nào được gen</h3>
+              <h3 className="text-base font-semibold text-zinc-200">
+                Chưa có hình ảnh nào được gen
+              </h3>
               <p className="text-xs text-zinc-400 mt-1 max-w-sm">
-                Hãy quay lại Storyboard hoặc Workspace để thực hiện Vẽ ảnh AI trước khi xuất file.
+                Hãy quay lại Storyboard hoặc Workspace để thực hiện Vẽ ảnh AI
+                trước khi xuất file.
               </p>
               <button
                 type="button"
@@ -145,8 +204,13 @@ export function ExportModal({
               {generatedPanels.map((panel) => (
                 <article key={panel.id} className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
-                    <span className="font-medium">Khung {panel.orderIndex}</span>
-                    <span className="italic text-[10px] text-zinc-500 truncate max-w-[200px] md:max-w-[350px]" title={getPanelScenePromptDisplay(panel, outputLanguage)}>
+                    <span className="font-medium">
+                      Khung {panel.orderIndex}
+                    </span>
+                    <span
+                      className="italic text-[10px] text-zinc-500 truncate max-w-[200px] md:max-w-[350px]"
+                      title={getPanelScenePromptDisplay(panel, outputLanguage)}
+                    >
                       {getPanelScenePromptDisplay(panel, outputLanguage)}
                     </span>
                   </div>

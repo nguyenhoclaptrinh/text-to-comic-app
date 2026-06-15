@@ -69,7 +69,7 @@ export async function GET() {
         publicEnabled: process.env.NEXT_PUBLIC_KAGGLE_ENABLED === "true",
         configured: Boolean(
           process.env.KAGGLE_API_TOKEN ||
-            (process.env.KAGGLE_USERNAME && process.env.KAGGLE_KEY),
+          (process.env.KAGGLE_USERNAME && process.env.KAGGLE_KEY),
         ),
         token: getMaskedConfigValue(process.env.KAGGLE_API_TOKEN),
         username: getMaskedConfigValue(process.env.KAGGLE_USERNAME),
@@ -87,7 +87,9 @@ export async function GET() {
         serviceRoleKey: getMaskedConfigValue(
           process.env.SUPABASE_SERVICE_ROLE_KEY,
         ),
-        anonKey: getMaskedConfigValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+        anonKey: getMaskedConfigValue(
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        ),
       },
     },
   });

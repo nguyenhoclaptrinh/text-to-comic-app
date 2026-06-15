@@ -139,7 +139,10 @@ export async function generateMultiPageStoryboard(
             apiKey,
             model: geminiResponse.usedModel,
           }).catch((err) => {
-            console.warn("[Gemini Localization] Error on page " + (index + 1) + ":", err);
+            console.warn(
+              "[Gemini Localization] Error on page " + (index + 1) + ":",
+              err,
+            );
             return null;
           });
 
@@ -163,7 +166,10 @@ export async function generateMultiPageStoryboard(
             const canSyncSeedBubble =
               nextPanel.bubbles.length === 1 &&
               isSeedBubbleText(nextPanel, nextPanel.bubbles[0]?.text || "");
-            const nextBubbleText = getPanelBubbleSeed(nextPanel, outputLanguage);
+            const nextBubbleText = getPanelBubbleSeed(
+              nextPanel,
+              outputLanguage,
+            );
 
             return {
               ...nextPanel,
@@ -422,4 +428,83 @@ function stripJsonFence(value: string) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+export async function generateStorySuggestion({
+  title,
+  style,
+  genre,
+  aspectRatio,
+  customApiKey,
+}: {
+  title: string;
+  style: string;
+  genre: string;
+  aspectRatio: string;
+  customApiKey?: string;
+}): Promise<{ storyText: string }> {
+  const apiKey = customApiKey || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing Gemini API Key.");
+  }
+  const preferredModel = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+
+  const prompt = `Bạn là một biên kịch truyện tranh chuyên nghiệp. Hãy viết một cốt truyện chữ chi tiết dùng để phân cảnh làm truyện tranh (webtoon/manga/comic).
+Thông tin đầu vào:
+- Tiêu đề truyện: "${title}"
+- Thể loại truyện: "${genre}"
+- Phong cách vẽ tranh: "${style}"
+- Tỉ lệ khung hình mong muốn: "${aspectRatio}"
+
+Yêu cầu kịch bản truyện chữ:
+1. Viết một câu chuyện hấp dẫn, lôi cuốn bằng tiếng Việt.
+2. Trình bày cốt truyện dưới dạng các đoạn văn rõ ràng, có diễn biến tâm lý nhân vật, mô tả chi tiết bối cảnh xung quanh và các câu thoại trực tiếp của nhân vật đặt trong dấu ngoặc kép (Ví dụ: Tèo nói: "Chào buổi sáng!").
+3. Hãy viết dài khoảng 3-4 đoạn văn để đủ tạo ra 4-8 khung hình truyện tranh phong phú.
+4. Trả về dưới định dạng JSON với cấu trúc chính xác:
+{
+  "storyText": "Nội dung kịch bản chi tiết ở đây..."
+}
+Chú ý: Chỉ trả về JSON hợp lệ, không kèm giải thích hay Markdown codeblock.`;
+
+  const response = await fetchWithTimeout(
+    `${GEMINI_ENDPOINT}/models/${preferredModel}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              storyText: { type: "STRING" },
+            },
+            required: ["storyText"],
+          },
+        },
+      }),
+    },
+    getAiTimeoutMs(),
+  );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw createAiProviderErrorFromResponse(response, detail);
+  }
+
+  const data: unknown = await response.json();
+  const text = extractGeminiText(data);
+  try {
+    const parsed = JSON.parse(stripJsonFence(text));
+    if (parsed && typeof parsed.storyText === "string") {
+      return { storyText: parsed.storyText };
+    }
+  } catch (err) {
+    console.error("Failed to parse suggest-story response:", err);
+  }
+  throw new Error("Không thể phân tích dữ liệu gợi ý kịch bản từ AI.");
 }

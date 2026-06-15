@@ -22,7 +22,9 @@ export function ComicStudioApp() {
   const { state, actions } = useComicStudioState();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const showWorkspaceTopBar =
-    state.view === "storyboard" || state.view === "comic" || state.view === "export";
+    state.view === "storyboard" ||
+    state.view === "comic" ||
+    state.view === "export";
 
   return (
     <main className="flex min-h-dvh bg-background font-sans text-text-primary transition-colors duration-200">
@@ -32,7 +34,9 @@ export function ComicStudioApp() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         displayLanguage={state.activeProject.outputLanguage || "en"}
         onChangeDisplayLanguage={
-          state.view === "storyboard" || state.view === "comic" || state.view === "export"
+          state.view === "storyboard" ||
+          state.view === "comic" ||
+          state.view === "export"
             ? actions.setProjectOutputLanguage
             : undefined
         }
@@ -53,6 +57,7 @@ export function ComicStudioApp() {
       {state.exportOpen ? (
         <ExportModal
           panels={state.allPanels}
+          pages={state.pages}
           projectTitle={state.activeProject.title}
           missingImages={state.missingImages}
           outputLanguage={state.activeProject.outputLanguage || "en"}
@@ -87,7 +92,14 @@ function ActiveView({
         onSelectProject={actions.selectProject}
         onDeleteProject={actions.deleteProject}
         onAnalyze={(title, text, style, genre, aspectRatio, outputLanguage) =>
-          actions.analyzeStory(style, title, text, genre, aspectRatio, outputLanguage)
+          actions.analyzeStory(
+            style,
+            title,
+            text,
+            genre,
+            aspectRatio,
+            outputLanguage,
+          )
         }
         isAnalyzing={state.isAnalyzingStory}
         importError={state.importError}
@@ -104,13 +116,13 @@ function ActiveView({
         isAnalyzing={state.isAnalyzingStory}
         setTitle={actions.setStoryTitle}
         setStoryText={actions.setStoryText}
-        onAnalyze={(style, outputLanguage) =>
+        onAnalyze={(style, genre, aspectRatio, outputLanguage) =>
           void actions.analyzeStory(
             style,
             undefined,
             undefined,
-            undefined,
-            undefined,
+            genre,
+            aspectRatio,
             outputLanguage,
           )
         }
@@ -183,6 +195,7 @@ function ActiveView({
       onGoToImport={() => actions.setView("projects")}
       onUpdateCharacter={actions.updateCharacter}
       onMovePanel={actions.movePanel}
+      onApplyPageStoryboard={actions.applyPageStoryboard}
       projectStyle={state.activeProject.style}
       projectGenre={state.activeProject.genre}
       projectAspectRatio={state.activeProject.aspectRatio}

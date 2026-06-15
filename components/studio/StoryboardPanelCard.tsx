@@ -135,7 +135,11 @@ function PanelTextEditor({
         </div>
       </div>
 
-      <EditablePanelText panel={panel} outputLanguage={outputLanguage} onUpdate={onUpdate} />
+      <EditablePanelText
+        panel={panel}
+        outputLanguage={outputLanguage}
+        onUpdate={onUpdate}
+      />
       <CharacterChips panel={panel} characters={characters} />
     </div>
   );

@@ -19,6 +19,7 @@ import {
 import { CharacterCastingPanel } from "@/components/studio/CharacterCastingPanel";
 import { StoryboardPanelCard } from "@/components/studio/StoryboardPanelCard";
 import { PageSelector } from "@/components/studio/PageSelector";
+import { analyzeStoryToPages } from "@/lib/studio/ai-services";
 import type { GenerationSummary } from "@/lib/studio/types";
 import type { Character, Page, Panel } from "@/lib/studio/types";
 
@@ -50,6 +51,7 @@ export function StoryboardWorkspace({
   projectStyle,
   projectGenre,
   projectAspectRatio,
+  onApplyPageStoryboard,
 }: {
   characters: Character[];
   pages: Page[];
@@ -78,9 +80,108 @@ export function StoryboardWorkspace({
   projectStyle?: string;
   projectGenre?: string;
   projectAspectRatio?: string;
+  onApplyPageStoryboard?: (
+    pageId: string,
+    panels: Panel[],
+    characters?: Character[],
+  ) => void;
 }) {
   const [isCastingOpen, setIsCastingOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [pageStoryText, setPageStoryText] = useState("");
+  const [previewPanels, setPreviewPanels] = useState<Panel[] | null>(null);
+  const [previewCharacters, setPreviewCharacters] = useState<Character[]>([]);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState("");
+
   const hasBackendError = panels.some((panel) => panel.status === "error");
+
+  async function handleGeneratePreview() {
+    if (!pageStoryText.trim()) return;
+    setIsGeneratingPreview(true);
+    setPreviewError("");
+    try {
+      // 1. Gather project metadata
+      const styleText = projectStyle || "webtoon";
+      const genreText = projectGenre || "Chưa xác định";
+      const aspectText = projectAspectRatio || "1:1";
+
+      let finalStoryText = `[Thể loại truyện]: ${genreText}\n[Phong cách vẽ]: ${styleText}\n[Tỉ lệ khung hình]: ${aspectText}\n\n`;
+
+      // 2. Gather characters casting database context
+      if (characters && characters.length > 0) {
+        const charLines = characters.map((c) => {
+          const genderText =
+            c.gender === "Nam" ? "Nam" : c.gender === "Nữ" ? "Nữ" : "Khác";
+          const roleText = c.role || "Vai phụ";
+          const desc =
+            c.descriptionDisplayVi ||
+            c.descriptionDisplayEn ||
+            c.description ||
+            "";
+          return `- Tên: ${c.name} (${genderText}, Vai trò: ${roleText}). Mô tả ngoại hình: ${desc}`;
+        });
+        finalStoryText += `[Danh sách nhân vật cố định - Hãy giữ đúng tên và mô tả này khi họ xuất hiện trong phân cảnh mới]:\n${charLines.join("\n")}\n\n`;
+      }
+
+      // 3. Gather storyboard timeline context from previous pages
+      const activePageIndex = pages.findIndex((p) => p.id === activePageId);
+      if (activePageIndex > 0) {
+        const prevPages = pages.slice(0, activePageIndex);
+        const prevPanelsDescriptions = prevPages
+          .flatMap((p) => p.panels)
+          .map((p, idx) => {
+            const scene = p.scenePromptDisplayVi || p.scenePrompt || "";
+            const dial = p.dialogueDisplayVi || p.dialogue || "";
+            return `Khung ${idx + 1}: Bối cảnh: "${scene}"${dial ? `, Thoại: "${dial}"` : ""}`;
+          })
+          .slice(-6); // Take last 6 panels for narrative continuation
+
+        if (prevPanelsDescriptions.length > 0) {
+          finalStoryText += `[Diễn biến mạch truyện trước đó - Các khung hình đã diễn ra]:\n${prevPanelsDescriptions.join("\n")}\n\n`;
+        }
+      }
+
+      // 4. Inject current new page narrative input
+      finalStoryText += `[Nội dung cốt truyện mới cần tạo phân cảnh cho trang này]:\n${pageStoryText}`;
+
+      // 5. Inject draft panels editing context if regenerating
+      if (previewPanels && previewPanels.length > 0) {
+        const existingContext = previewPanels
+          .map((p, idx) => {
+            const scene = p.scenePromptDisplayVi || p.scenePrompt || "";
+            const dial = p.dialogueDisplayVi || p.dialogue || "";
+            return `Khung ${idx + 1}: Bối cảnh: "${scene}"${dial ? `, Thoại: "${dial}"` : ""}`;
+          })
+          .join("\n");
+        finalStoryText += `\n\n[Dữ liệu các khung cũ của trang này để tham khảo/chỉnh sửa, hãy giữ tính nhất quán hoặc điều chỉnh theo yêu cầu mới]:\n${existingContext}`;
+      }
+
+      const { pages: generatedPages, characters: generatedCharacters } =
+        await analyzeStoryToPages({
+          storyTitle: projectTitle || "Page Storyboard",
+          storyText: finalStoryText,
+          outputLanguage: outputLanguage === "vi" ? "vi" : "en",
+        });
+
+      if (generatedPages && generatedPages.length > 0) {
+        const newPanels = generatedPages[0].panels.map((p) => ({
+          ...p,
+          style: "inherit" as const,
+        }));
+        setPreviewPanels(newPanels);
+        if (generatedCharacters) {
+          setPreviewCharacters(generatedCharacters);
+        }
+      } else {
+        setPreviewError("Không nhận được dữ liệu phân cảnh từ AI.");
+      }
+    } catch (error) {
+      setPreviewError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  }
 
   return (
     <div className="relative grid min-h-0 flex-1 grid-cols-1 overflow-hidden transition-colors duration-200 lg:grid-cols-[288px_minmax(0,1fr)]">
@@ -105,7 +206,9 @@ export function StoryboardWorkspace({
           onOpenCasting={() => setIsCastingOpen(true)}
           onGenerateAll={onGenerateAll}
           onOpenExport={onOpenExport}
+          onOpenAiModal={() => setIsAiModalOpen(true)}
           isGeneratingAll={isGeneratingAll}
+          isGeneratingPage={isGeneratingPreview}
           style={projectStyle}
           genre={projectGenre}
           aspectRatio={projectAspectRatio}
@@ -144,6 +247,242 @@ export function StoryboardWorkspace({
           )}
         </div>
       </section>
+
+      {/* Modal nhập truyện chữ để AI tự động phân cảnh cho trang */}
+      {isAiModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-4xl rounded-xl border border-border-main bg-surface-elevated p-6 shadow-2xl animate-in scale-in duration-200 flex flex-col max-h-[85vh]"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="mb-4 flex items-center justify-between border-b border-border-main pb-3 shrink-0">
+              <h3 className="text-lg font-semibold text-text-primary">
+                Tự động Phân cảnh bằng AI cho Trang này
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAiModalOpen(false);
+                  setPreviewPanels(null);
+                  setPreviewError("");
+                }}
+                className="text-text-secondary hover:text-text-primary transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden flex-1 py-2">
+              {/* Cột trái: Nhập truyện chữ */}
+              <div className="flex flex-col h-full min-h-0">
+                <label className="mb-2 text-sm font-semibold text-text-primary">
+                  Nhập cốt truyện chữ cho trang:
+                </label>
+
+                {/* Context dự án đã có */}
+                <div className="mb-3 rounded-lg border border-border-main/50 bg-surface/30 p-2.5 text-xs text-text-secondary">
+                  <div className="font-semibold text-text-primary mb-1">
+                    Mạch truyện liên quan:
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 mb-1.5">
+                    <div>
+                      <span className="text-zinc-500">Thể loại:</span>{" "}
+                      {projectGenre || "Chưa chọn"}
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Phong cách:</span>{" "}
+                      {projectStyle || "webtoon"}
+                    </div>
+                  </div>
+                  {characters && characters.length > 0 && (
+                    <div>
+                      <span className="text-zinc-500">
+                        Nhân vật đã casting ({characters.length}):
+                      </span>{" "}
+                      <span className="text-text-primary font-medium">
+                        {characters.map((c) => c.name).join(", ")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <textarea
+                  className="flex-1 w-full min-h-[150px] rounded-lg border border-border-main bg-surface p-3 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  placeholder="Ví dụ: Cậu bé bước vào phòng thí nghiệm bí mật. Có một cỗ máy khổng lồ đang hoạt động. Cậu reo lên: 'Tuyệt quá, cuối cùng mình cũng tìm thấy nó!'..."
+                  value={pageStoryText}
+                  onChange={(e) => setPageStoryText(e.target.value)}
+                />
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    disabled={!pageStoryText.trim() || isGeneratingPreview}
+                    onClick={handleGeneratePreview}
+                    className="w-full inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-650 px-4 text-sm font-semibold text-white hover:bg-violet-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingPreview ? (
+                      <Loader2 className="animate-spin" size={16} />
+                    ) : (
+                      <Wand2 size={16} />
+                    )}
+                    {previewPanels
+                      ? "Tạo lại phân cảnh khác (Refetch)"
+                      : "Tạo phân cảnh"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Cột phải: Xem trước kết quả */}
+              <div className="flex flex-col h-full border border-border-main/50 rounded-lg bg-surface/30 p-4 min-h-0">
+                <span className="mb-3 text-sm font-semibold text-text-primary block">
+                  Xem trước phân cảnh:
+                </span>
+
+                <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1">
+                  {isGeneratingPreview ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                      <Loader2
+                        className="animate-spin text-primary mb-3"
+                        size={32}
+                      />
+                      <p className="text-sm text-text-secondary">
+                        AI đang phân cảnh... Vui lòng đợi trong giây lát.
+                      </p>
+                    </div>
+                  ) : previewError ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-4 text-red-500">
+                      <AlertTriangle className="mb-2" size={28} />
+                      <p className="text-sm font-medium">Lỗi tạo phân cảnh</p>
+                      <p className="text-xs text-text-secondary mt-1">
+                        {previewError}
+                      </p>
+                    </div>
+                  ) : previewPanels ? (
+                    previewPanels.map((panel, idx) => (
+                      <div
+                        key={panel.id}
+                        className="border border-border-main bg-surface-elevated/40 rounded-lg p-3 text-xs space-y-2"
+                      >
+                        <div className="font-semibold text-primary flex items-center justify-between">
+                          <span>Khung {idx + 1}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-surface-elevated text-text-secondary">
+                            Tone:{" "}
+                            {panel.imageTone.replace("from-", "").split(" ")[0]}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+                            Bối cảnh (Vẽ tranh)
+                          </label>
+                          <textarea
+                            value={
+                              panel.scenePromptDisplayVi ||
+                              panel.scenePrompt ||
+                              ""
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPreviewPanels((prev) =>
+                                prev
+                                  ? prev.map((p) =>
+                                      p.id === panel.id
+                                        ? {
+                                            ...p,
+                                            scenePrompt: val,
+                                            scenePromptDisplayVi: val,
+                                            scenePromptDisplayEn: val,
+                                          }
+                                        : p,
+                                    )
+                                  : null,
+                              );
+                            }}
+                            className="w-full bg-zinc-900 border border-zinc-700/60 rounded p-1.5 text-xs text-text-primary focus:border-primary focus:outline-none resize-y"
+                            rows={2}
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+                            Lời thoại
+                          </label>
+                          <textarea
+                            value={
+                              panel.dialogueDisplayVi || panel.dialogue || ""
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPreviewPanels((prev) =>
+                                prev
+                                  ? prev.map((p) =>
+                                      p.id === panel.id
+                                        ? {
+                                            ...p,
+                                            dialogue: val,
+                                            dialogueDisplayVi: val,
+                                            dialogueDisplayEn: val,
+                                          }
+                                        : p,
+                                    )
+                                  : null,
+                              );
+                            }}
+                            className="w-full bg-zinc-900 border border-zinc-700/60 rounded p-1.5 text-xs text-violet-300 focus:border-primary focus:outline-none resize-y"
+                            rows={1}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-4 text-text-muted">
+                      <FileText className="mb-2 opacity-50" size={32} />
+                      <p className="text-xs">Chưa có phân cảnh nào được tạo.</p>
+                      <p className="text-[10px] text-text-secondary mt-1">
+                        Hãy nhập nội dung bên trái rồi bấm nút tạo phân cảnh.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3 border-t border-border-main pt-4 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAiModalOpen(false);
+                  setPreviewPanels(null);
+                  setPreviewError("");
+                }}
+                className="h-10 rounded-lg border border-border-main px-4 text-sm font-medium text-text-primary hover:bg-surface transition"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={!previewPanels || isGeneratingPreview}
+                onClick={() => {
+                  if (onApplyPageStoryboard && previewPanels) {
+                    onApplyPageStoryboard(
+                      activePageId,
+                      previewPanels,
+                      previewCharacters,
+                    );
+                    setIsAiModalOpen(false);
+                    setPreviewPanels(null);
+                    setPageStoryText("");
+                  }
+                }}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-emerald-950 px-5 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <BadgeCheck size={16} />
+                Áp dụng lên trang
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================== */}
       {/* RESPONSIVE UI: LEFT SLIDE DRAWER FOR CHARACTER CASTING         */}
@@ -241,7 +580,9 @@ function StoryboardHeader({
   onOpenCasting,
   onGenerateAll,
   onOpenExport,
+  onOpenAiModal,
   isGeneratingAll,
+  isGeneratingPage,
   style,
   genre,
   aspectRatio,
@@ -252,7 +593,9 @@ function StoryboardHeader({
   onOpenCasting: () => void;
   onGenerateAll?: () => void;
   onOpenExport?: () => void;
+  onOpenAiModal?: () => void;
   isGeneratingAll?: boolean;
+  isGeneratingPage?: boolean;
   style?: string;
   genre?: string;
   aspectRatio?: string;
@@ -267,7 +610,8 @@ function StoryboardHeader({
           </h1>
           <div className="mt-2 flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border-main bg-surface-elevated px-2.5 py-0.5 text-[10px] font-semibold text-text-secondary shadow-[0_1px_2px_rgba(0,0,0,0.15)]">
-              Đã vẽ {generationSummary.done}/{generationSummary.total} khung hình
+              Đã vẽ {generationSummary.done}/{generationSummary.total} khung
+              hình
             </span>
             {generationSummary.errors > 0 ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-red-500 dark:text-red-300">
@@ -299,13 +643,32 @@ function StoryboardHeader({
             <Download size={16} />
             Xuất file
           </button>
+
+          <button
+            type="button"
+            onClick={onOpenAiModal}
+            disabled={isGeneratingAll || isGeneratingPage}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGeneratingPage ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              <Wand2 size={16} className="text-violet-400" />
+            )}
+            Phân cảnh AI
+          </button>
+
           <button
             type="button"
             onClick={onGenerateAll}
-            disabled={isGeneratingAll}
+            disabled={isGeneratingAll || isGeneratingPage}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isGeneratingAll ? <Loader2 className="animate-spin" size={16} /> : <Wand2 size={16} />}
+            {isGeneratingAll ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              <Wand2 size={16} />
+            )}
             Vẽ tất cả
           </button>
           <button

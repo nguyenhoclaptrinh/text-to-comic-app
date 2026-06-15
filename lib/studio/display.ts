@@ -11,7 +11,11 @@ export function getPanelScenePromptDisplay(
   language: DisplayLanguage,
 ) {
   if (language === "vi") {
-    return panel.scenePromptDisplayVi || panel.scenePromptDisplay || panel.scenePrompt;
+    return (
+      panel.scenePromptDisplayVi ||
+      panel.scenePromptDisplay ||
+      panel.scenePrompt
+    );
   }
 
   return panel.scenePromptDisplayEn || panel.scenePrompt;
@@ -56,10 +60,7 @@ export function getAutoBubbleSeedCandidates(panel: Panel) {
   );
 }
 
-export function getPanelBubbleSeed(
-  panel: Panel,
-  language: DisplayLanguage,
-) {
+export function getPanelBubbleSeed(panel: Panel, language: DisplayLanguage) {
   return getPanelDialogueDisplay(panel, language).trim();
 }
 

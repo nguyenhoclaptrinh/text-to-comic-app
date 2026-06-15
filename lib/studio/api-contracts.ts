@@ -37,25 +37,47 @@ export const StoryboardAiPanelSchema = z.object({
 
 export const StoryboardAiCharacterSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  gender: z.preprocess((val) => {
-    if (typeof val === "string") {
-      const lower = val.trim().toLowerCase();
-      if (lower === "nam" || lower === "male") return "Nam";
-      if (lower === "nữ" || lower === "female") return "Nữ";
-      if (lower === "khác" || lower === "other") return "Khác";
-    }
-    return val;
-  }, z.enum(["Nam", "Nữ", "Khác"])),
-  role: z.preprocess((val) => {
-    if (typeof val === "string") {
-      const lower = val.trim().toLowerCase();
-      if (lower === "vai chính" || lower === "main" || lower === "protagonist") return "Vai chính";
-      if (lower === "vai phụ" || lower === "supporting") return "Vai phụ";
-      if (lower === "phản diện" || lower === "antagonist" || lower === "villain") return "Phản diện";
-      if (lower === "quần chúng" || lower === "extra" || lower === "background" || lower === "npc") return "Quần chúng";
-    }
-    return val;
-  }, z.enum(["Vai chính", "Vai phụ", "Phản diện", "Quần chúng"])),
+  gender: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        const lower = val.trim().toLowerCase();
+        if (lower === "nam" || lower === "male") return "Nam";
+        if (lower === "nữ" || lower === "female") return "Nữ";
+        if (lower === "khác" || lower === "other") return "Khác";
+      }
+      return val;
+    },
+    z.enum(["Nam", "Nữ", "Khác"]),
+  ),
+  role: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        const lower = val.trim().toLowerCase();
+        if (
+          lower === "vai chính" ||
+          lower === "main" ||
+          lower === "protagonist"
+        )
+          return "Vai chính";
+        if (lower === "vai phụ" || lower === "supporting") return "Vai phụ";
+        if (
+          lower === "phản diện" ||
+          lower === "antagonist" ||
+          lower === "villain"
+        )
+          return "Phản diện";
+        if (
+          lower === "quần chúng" ||
+          lower === "extra" ||
+          lower === "background" ||
+          lower === "npc"
+        )
+          return "Quần chúng";
+      }
+      return val;
+    },
+    z.enum(["Vai chính", "Vai phụ", "Phản diện", "Quần chúng"]),
+  ),
   description: z.string().trim().min(1).max(1000),
 });
 
@@ -184,9 +206,7 @@ export type StoryboardAiResponse = z.infer<typeof StoryboardAiResponseSchema>;
 export type StoryboardResponse = z.infer<typeof StoryboardResponseSchema>;
 export type GeneratePanelRequest = z.infer<typeof GeneratePanelRequestSchema>;
 export type GeneratePanelResponse = z.infer<typeof GeneratePanelResponseSchema>;
-export type KaggleImageJobStatus = z.infer<
-  typeof KaggleImageJobStatusSchema
->;
+export type KaggleImageJobStatus = z.infer<typeof KaggleImageJobStatusSchema>;
 export type KaggleImageJobResponse = z.infer<
   typeof KaggleImageJobResponseSchema
 >;

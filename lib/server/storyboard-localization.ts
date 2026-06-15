@@ -119,7 +119,8 @@ export async function localizeStoryboardForDisplay({
       return {
         ...character,
         descriptionDisplayVi:
-          localizedCharacter?.descriptionDisplayVi || character.descriptionDisplayEn,
+          localizedCharacter?.descriptionDisplayVi ||
+          character.descriptionDisplayEn,
       };
     }),
   };
@@ -138,7 +139,7 @@ function createLocalizationPrompt(storyboard: StoryboardAiResponse) {
     "Return JSON only.",
     "",
     "Return this shape:",
-    "{\"panels\":[{\"orderIndex\":1,\"scenePromptDisplayVi\":\"...\",\"dialogueDisplayVi\":\"...\"}],\"characters\":[{\"name\":\"...\",\"descriptionDisplayVi\":\"...\"}]}",
+    '{"panels":[{"orderIndex":1,"scenePromptDisplayVi":"...","dialogueDisplayVi":"..."}],"characters":[{"name":"...","descriptionDisplayVi":"..."}]}',
     "",
     `Canonical storyboard JSON: ${JSON.stringify(storyboard)}`,
   ].join("\n\n");

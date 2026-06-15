@@ -28,9 +28,7 @@ export const DEFAULT_GEMINI_TEXT_MODEL_POOL = [
   "gemini-2.5-flash-lite",
 ];
 
-export const DEFAULT_GEMINI_IMAGE_MODEL_POOL = [
-  "imagen-4.0-generate-001",
-];
+export const DEFAULT_GEMINI_IMAGE_MODEL_POOL = ["imagen-4.0-generate-001"];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
 export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
@@ -76,8 +74,7 @@ export function getPublicKaggleEnabled() {
 
 export function getPublicKaggleImageModel() {
   return (
-    process.env.NEXT_PUBLIC_KAGGLE_DIFFUSION_MODEL ||
-    DEFAULT_KAGGLE_IMAGE_MODEL
+    process.env.NEXT_PUBLIC_KAGGLE_DIFFUSION_MODEL || DEFAULT_KAGGLE_IMAGE_MODEL
   );
 }
 

@@ -23,7 +23,7 @@ import {
 } from "@/lib/studio/selectors";
 import { getPanelBubbleSeed, isSeedBubbleText } from "@/lib/studio/display";
 import { updatePanelBubble } from "@/lib/studio/utils";
-import type { Bubble, Page, Project } from "@/lib/studio/types";
+import type { Bubble, Page, Project, Panel, Character } from "@/lib/studio/types";
 
 const INITIAL_PROJECT_ID = "workspace-project";
 const INITIAL_PAGE_ID = "workspace-page";
@@ -50,7 +50,9 @@ export function useComicStudioState() {
   const [pages, setPages] = useState<Page[]>([INITIAL_PAGE]);
   const [storyTitle, setStoryTitle] = useState("");
   const [storyText, setStoryText] = useState("");
-  const [storyOutputLanguage, setStoryOutputLanguage] = useState<"en" | "vi">("en");
+  const [storyOutputLanguage, setStoryOutputLanguage] = useState<"en" | "vi">(
+    "en",
+  );
   const [importError, setImportError] = useState("");
   const [isAnalyzingStory, setIsAnalyzingStory] = useState(false);
 
@@ -80,7 +82,9 @@ export function useComicStudioState() {
 
   const activeProjectPagesWithGlobalIndices = useMemo(() => {
     let globalIndex = 0;
-    const sortedPages = [...activeProjectPages].sort((a, b) => a.orderIndex - b.orderIndex);
+    const sortedPages = [...activeProjectPages].sort(
+      (a, b) => a.orderIndex - b.orderIndex,
+    );
     return sortedPages.map((page) => ({
       ...page,
       panels: page.panels.map((panel) => {
@@ -94,7 +98,9 @@ export function useComicStudioState() {
   }, [activeProjectPages]);
 
   const activePage =
-    activeProjectPagesWithGlobalIndices.find((page) => page.id === nav.activePageId) ??
+    activeProjectPagesWithGlobalIndices.find(
+      (page) => page.id === nav.activePageId,
+    ) ??
     activeProjectPagesWithGlobalIndices[0] ??
     pages[0];
 
@@ -243,11 +249,12 @@ export function useComicStudioState() {
 
     try {
       const projectId = crypto.randomUUID();
-      const { pages: generatedPages, characters: generatedCharacters } = await analyzeStoryToPages({
-        storyTitle: finalTitle,
-        storyText: finalText,
-        outputLanguage: finalOutputLanguage,
-      });
+      const { pages: generatedPages, characters: generatedCharacters } =
+        await analyzeStoryToPages({
+          storyTitle: finalTitle,
+          storyText: finalText,
+          outputLanguage: finalOutputLanguage,
+        });
 
       setImportError("");
       const pagesWithCorrectProjectId = generatedPages.map((page) => ({
@@ -271,7 +278,9 @@ export function useComicStudioState() {
           },
           ...current,
         ];
-        return current.length === 1 && current[0].id === INITIAL_PROJECT_ID && current[0].panelCount === 0
+        return current.length === 1 &&
+          current[0].id === INITIAL_PROJECT_ID &&
+          current[0].panelCount === 0
           ? next.filter((p) => p.id !== INITIAL_PROJECT_ID)
           : next;
       });
@@ -284,7 +293,7 @@ export function useComicStudioState() {
           (current[0].panels.length === 0 ||
             (current[0].panels.length === 1 &&
               current[0].panels[0].scenePrompt.startsWith("Blank panel")));
-        
+
         if (isInitialEmpty) {
           return pagesWithCorrectProjectId;
         }
@@ -301,7 +310,6 @@ export function useComicStudioState() {
           : [];
 
       if (newCharactersList.length > 0) {
-
         casting.setCharacters((current) => [
           ...newCharactersList,
           ...current.filter((c) => c.projectId !== projectId),
@@ -356,6 +364,35 @@ export function useComicStudioState() {
     nav.setSelectedBubbleId("");
   }
 
+  function applyPageStoryboard(
+    pageId: string,
+    newPanels: Panel[],
+    generatedCharacters?: Character[],
+  ) {
+    setPages((current) => {
+      const nextPages = current.map((page) =>
+        page.id === pageId ? { ...page, panels: newPanels } : page,
+      );
+      setProjects((currentProjects) =>
+        syncProjectPanelCounts(currentProjects, nextPages),
+      );
+      return nextPages;
+    });
+
+    if (generatedCharacters && generatedCharacters.length > 0) {
+      const newCharactersList = generatedCharacters.map((c, idx) => ({
+        ...c,
+        projectId: nav.activeProjectId,
+        priority: idx + 1,
+      }));
+
+      casting.setCharacters((current) => [
+        ...newCharactersList,
+        ...current.filter((c) => c.projectId !== nav.activeProjectId),
+      ]);
+    }
+  }
+
   function deletePage(pageId: string) {
     const pageToDelete = pages.find((p) => p.id === pageId);
     if (!pageToDelete) return;
@@ -391,10 +428,11 @@ export function useComicStudioState() {
     );
 
     if (nav.activePageId === pageId) {
-      const fallbackPage = reorderedPages.find((page) => {
-        const pId = page.projectId || INITIAL_PROJECT_ID;
-        return pId === projectId;
-      }) || reorderedPages[0];
+      const fallbackPage =
+        reorderedPages.find((page) => {
+          const pId = page.projectId || INITIAL_PROJECT_ID;
+          return pId === projectId;
+        }) || reorderedPages[0];
 
       nav.setActivePageId(fallbackPage.id);
       nav.setSelectedPanelId(fallbackPage.panels[0]?.id ?? "");
@@ -460,7 +498,9 @@ export function useComicStudioState() {
     let newActivePanelId = "";
 
     if (nav.activeProjectId === projectId) {
-      const nextProjectPages = pages.filter((page) => page.projectId === nextProject.id);
+      const nextProjectPages = pages.filter(
+        (page) => page.projectId === nextProject.id,
+      );
       if (nextProjectPages.length > 0) {
         newActivePageId = nextProjectPages[0].id;
         newActivePanelId = nextProjectPages[0].panels[0]?.id ?? "";
@@ -469,7 +509,9 @@ export function useComicStudioState() {
       }
     }
 
-    casting.setCharacters((current) => current.filter((c) => c.projectId !== projectId));
+    casting.setCharacters((current) =>
+      current.filter((c) => c.projectId !== projectId),
+    );
 
     setProjects((current) => {
       const updated = current.filter((p) => p.id !== projectId);
@@ -477,9 +519,16 @@ export function useComicStudioState() {
     });
 
     setPages((currentPages) => {
-      const updated = currentPages.filter((page) => page.projectId !== projectId);
-      if (nav.activeProjectId === projectId && nextProject.id === INITIAL_PROJECT_ID) {
-        const nextProjectPages = updated.filter((page) => page.projectId === INITIAL_PROJECT_ID);
+      const updated = currentPages.filter(
+        (page) => page.projectId !== projectId,
+      );
+      if (
+        nav.activeProjectId === projectId &&
+        nextProject.id === INITIAL_PROJECT_ID
+      ) {
+        const nextProjectPages = updated.filter(
+          (page) => page.projectId === INITIAL_PROJECT_ID,
+        );
         if (nextProjectPages.length === 0) {
           const defaultPage = {
             ...INITIAL_PAGE,
@@ -567,7 +616,7 @@ export function useComicStudioState() {
       updateBubble,
       deleteBubble,
       handleBubbleMove: drag.handleBubbleMove,
+      applyPageStoryboard,
     },
   };
 }
-
