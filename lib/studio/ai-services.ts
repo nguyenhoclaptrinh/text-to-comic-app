@@ -4,7 +4,6 @@
  */
 
 import { GENERATION_DELAY_MS } from "@/lib/studio/constants";
-import { createGeneratedBubble } from "@/lib/studio/factories";
 import {
   GeneratePanelResponseSchema,
   KaggleImageJobResponseSchema,
@@ -178,12 +177,7 @@ export async function generatePanelImage(
       errorMessage: parsedResponse.data.warning,
       usedModel: parsedResponse.data.usedModel,
       usedProvider: parsedResponse.data.usedProvider,
-      bubbles:
-        panel.bubbles.length > 0
-          ? panel.bubbles
-          : panel.dialogue.trim()
-            ? [createGeneratedBubble(panel)]
-            : [],
+      bubbles: panel.bubbles,
     };
   }
 
@@ -192,12 +186,7 @@ export async function generatePanelImage(
   return {
     status: "success",
     errorMessage: undefined,
-    bubbles:
-      panel.bubbles.length > 0
-        ? panel.bubbles
-        : panel.dialogue.trim()
-          ? [createGeneratedBubble(panel)]
-          : [],
+    bubbles: panel.bubbles,
   };
 }
 
@@ -249,12 +238,7 @@ export async function generatePanelImageViaKaggleJob(
     errorMessage: undefined,
     usedModel: completedJob.usedModel,
     usedProvider: completedJob.usedProvider,
-    bubbles:
-      panel.bubbles.length > 0
-        ? panel.bubbles
-        : panel.dialogue.trim()
-          ? [createGeneratedBubble(panel)]
-          : [],
+    bubbles: panel.bubbles,
   };
 }
 

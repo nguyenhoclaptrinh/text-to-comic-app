@@ -56,24 +56,29 @@ export function usePanelActions({
             patch.dialogue !== undefined &&
             patch.dialogue !== panel.dialogue
           ) {
-            const cleanText = dialogueToBubble(patch.dialogue);
-            if (cleanText.trim()) {
-              if (panel.bubbles.length > 0) {
-                updatedPanel.bubbles = panel.bubbles.map((bubble, idx) =>
-                  idx === 0 ? { ...bubble, text: cleanText } : bubble,
-                );
-              } else {
-                updatedPanel.bubbles = [
-                  {
-                    id: crypto.randomUUID(),
-                    text: cleanText,
-                    x: 35,
-                    y: 15,
-                    width: 30,
-                    height: 12,
-                  },
-                ];
-              }
+            const previousSeedText = dialogueToBubble(panel.dialogue);
+            const nextSeedText = dialogueToBubble(patch.dialogue);
+            const canSyncSeedBubble =
+              panel.bubbles.length === 1 &&
+              panel.bubbles[0]?.text === previousSeedText;
+
+            if (canSyncSeedBubble) {
+              updatedPanel.bubbles = nextSeedText
+                ? panel.bubbles.map((bubble, idx) =>
+                    idx === 0 ? { ...bubble, text: nextSeedText } : bubble,
+                  )
+                : [];
+            } else if (panel.bubbles.length === 0 && nextSeedText) {
+              updatedPanel.bubbles = [
+                {
+                  id: crypto.randomUUID(),
+                  text: nextSeedText,
+                  x: 35,
+                  y: 15,
+                  width: 30,
+                  height: 12,
+                },
+              ];
             }
           }
 

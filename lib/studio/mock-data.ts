@@ -38,7 +38,7 @@ export const PANELS_SEED: Panel[] = [
     bubbles: [
       {
         id: "bubble-1",
-        text: "Weather like this...",
+        text: "Xiao Se: Weather like this will not bring many guests.",
         x: 5, // %
         y: 8, // %
         width: 28, // %

@@ -18,7 +18,6 @@ import {
 import {
   countMissingImages,
   countPanelsForProject,
-  getPanelsForProject,
   summarizeGeneration,
   syncProjectPanelCounts,
 } from "@/lib/studio/selectors";
@@ -241,77 +240,17 @@ export function useComicStudioState() {
         return [...pagesWithCorrectProjectId, ...current];
       });
 
-      let newCharactersList;
-      if (generatedCharacters && generatedCharacters.length > 0) {
-        newCharactersList = generatedCharacters.map((c, idx) => ({
-          ...c,
-          projectId,
-          priority: idx + 1,
-        }));
-      } else {
-        // Trích xuất nhân vật tự động từ các panels
-        const detectedIds = new Set<string>();
-        pagesWithCorrectProjectId.forEach((page) => {
-          page.panels.forEach((panel) => {
-            panel.characterIds.forEach((id) => {
-              if (id && id !== "unknown-character") {
-                detectedIds.add(id);
-              }
-            });
-          });
-        });
-
-        const occurrences: Record<string, number> = {};
-        pagesWithCorrectProjectId.forEach((page) => {
-          page.panels.forEach((panel) => {
-            panel.characterIds.forEach((id) => {
-              if (id && id !== "unknown-character") {
-                occurrences[id] = (occurrences[id] || 0) + 1;
-              }
-            });
-          });
-        });
-
-        const sortedIds = Array.from(detectedIds).sort(
-          (a, b) => (occurrences[b] || 0) - (occurrences[a] || 0)
-        );
-
-        const colors = [
-          "#8b5cf6",
-          "#ef4444",
-          "#10b981",
-          "#f59e0b",
-          "#3b82f6",
-          "#ec4899",
-        ];
-        newCharactersList = sortedIds.map((id, idx) => {
-          const name = prettifyCharacterId(id) || `Nhân vật ${idx + 1}`;
-          const count = occurrences[id] || 0;
-          const priority = idx + 1;
-          
-          let role = "Vai phụ";
-          if (idx === 0) {
-            role = "Vai chính";
-          } else if (count === 1) {
-            role = "Quần chúng";
-          }
-
-          const gender = detectGender(id, name, finalText);
-
-          return {
-            id,
-            projectId,
-            name,
-            role,
-            gender,
-            priority,
-            description: `Nhân vật ${name}. Xuất hiện trong ${count} khung hình.`,
-            color: colors[idx % colors.length],
-          };
-        });
-      }
+      const newCharactersList =
+        generatedCharacters && generatedCharacters.length > 0
+          ? generatedCharacters.map((c, idx) => ({
+              ...c,
+              projectId,
+              priority: idx + 1,
+            }))
+          : [];
 
       if (newCharactersList.length > 0) {
+
         casting.setCharacters((current) => [
           ...newCharactersList,
           ...current.filter((c) => c.projectId !== projectId),
@@ -578,79 +517,3 @@ export function useComicStudioState() {
   };
 }
 
-function prettifyCharacterId(characterId: string) {
-  return characterId
-    .split("-")
-    .filter((word) => word.length > 1)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function detectGender(id: string, name: string, storyText: string): "Nam" | "Nữ" | "Khác" {
-  const lowerText = storyText.toLowerCase();
-  const lowerName = name.toLowerCase();
-  
-  const femaleWords = ["cô", "nàng", "nữ", "chị", "bà", "mẹ", "vợ", "am", "hoa", "bé gái", "con gái", "mẫu thân", "bà ngoại", "chị gái", "em gái"];
-  const maleWords = ["anh", "chàng", "cậu", "nam", "ông", "bố", "chồng", "lão", "tể", "phu", "bác", "cha", "em trai", "con trai", "bé trai", "thợ săn", "thầy", "sư"];
-
-  const isAlpha = (char: string) => /[a-zA-Z0-9]/.test(char) || (char && char.charCodeAt(0) > 127);
-  
-  const containsWord = (text: string, word: string): boolean => {
-    let index = -1;
-    while ((index = text.indexOf(word, index + 1)) !== -1) {
-      const before = index > 0 ? text.charAt(index - 1) : " ";
-      const after = index + word.length < text.length ? text.charAt(index + word.length) : " ";
-      if (!isAlpha(before) && !isAlpha(after)) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  if (femaleWords.some(w => containsWord(lowerName, w))) {
-    return "Nữ";
-  }
-  if (maleWords.some(w => containsWord(lowerName, w))) {
-    return "Nam";
-  }
-  
-  const sentences = lowerText.split(/[.!?\n]+/);
-  let femaleScore = 0;
-  let maleScore = 0;
-  
-  const lowerId = id.toLowerCase();
-  
-  for (const sentence of sentences) {
-    if (containsWord(sentence, lowerName) || containsWord(sentence, lowerId)) {
-      const femaleContext = ["cô ấy", "nàng", "chị ấy", "thiếu nữ", "nữ tử", "nữ nhân", "bà ấy", "mẹ", "vợ", "cô", "chị", "em gái", "bà ngoại", "mẫu thân"];
-      const maleContext = ["anh ấy", "chàng", "cậu ấy", "nam nhân", "ông ấy", "bố", "chồng", "anh", "cậu", "em trai", "gã", "hắn", "bác", "cha", "phu quân", "thợ săn"];
-      
-      if (femaleContext.some(w => containsWord(sentence, w))) {
-        femaleScore++;
-      }
-      if (maleContext.some(w => containsWord(sentence, w))) {
-        maleScore++;
-      }
-    }
-  }
-  
-  if (femaleScore > maleScore) {
-    return "Nữ";
-  }
-  if (maleScore > femaleScore) {
-    return "Nam";
-  }
-  
-  // Endings check for common Vietnamese names
-  const maleEndings = ["hùng", "cường", "minh", "tuấn", "kiên", "hoàng", "dũng", "sơn", "hải", "phong", "vũ", "thành", "đạt", "nam", "trung", "khánh", "lâm", "thịnh", "tèo", "tí"];
-  const femaleEndings = ["hoa", "lan", "mai", "cúc", "vy", "trang", "hương", "nhung", "phương", "thảo", "linh", "hà", "chi", "diệp", "anh", "tuyết", "ngọc", "nhi", "quỳnh", "thư"];
-  
-  if (maleEndings.some(w => containsWord(lowerName, w))) {
-    return "Nam";
-  }
-  if (femaleEndings.some(w => containsWord(lowerName, w))) {
-    return "Nữ";
-  }
-  
-  return "Khác";
-}

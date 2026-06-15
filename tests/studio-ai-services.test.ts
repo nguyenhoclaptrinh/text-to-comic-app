@@ -131,7 +131,7 @@ describe("studio AI services", () => {
     });
   });
 
-  it("should create a successful panel generation patch with a bubble fallback", async () => {
+  it("should preserve existing bubbles without auto-generating new ones", async () => {
     vi.useFakeTimers();
     const promise = generatePanelImage({ ...PANELS_SEED[1], bubbles: [] });
 
@@ -139,7 +139,7 @@ describe("studio AI services", () => {
     const patch = await promise;
 
     expect(patch).toMatchObject({ status: "success" });
-    expect(patch.bubbles).toHaveLength(1);
+    expect(patch.bubbles).toHaveLength(0);
     expect(patch.imageUrl).toBeUndefined();
     vi.useRealTimers();
   });

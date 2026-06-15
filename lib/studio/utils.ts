@@ -18,8 +18,7 @@ export function clamp(value: number, min: number, max: number) {
 }
 
 export function dialogueToBubble(dialogue: string) {
-  const [, text = dialogue] = dialogue.split(":");
-  return text.trim().slice(0, BUBBLE_TEXT_MAX_LENGTH);
+  return dialogue.trim();
 }
 
 export function nextBubbleCoordinate(
@@ -74,8 +73,12 @@ export function createMockPanels(storyText: string): Panel[] {
     .map((s) => s.trim())
     .filter((s) => s.length > 5);
 
+  if (sentences.length === 0 && cleanText) {
+    sentences.push(cleanText);
+  }
+
   if (sentences.length === 0) {
-    sentences.push("A quiet scene unfolds.");
+    return [];
   }
 
   // Chia panel động: tối thiểu 3 panel, tối đa 8 panel tùy theo độ dài câu
@@ -95,7 +98,7 @@ export function createMockPanels(storyText: string): Panel[] {
   ];
 
   return chunks.map((chunkSentences, index) => {
-    const textFragment = chunkSentences.join(" ") || "The story continues.";
+    const textFragment = chunkSentences.join(" ").trim() || cleanText;
     let dialogue = "";
     let characterIds: string[] = [];
 
@@ -116,9 +119,15 @@ export function createMockPanels(storyText: string): Panel[] {
         const speechIndicator = textFragment.match(
           /([A-ZÀ-Ỹa-zà-ỹ\s]+)\s+(nói|hỏi|trả lời|thầm nghĩ|cười)/iu,
         );
-        const speaker = speechIndicator ? speechIndicator[1].trim() : "Speaker";
-        dialogue = `${speaker}: ${quoteMatch[1].trim()}`;
-        characterIds = [speaker.toLowerCase().replace(/[^a-z0-9à-ỹ]+/gi, "-")];
+        if (speechIndicator) {
+          const speaker = speechIndicator[1].trim();
+          dialogue = speaker + ": " + quoteMatch[1].trim();
+          characterIds = [
+            speaker.toLowerCase().replace(/[^a-z0-9à-ỹ]+/gi, "-"),
+          ];
+        } else {
+          dialogue = quoteMatch[1].trim();
+        }
       }
     }
 
