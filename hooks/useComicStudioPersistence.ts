@@ -86,7 +86,38 @@ export function useComicStudioPersistence(
       setProjects(persistedSnapshot.projects);
       setActiveProjectId(persistedSnapshot.activeProjectId);
       setCharacters(persistedSnapshot.characters);
-      setPages(persistedSnapshot.pages);
+
+      const healedPages = (persistedSnapshot.pages || []).map((page) => ({
+        ...page,
+        panels: (page.panels || []).map((panel) => {
+          if (
+            panel.dialogue &&
+            panel.dialogue.trim() &&
+            (!panel.bubbles || panel.bubbles.length === 0)
+          ) {
+            const [, text = panel.dialogue] = panel.dialogue.split(":");
+            const cleanText = text.trim().slice(0, 150);
+            if (cleanText) {
+              return {
+                ...panel,
+                bubbles: [
+                  {
+                    id: crypto.randomUUID(),
+                    text: cleanText,
+                    x: 35,
+                    y: 15,
+                    width: 30,
+                    height: 12,
+                  },
+                ],
+              };
+            }
+          }
+          return panel;
+        }),
+      }));
+
+      setPages(healedPages);
       setActivePageId(persistedSnapshot.activePageId);
       setStoryTitle(persistedSnapshot.storyTitle);
       setStoryText(persistedSnapshot.storyText);

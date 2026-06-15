@@ -57,10 +57,23 @@ export function usePanelActions({
             patch.dialogue !== panel.dialogue
           ) {
             const cleanText = dialogueToBubble(patch.dialogue);
-            if (panel.bubbles.length > 0) {
-              updatedPanel.bubbles = panel.bubbles.map((bubble, idx) =>
-                idx === 0 ? { ...bubble, text: cleanText } : bubble,
-              );
+            if (cleanText.trim()) {
+              if (panel.bubbles.length > 0) {
+                updatedPanel.bubbles = panel.bubbles.map((bubble, idx) =>
+                  idx === 0 ? { ...bubble, text: cleanText } : bubble,
+                );
+              } else {
+                updatedPanel.bubbles = [
+                  {
+                    id: crypto.randomUUID(),
+                    text: cleanText,
+                    x: 35,
+                    y: 15,
+                    width: 30,
+                    height: 12,
+                  },
+                ];
+              }
             }
           }
 

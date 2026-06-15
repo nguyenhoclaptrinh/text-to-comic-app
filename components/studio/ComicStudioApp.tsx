@@ -27,7 +27,7 @@ export function ComicStudioApp() {
         setView={actions.setView}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
-      <section className="flex min-w-0 flex-1 flex-col pt-14 md:pt-14 pb-16 md:pb-0">
+      <section className="flex min-w-0 flex-1 flex-col pt-14 md:pt-16 pb-16 md:pb-0">
         <ActiveView state={state} actions={actions} />
       </section>
       {state.exportOpen ? (
@@ -64,6 +64,7 @@ function ActiveView({
         projects={state.projects}
         activeProjectId={state.activeProjectId}
         onSelectProject={actions.selectProject}
+        onDeleteProject={actions.deleteProject}
         onAnalyze={(title, text, style, genre, aspectRatio) =>
           actions.analyzeStory(style, title, text, genre, aspectRatio)
         }

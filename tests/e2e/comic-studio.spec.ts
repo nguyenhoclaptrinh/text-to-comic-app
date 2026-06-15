@@ -55,7 +55,7 @@ test("creates, generates, edits, and exports a comic", async ({ page }) => {
     .getByRole("button", { name: "Xuất file" })
     .click();
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: /Tải file|Xuất phần đã có/ }).click();
+  await page.getByRole("button", { name: "Lưu file" }).click();
   const download = await downloadPromise;
   const downloadPath = `./downloads/${download.suggestedFilename()}`;
   await download.saveAs(downloadPath);

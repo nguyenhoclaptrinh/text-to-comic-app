@@ -4,7 +4,7 @@
  */
 
 import { chunkStoryText } from "@/lib/server/chunking-engine";
-import { createMockPanels } from "@/lib/studio/utils";
+import { createMockPanels, dialogueToBubble } from "@/lib/studio/utils";
 import type {
   StoryboardAiResponse,
   StoryboardResponse,
@@ -55,7 +55,18 @@ export function normalizeStoryboardAiResponse(
       characterIds: panel.characters.map(slugifyCharacterName),
       status: "draft",
       imageTone: PANEL_IMAGE_TONES[index % PANEL_IMAGE_TONES.length],
-      bubbles: [],
+      bubbles: panel.dialogue && panel.dialogue.trim()
+        ? [
+            {
+              id: crypto.randomUUID(),
+              text: dialogueToBubble(panel.dialogue),
+              x: 35,
+              y: 15,
+              width: 30,
+              height: 12,
+            },
+          ]
+        : [],
       seed: Math.floor(Math.random() * 1000000),
       style: "inherit",
     }));

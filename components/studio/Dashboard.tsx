@@ -8,6 +8,7 @@ import {
   Rocket,
   Sparkles,
   Swords,
+  Trash2,
   Wand2,
   X,
 } from "lucide-react";
@@ -21,6 +22,7 @@ export function Dashboard({
   projects,
   activeProjectId,
   onSelectProject,
+  onDeleteProject,
   onAnalyze,
   isAnalyzing,
   importError,
@@ -28,6 +30,7 @@ export function Dashboard({
   projects: Project[];
   activeProjectId: string;
   onSelectProject: (projectId: string) => void;
+  onDeleteProject: (projectId: string) => void;
   onAnalyze: (
     title: string,
     text: string,
@@ -136,6 +139,11 @@ export function Dashboard({
               project={project}
               selected={activeProjectId === project.id}
               onSelect={() => onSelectProject(project.id)}
+              onDelete={() => {
+                if (confirm(`Bạn có chắc chắn muốn xóa dự án "${project.title}" không?`)) {
+                  onDeleteProject(project.id);
+                }
+              }}
             />
           ))}
         </div>
@@ -393,38 +401,53 @@ function ProjectCard({
   project,
   selected,
   onSelect,
+  onDelete,
 }: {
   project: Project;
   selected: boolean;
   onSelect: () => void;
+  onDelete: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`min-h-56 rounded-xl border bg-surface p-4 text-left transition hover:border-primary/50 ${
+    <div
+      className={`relative group min-h-56 rounded-xl border bg-surface p-4 text-left transition ${
         selected
           ? "border-primary/60 shadow-lg shadow-primary/5"
           : "border-border-main"
       }`}
     >
-      <div
-        className="mb-4 grid h-28 grid-cols-3 gap-2 rounded-lg bg-background p-3"
-        aria-hidden="true"
+      {/* Delete button absolutely positioned at the top-right of the card */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        aria-label={`Xóa dự án ${project.title}`}
+        className="absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:border-red-500 hover:bg-red-500/20 hover:text-red-300 transition shadow-sm backdrop-blur-sm cursor-pointer"
       >
-        <div className="rounded-md bg-slate-800/80 dark:bg-slate-800" />
-        <div className="rounded-md bg-zinc-400/80 dark:bg-zinc-700" />
-        <div className="rounded-md bg-stone-400/80 dark:bg-stone-700" />
+        <Trash2 size={14} />
+      </button>
+
+      <div onClick={onSelect} className="cursor-pointer">
+        <div
+          className="mb-4 grid h-28 grid-cols-3 gap-2 rounded-lg bg-background p-3"
+          aria-hidden="true"
+        >
+          <div className="rounded-md bg-slate-800/80 dark:bg-slate-800" />
+          <div className="rounded-md bg-zinc-400/80 dark:bg-zinc-700" />
+          <div className="rounded-md bg-stone-400/80 dark:bg-stone-700" />
+        </div>
+        <div className="flex items-center justify-between gap-3 pr-2">
+          <h2 className="min-w-0 truncate text-base font-semibold text-text-primary group-hover:text-primary transition-colors">
+            {project.title}
+          </h2>
+          <ProjectStatusPill status={project.status} />
+        </div>
+        <div className="mt-3 text-sm text-text-secondary">
+          {project.panelCount} khung hình · Cập nhật {project.updatedAt}
+        </div>
       </div>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="min-w-0 truncate text-base font-semibold text-text-primary">
-          {project.title}
-        </h2>
-        <ProjectStatusPill status={project.status} />
-      </div>
-      <div className="mt-3 text-sm text-text-secondary">
-        {project.panelCount} khung hình · Cập nhật {project.updatedAt}
-      </div>
-    </button>
+    </div>
   );
 }

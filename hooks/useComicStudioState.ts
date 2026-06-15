@@ -59,12 +59,43 @@ export function useComicStudioState() {
   // 2. Phân rã Trạng thái Nhân vật & Casting
   const casting = useCastingState([]);
 
+  const activeCharacters = useMemo(() => {
+    return casting.characters.filter((c) => {
+      const pId = c.projectId || INITIAL_PROJECT_ID;
+      return pId === nav.activeProjectId;
+    });
+  }, [casting.characters, nav.activeProjectId]);
+
   const activeProject =
     projects.find((project) => project.id === nav.activeProjectId) ??
     projects[0];
 
+  const activeProjectPages = useMemo(() => {
+    return pages.filter((page) => {
+      const pId = page.projectId || INITIAL_PROJECT_ID;
+      return pId === nav.activeProjectId;
+    });
+  }, [pages, nav.activeProjectId]);
+
+  const activeProjectPagesWithGlobalIndices = useMemo(() => {
+    let globalIndex = 0;
+    const sortedPages = [...activeProjectPages].sort((a, b) => a.orderIndex - b.orderIndex);
+    return sortedPages.map((page) => ({
+      ...page,
+      panels: page.panels.map((panel) => {
+        globalIndex++;
+        return {
+          ...panel,
+          orderIndex: globalIndex,
+        };
+      }),
+    }));
+  }, [activeProjectPages]);
+
   const activePage =
-    pages.find((page) => page.id === nav.activePageId) ?? pages[0];
+    activeProjectPagesWithGlobalIndices.find((page) => page.id === nav.activePageId) ??
+    activeProjectPagesWithGlobalIndices[0] ??
+    pages[0];
 
   const panels = activePage?.panels ?? [];
 
@@ -118,8 +149,8 @@ export function useComicStudioState() {
 
   // 4. Lớp Actions điều hành Panel
   const panelActions = usePanelActions({
-    pages,
-    characters: casting.characters,
+    pages: activeProjectPages,
+    characters: activeCharacters,
     selectedPanelId,
     setProjects,
     setPages,
@@ -176,22 +207,39 @@ export function useComicStudioState() {
         panels: page.panels.map((p) => ({ ...p, style: "inherit" as const })),
       }));
 
-      setProjects((current) => [
-        {
-          ...createProject(
-            projectId,
-            finalTitle,
-            countPanelsForProject(pagesWithCorrectProjectId, projectId),
-            genre,
-            aspectRatio,
-          ),
-          style,
-        },
-        ...current,
-      ]);
+      setProjects((current) => {
+        const next = [
+          {
+            ...createProject(
+              projectId,
+              finalTitle,
+              countPanelsForProject(pagesWithCorrectProjectId, projectId),
+              genre,
+              aspectRatio,
+            ),
+            style,
+          },
+          ...current,
+        ];
+        return current.length === 1 && current[0].id === INITIAL_PROJECT_ID && current[0].panelCount === 0
+          ? next.filter((p) => p.id !== INITIAL_PROJECT_ID)
+          : next;
+      });
       nav.setActiveProjectId(projectId);
 
-      setPages(pagesWithCorrectProjectId);
+      setPages((current) => {
+        const isInitialEmpty =
+          current.length === 1 &&
+          current[0].id === INITIAL_PAGE_ID &&
+          (current[0].panels.length === 0 ||
+            (current[0].panels.length === 1 &&
+              current[0].panels[0].scenePrompt.startsWith("Blank panel")));
+        
+        if (isInitialEmpty) {
+          return pagesWithCorrectProjectId;
+        }
+        return [...pagesWithCorrectProjectId, ...current];
+      });
 
       // Trích xuất nhân vật tự động từ các panels
       const detectedIds = new Set<string>();
@@ -205,6 +253,21 @@ export function useComicStudioState() {
         });
       });
 
+      const occurrences: Record<string, number> = {};
+      pagesWithCorrectProjectId.forEach((page) => {
+        page.panels.forEach((panel) => {
+          panel.characterIds.forEach((id) => {
+            if (id && id !== "unknown-character") {
+              occurrences[id] = (occurrences[id] || 0) + 1;
+            }
+          });
+        });
+      });
+
+      const sortedIds = Array.from(detectedIds).sort(
+        (a, b) => (occurrences[b] || 0) - (occurrences[a] || 0)
+      );
+
       const colors = [
         "#8b5cf6",
         "#ef4444",
@@ -213,20 +276,37 @@ export function useComicStudioState() {
         "#3b82f6",
         "#ec4899",
       ];
-      const newCharactersList = Array.from(detectedIds).map((id, idx) => {
+      const newCharactersList = sortedIds.map((id, idx) => {
         const name = prettifyCharacterId(id) || `Nhân vật ${idx + 1}`;
+        const count = occurrences[id] || 0;
+        const priority = idx + 1;
+        
+        let role = "Vai phụ";
+        if (idx === 0) {
+          role = "Vai chính";
+        } else if (count === 1) {
+          role = "Quần chúng";
+        }
+
+        const gender = detectGender(id, name, finalText);
 
         return {
           id,
+          projectId,
           name,
-          role: idx === 0 ? "Main protagonist" : "Supporting role",
-          description: `Nhân vật trong truyện: ${name}.`,
+          role,
+          gender,
+          priority,
+          description: `Nhân vật ${name}. Xuất hiện trong ${count} khung hình.`,
           color: colors[idx % colors.length],
         };
       });
 
       if (newCharactersList.length > 0) {
-        casting.setCharacters(newCharactersList);
+        casting.setCharacters((current) => [
+          ...newCharactersList,
+          ...current.filter((c) => c.projectId !== projectId),
+        ]);
       }
 
       const firstPage = pagesWithCorrectProjectId[0] || generatedPages[0];
@@ -243,11 +323,12 @@ export function useComicStudioState() {
 
   function addPage() {
     const newPageId = crypto.randomUUID();
+    const newPageIndex = activeProjectPages.length + 1;
     const newPage = {
       id: newPageId,
       projectId: nav.activeProjectId,
-      orderIndex: pages.length + 1,
-      title: `Page ${pages.length + 1}`,
+      orderIndex: newPageIndex,
+      title: `Page ${newPageIndex}`,
       panels: [
         {
           id: crypto.randomUUID(),
@@ -277,16 +358,33 @@ export function useComicStudioState() {
   }
 
   function deletePage(pageId: string) {
-    const nextPages = pages.filter((page) => page.id !== pageId);
-    if (nextPages.length === 0) {
+    const pageToDelete = pages.find((p) => p.id === pageId);
+    if (!pageToDelete) return;
+    const projectId = pageToDelete.projectId || INITIAL_PROJECT_ID;
+
+    const remainingPages = pages.filter((page) => page.id !== pageId);
+    const remainingProjectPages = remainingPages.filter((page) => {
+      const pId = page.projectId || INITIAL_PROJECT_ID;
+      return pId === projectId;
+    });
+
+    if (remainingProjectPages.length === 0) {
       return;
     }
 
-    const reorderedPages = nextPages.map((page, idx) => ({
-      ...page,
-      orderIndex: idx + 1,
-      title: `Page ${idx + 1}`,
-    }));
+    let projectIndex = 0;
+    const reorderedPages = remainingPages.map((page) => {
+      const pId = page.projectId || INITIAL_PROJECT_ID;
+      if (pId === projectId) {
+        projectIndex++;
+        return {
+          ...page,
+          orderIndex: projectIndex,
+          title: `Page ${projectIndex}`,
+        };
+      }
+      return page;
+    });
 
     setPages(reorderedPages);
     setProjects((currentProjects) =>
@@ -294,10 +392,14 @@ export function useComicStudioState() {
     );
 
     if (nav.activePageId === pageId) {
-      const fallbackPage = reorderedPages[0];
+      const fallbackPage = reorderedPages.find((page) => {
+        const pId = page.projectId || INITIAL_PROJECT_ID;
+        return pId === projectId;
+      }) || reorderedPages[0];
+
       nav.setActivePageId(fallbackPage.id);
-      nav.setSelectedPanelId(fallbackPage.panels[0].id);
-      nav.setSelectedBubbleId(fallbackPage.panels[0].bubbles[0]?.id ?? "");
+      nav.setSelectedPanelId(fallbackPage.panels[0]?.id ?? "");
+      nav.setSelectedBubbleId(fallbackPage.panels[0]?.bubbles[0]?.id ?? "");
     }
   }
 
@@ -351,12 +453,65 @@ export function useComicStudioState() {
     nav.setSelectedBubbleId("");
   }
 
+  function deleteProject(projectId: string) {
+    const remainingProjects = projects.filter((p) => p.id !== projectId);
+    const nextProject = remainingProjects[0] || INITIAL_PROJECT;
+
+    let newActivePageId = "";
+    let newActivePanelId = "";
+
+    if (nav.activeProjectId === projectId) {
+      const nextProjectPages = pages.filter((page) => page.projectId === nextProject.id);
+      if (nextProjectPages.length > 0) {
+        newActivePageId = nextProjectPages[0].id;
+        newActivePanelId = nextProjectPages[0].panels[0]?.id ?? "";
+      } else if (nextProject.id === INITIAL_PROJECT_ID) {
+        newActivePageId = crypto.randomUUID();
+      }
+    }
+
+    casting.setCharacters((current) => current.filter((c) => c.projectId !== projectId));
+
+    setProjects((current) => {
+      const updated = current.filter((p) => p.id !== projectId);
+      return updated.length > 0 ? updated : [INITIAL_PROJECT];
+    });
+
+    setPages((currentPages) => {
+      const updated = currentPages.filter((page) => page.projectId !== projectId);
+      if (nav.activeProjectId === projectId && nextProject.id === INITIAL_PROJECT_ID) {
+        const nextProjectPages = updated.filter((page) => page.projectId === INITIAL_PROJECT_ID);
+        if (nextProjectPages.length === 0) {
+          const defaultPage = {
+            ...INITIAL_PAGE,
+            id: newActivePageId || crypto.randomUUID(),
+          };
+          return [defaultPage, ...updated];
+        }
+      }
+      return updated;
+    });
+
+    if (nav.activeProjectId === projectId) {
+      nav.setActiveProjectId(nextProject.id);
+      if (newActivePageId) {
+        nav.setActivePageId(newActivePageId);
+        nav.setSelectedPanelId(newActivePanelId);
+        nav.setSelectedBubbleId("");
+      } else {
+        nav.setActivePageId("");
+        nav.setSelectedPanelId("");
+        nav.setSelectedBubbleId("");
+      }
+    }
+  }
+
   // 5. Phân rã Trạng thái Kéo thả Bong bóng thoại
   const drag = useBubbleDragState(updateBubble);
 
   const allPanels = useMemo(
-    () => getPanelsForProject(pages, nav.activeProjectId),
-    [pages, nav.activeProjectId],
+    () => activeProjectPagesWithGlobalIndices.flatMap((page) => page.panels),
+    [activeProjectPagesWithGlobalIndices],
   );
 
   return {
@@ -365,8 +520,8 @@ export function useComicStudioState() {
       projects,
       activeProjectId: nav.activeProjectId,
       activeProject,
-      characters: casting.characters,
-      pages,
+      characters: activeCharacters,
+      pages: activeProjectPagesWithGlobalIndices,
       activePageId: nav.activePageId,
       panels,
       allPanels,
@@ -399,11 +554,12 @@ export function useComicStudioState() {
       generatePanel: panelActions.generatePanel,
       generateAll: panelActions.generateAll,
       movePanel: panelActions.movePanel,
-      addCharacter: casting.addCharacter,
-        deleteCharacter: casting.deleteCharacter,
+      addCharacter: () => casting.addCharacter(nav.activeProjectId),
+      deleteCharacter: casting.deleteCharacter,
       updateCharacter: casting.updateCharacter,
       addPage,
       deletePage,
+      deleteProject,
       setActivePageId: nav.setActivePageId,
       addBubble,
       updateBubble,
@@ -419,4 +575,49 @@ function prettifyCharacterId(characterId: string) {
     .filter((word) => word.length > 1)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function detectGender(id: string, name: string, storyText: string): "Nam" | "Nữ" | "Khác" {
+  const lowerText = storyText.toLowerCase();
+  const lowerName = name.toLowerCase();
+  const lowerId = id.toLowerCase();
+  
+  if (/\b(cô|nàng|nữ|chị|bà|mẹ|vợ|am|hoa)\b/i.test(lowerName)) {
+    return "Nữ";
+  }
+  if (/\b(anh|chàng|cậu|nam|ông|bố|chồng|lão|tể|phu)\b/i.test(lowerName)) {
+    return "Nam";
+  }
+  
+  const sentences = lowerText.split(/[.!?\n]+/);
+  let femaleScore = 0;
+  let maleScore = 0;
+  
+  for (const sentence of sentences) {
+    if (sentence.includes(lowerName) || sentence.includes(lowerId)) {
+      if (/\b(cô ấy|nàng|chị ấy|thiếu nữ|nữ tử|nữ nhân|bà ấy|mẹ|vợ|cô|chị|em gái)\b/.test(sentence)) {
+        femaleScore++;
+      }
+      if (/\b(anh ấy|chàng|cậu ấy|nam nhân|ông ấy|bố|chồng|anh|cậu|em trai|gã|hắn)\b/.test(sentence)) {
+        maleScore++;
+      }
+    }
+  }
+  
+  if (femaleScore > maleScore) {
+    return "Nữ";
+  }
+  if (maleScore > femaleScore) {
+    return "Nam";
+  }
+  
+  // Endings check for common Vietnamese names
+  if (/\b(hùng|cường|minh|tuấn|kiên|hoàng|dũng|sơn|hải|phong|vũ|thành|đạt|nam|trung|khánh|lâm|thịnh|tèo|tí)\b/.test(lowerName)) {
+    return "Nam";
+  }
+  if (/\b(hoa|lan|mai|cúc|vy|trang|hương|nhung|phương|thảo|linh|hà|chi|diệp|anh|tuyết|ngọc|nhi|quỳnh|thư)\b/.test(lowerName)) {
+    return "Nữ";
+  }
+  
+  return "Khác";
 }
