@@ -136,12 +136,20 @@ export function createMockPanels(storyText: string): Panel[] {
     }
 
     const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 300)}. Highly detailed, comic book style.`;
+    const scenePromptVi = `Một khung truyện tranh minh họa: ${textFragment.slice(0, 300)}. Phong cách chi tiết, đậm chất truyện tranh.`;
+    const dialogueVi = dialogue ? `[VI] ${dialogue}` : "";
 
     return {
       id: crypto.randomUUID(),
       orderIndex: index + 1,
       scenePrompt,
+      scenePromptDisplayEn: scenePrompt,
+      scenePromptDisplayVi: scenePromptVi,
+      scenePromptDisplay: scenePrompt,
       dialogue,
+      dialogueDisplayEn: dialogue,
+      dialogueDisplayVi: dialogueVi,
+      dialogueDisplay: dialogue,
       characterIds,
       status: "draft",
       imageTone: defaultTones[index % defaultTones.length],

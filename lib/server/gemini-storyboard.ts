@@ -17,6 +17,8 @@ import {
   routeAiModels,
 } from "@/lib/server/ai-router";
 import { chunkStoryText } from "@/lib/server/chunking-engine";
+import { localizeStoryboardForDisplay } from "@/lib/server/storyboard-localization";
+import { getPanelBubbleSeed, isSeedBubbleText } from "@/lib/studio/display";
 import {
   normalizeStoryboardAiResponse,
   slugifyCharacterName,
@@ -98,6 +100,7 @@ export async function generateMultiPageStoryboard(
   const chunks = chunkStoryText(input.storyText, 4500);
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
   const preferredModel = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+  const outputLanguage = input.outputLanguage || "en";
 
   const pages: Page[] = [];
   const charactersMap = new Map<string, Character>();
@@ -131,8 +134,54 @@ export async function generateMultiPageStoryboard(
           panels = normalizeStoryboardAiResponse(geminiResponse.storyboard);
           finalUsedModel = geminiResponse.usedModel;
 
+          const localized = await localizeStoryboardForDisplay({
+            storyboard: geminiResponse.storyboard,
+            apiKey,
+            model: geminiResponse.usedModel,
+          }).catch((err) => {
+            console.warn("[Gemini Localization] Error on page " + (index + 1) + ":", err);
+            return null;
+          });
+
+          panels = panels.map((panel) => {
+            const localizedPanel = localized?.panels.find(
+              (item) => item.orderIndex === panel.orderIndex,
+            );
+
+            const nextPanel = {
+              ...panel,
+              scenePromptDisplayEn:
+                localizedPanel?.scenePromptDisplayEn || panel.scenePrompt,
+              scenePromptDisplayVi:
+                localizedPanel?.scenePromptDisplayVi || panel.scenePrompt,
+              dialogueDisplayEn:
+                localizedPanel?.dialogueDisplayEn || panel.dialogue,
+              dialogueDisplayVi:
+                localizedPanel?.dialogueDisplayVi || panel.dialogue,
+            };
+
+            const canSyncSeedBubble =
+              nextPanel.bubbles.length === 1 &&
+              isSeedBubbleText(nextPanel, nextPanel.bubbles[0]?.text || "");
+            const nextBubbleText = getPanelBubbleSeed(nextPanel, outputLanguage);
+
+            return {
+              ...nextPanel,
+              bubbles: canSyncSeedBubble
+                ? nextBubbleText
+                  ? nextPanel.bubbles.map((bubble, idx) =>
+                      idx === 0 ? { ...bubble, text: nextBubbleText } : bubble,
+                    )
+                  : []
+                : nextPanel.bubbles,
+            };
+          });
+
           if (geminiResponse.storyboard.characters) {
             for (const c of geminiResponse.storyboard.characters) {
+              const localizedCharacter = localized?.characters?.find(
+                (item) => item.name === c.name,
+              );
               const id = slugifyCharacterName(c.name);
               if (!charactersMap.has(id)) {
                 charactersMap.set(id, {
@@ -142,6 +191,12 @@ export async function generateMultiPageStoryboard(
                   role: c.role,
                   gender: c.gender,
                   description: c.description,
+                  descriptionDisplayEn:
+                    localizedCharacter?.descriptionDisplayEn || c.description,
+                  descriptionDisplayVi:
+                    localizedCharacter?.descriptionDisplayVi || c.description,
+                  descriptionDisplay:
+                    localizedCharacter?.descriptionDisplayVi || c.description,
                   color: colors[charColorIdx % colors.length],
                 });
                 charColorIdx++;
@@ -331,9 +386,10 @@ function extractGeminiText(data: unknown) {
 function createStoryboardPrompt({ storyTitle, storyText }: StoryboardRequest) {
   return [
     "You are a storyboard assistant for an AI-assisted comic creation app.",
-    "Convert the story into 3 to 6 comic panels.",
+    "Convert the story into 3 to 6 comic panels in English.",
     "Each panel must be visually actionable for image generation.",
     "Keep dialogue short enough for speech bubbles.",
+    "Return scenePrompt, dialogue, and character descriptions in English only.",
     "",
     "Also analyze and extract the complete list of characters appearing in the story. For each character, provide:",
     "- name: Their name",
@@ -349,6 +405,7 @@ function createStoryboardPrompt({ storyTitle, storyText }: StoryboardRequest) {
 function createRepairPrompt(rawText: string) {
   return [
     "Repair the following response into valid JSON that matches this shape:",
+    "Ensure all scenePrompt, dialogue, and description values remain in English.",
     '{"panels":[{"orderIndex":1,"scenePrompt":"...","characters":["..."],"dialogue":"..."}],"characters":[{"name":"...","gender":"Nam/Nữ/Khác","role":"Vai chính/Vai phụ/Phản diện/Quần chúng","description":"..."}]}',
     "Return JSON only.",
     rawText,

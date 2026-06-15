@@ -37,13 +37,16 @@ export class StudioAiError extends Error {
 export async function analyzeStoryToPages({
   storyTitle,
   storyText,
+  outputLanguage = "en",
 }: {
   storyTitle: string;
   storyText: string;
+  outputLanguage?: "en" | "vi";
 }): Promise<{ pages: Page[]; characters?: Character[] }> {
   const parsedRequest = StoryboardRequestSchema.safeParse({
     storyTitle,
     storyText,
+    outputLanguage,
   });
 
   if (!parsedRequest.success) {

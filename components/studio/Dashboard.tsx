@@ -37,6 +37,7 @@ export function Dashboard({
     style: string,
     genre?: string,
     aspectRatio?: string,
+    outputLanguage?: "en" | "vi",
   ) => Promise<void>;
   isAnalyzing: boolean;
   importError: string;
@@ -76,7 +77,7 @@ export function Dashboard({
       return;
     }
     try {
-      await onAnalyze(title, storyText, style, genre, aspectRatio);
+      await onAnalyze(title, storyText, style, genre, aspectRatio, "vi");
       setIsOpen(false);
     } catch {
       // Giữ modal để hiển thị lỗi

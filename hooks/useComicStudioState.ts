@@ -21,6 +21,7 @@ import {
   summarizeGeneration,
   syncProjectPanelCounts,
 } from "@/lib/studio/selectors";
+import { getPanelBubbleSeed, isSeedBubbleText } from "@/lib/studio/display";
 import { updatePanelBubble } from "@/lib/studio/utils";
 import type { Bubble, Page, Project } from "@/lib/studio/types";
 
@@ -49,6 +50,7 @@ export function useComicStudioState() {
   const [pages, setPages] = useState<Page[]>([INITIAL_PAGE]);
   const [storyTitle, setStoryTitle] = useState("");
   const [storyText, setStoryText] = useState("");
+  const [storyOutputLanguage, setStoryOutputLanguage] = useState<"en" | "vi">("en");
   const [importError, setImportError] = useState("");
   const [isAnalyzingStory, setIsAnalyzingStory] = useState(false);
 
@@ -130,6 +132,7 @@ export function useComicStudioState() {
       activePageId: nav.activePageId,
       storyTitle,
       storyText,
+      storyOutputLanguage,
       selectedPanelId,
       selectedBubbleId,
     },
@@ -141,6 +144,7 @@ export function useComicStudioState() {
       setActivePageId: nav.setActivePageId,
       setStoryTitle,
       setStoryText,
+      setStoryOutputLanguage,
       setSelectedPanelId: nav.setSelectedPanelId,
       setSelectedBubbleId: nav.setSelectedBubbleId,
     },
@@ -156,6 +160,7 @@ export function useComicStudioState() {
     setSelectedPanelId: nav.setSelectedPanelId,
     setSelectedBubbleId: nav.setSelectedBubbleId,
     projectStyle: activeProject?.style || "webtoon",
+    displayLanguage: activeProject?.outputLanguage || "en",
   });
 
   function selectProject(projectId: string) {
@@ -177,17 +182,61 @@ export function useComicStudioState() {
     );
   }
 
+  function setProjectOutputLanguage(language: "en" | "vi") {
+    const targetProjectId = nav.activeProjectId;
+
+    setProjects((current) =>
+      current.map((project) =>
+        project.id === targetProjectId
+          ? { ...project, outputLanguage: language }
+          : project,
+      ),
+    );
+
+    setPages((currentPages) =>
+      currentPages.map((page) => {
+        if (page.projectId !== targetProjectId) {
+          return page;
+        }
+
+        return {
+          ...page,
+          panels: page.panels.map((panel) => {
+            if (panel.bubbles.length !== 1) {
+              return panel;
+            }
+
+            const bubble = panel.bubbles[0];
+            if (!bubble || !isSeedBubbleText(panel, bubble.text)) {
+              return panel;
+            }
+
+            const nextBubbleText = getPanelBubbleSeed(panel, language);
+            return {
+              ...panel,
+              bubbles: nextBubbleText
+                ? [{ ...bubble, text: nextBubbleText }]
+                : [],
+            };
+          }),
+        };
+      }),
+    );
+  }
+
   async function analyzeStory(
     style: string = "webtoon",
     overrideTitle?: string,
     overrideText?: string,
     genre?: string,
     aspectRatio?: string,
+    overrideOutputLanguage?: "en" | "vi",
   ) {
     setIsAnalyzingStory(true);
 
     const finalTitle = overrideTitle !== undefined ? overrideTitle : storyTitle;
     const finalText = overrideText !== undefined ? overrideText : storyText;
+    const finalOutputLanguage = overrideOutputLanguage ?? storyOutputLanguage;
 
     if (overrideTitle !== undefined) setStoryTitle(overrideTitle);
     if (overrideText !== undefined) setStoryText(overrideText);
@@ -197,6 +246,7 @@ export function useComicStudioState() {
       const { pages: generatedPages, characters: generatedCharacters } = await analyzeStoryToPages({
         storyTitle: finalTitle,
         storyText: finalText,
+        outputLanguage: finalOutputLanguage,
       });
 
       setImportError("");
@@ -217,6 +267,7 @@ export function useComicStudioState() {
               aspectRatio,
             ),
             style,
+            outputLanguage: finalOutputLanguage,
           },
           ...current,
         ];
@@ -475,6 +526,7 @@ export function useComicStudioState() {
       allPanels,
       storyTitle,
       storyText,
+      storyOutputLanguage,
       importError,
       isAnalyzingStory,
       selectedPanelId,
@@ -490,6 +542,7 @@ export function useComicStudioState() {
       setView: nav.setView,
       setStoryTitle,
       setStoryText,
+      setStoryOutputLanguage,
       setSelectedPanelId: nav.setSelectedPanelId,
       setSelectedBubbleId: nav.setSelectedBubbleId,
       setDragging: drag.setDragging,
@@ -497,6 +550,7 @@ export function useComicStudioState() {
       selectProject,
       analyzeStory,
       updateProjectStyle,
+      setProjectOutputLanguage,
       updatePanel: panelActions.updatePanel,
       deletePanel: panelActions.deletePanel,
       generatePanel: panelActions.generatePanel,

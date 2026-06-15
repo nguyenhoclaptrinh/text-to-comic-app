@@ -7,27 +7,47 @@
 
 import { useState } from "react";
 import { Download, ImageOff, PanelsTopLeft } from "lucide-react";
+
 import { ComicEditor } from "@/components/studio/ComicEditor";
 import { Dashboard } from "@/components/studio/Dashboard";
 import { ExportModal } from "@/components/studio/ExportModal";
+import { SettingsModal } from "@/components/studio/SettingsModal";
 import { SideNavigation } from "@/components/studio/SideNavigation";
 import { StoryboardWorkspace } from "@/components/studio/StoryboardWorkspace";
-import { SettingsModal } from "@/components/studio/SettingsModal";
 import { TextImport } from "@/components/studio/TextImport";
+import { TopBar } from "@/components/studio/TopBar";
 import { useComicStudioState } from "@/hooks/useComicStudioState";
 
 export function ComicStudioApp() {
   const { state, actions } = useComicStudioState();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const showWorkspaceTopBar =
+    state.view === "storyboard" || state.view === "comic" || state.view === "export";
 
   return (
-    <main className="flex min-h-dvh bg-background text-text-primary font-sans transition-colors duration-200">
+    <main className="flex min-h-dvh bg-background font-sans text-text-primary transition-colors duration-200">
       <SideNavigation
         currentView={state.view}
         setView={actions.setView}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        displayLanguage={state.activeProject.outputLanguage || "en"}
+        onChangeDisplayLanguage={
+          state.view === "storyboard" || state.view === "comic" || state.view === "export"
+            ? actions.setProjectOutputLanguage
+            : undefined
+        }
       />
-      <section className="flex min-w-0 flex-1 flex-col pt-14 md:pt-16 pb-16 md:pb-0">
+      <section className="flex min-w-0 flex-1 flex-col pt-14 pb-16 md:pt-16 md:pb-0">
+        {showWorkspaceTopBar ? (
+          <TopBar
+            projectTitle={state.activeProject.title}
+            generationSummary={state.generationSummary}
+            isGeneratingAll={state.isGeneratingAll}
+            onGenerateAll={() => void actions.generateAll()}
+            onExport={() => actions.setExportOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
+        ) : null}
         <ActiveView state={state} actions={actions} />
       </section>
       {state.exportOpen ? (
@@ -35,6 +55,7 @@ export function ComicStudioApp() {
           panels={state.allPanels}
           projectTitle={state.activeProject.title}
           missingImages={state.missingImages}
+          outputLanguage={state.activeProject.outputLanguage || "en"}
           onClose={() => actions.setExportOpen(false)}
           onGoToStoryboard={() => {
             actions.setExportOpen(false);
@@ -65,8 +86,8 @@ function ActiveView({
         activeProjectId={state.activeProjectId}
         onSelectProject={actions.selectProject}
         onDeleteProject={actions.deleteProject}
-        onAnalyze={(title, text, style, genre, aspectRatio) =>
-          actions.analyzeStory(style, title, text, genre, aspectRatio)
+        onAnalyze={(title, text, style, genre, aspectRatio, outputLanguage) =>
+          actions.analyzeStory(style, title, text, genre, aspectRatio, outputLanguage)
         }
         isAnalyzing={state.isAnalyzingStory}
         importError={state.importError}
@@ -83,7 +104,16 @@ function ActiveView({
         isAnalyzing={state.isAnalyzingStory}
         setTitle={actions.setStoryTitle}
         setStoryText={actions.setStoryText}
-        onAnalyze={(style) => void actions.analyzeStory(style)}
+        onAnalyze={(style, outputLanguage) =>
+          void actions.analyzeStory(
+            style,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            outputLanguage,
+          )
+        }
       />
     );
   }
@@ -156,6 +186,7 @@ function ActiveView({
       projectStyle={state.activeProject.style}
       projectGenre={state.activeProject.genre}
       projectAspectRatio={state.activeProject.aspectRatio}
+      outputLanguage={state.activeProject.outputLanguage || "en"}
     />
   );
 }

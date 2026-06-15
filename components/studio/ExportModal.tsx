@@ -7,6 +7,7 @@ import { Download, Image as ImageIcon, Loader2, X } from "lucide-react";
 import { useState } from "react";
 
 import { ComicPanelArt } from "@/components/studio/PanelArtwork";
+import { type DisplayLanguage, getPanelScenePromptDisplay } from "@/lib/studio/display";
 import { exportComicPng } from "@/lib/studio/export-renderer";
 import type { Panel } from "@/lib/studio/types";
 
@@ -18,12 +19,14 @@ export function ExportModal({
   missingImages,
   onClose,
   onGoToStoryboard,
+  outputLanguage = "en",
 }: {
   panels: Panel[];
   projectTitle: string;
   missingImages: number;
   onClose: () => void;
   onGoToStoryboard: () => void;
+  outputLanguage?: DisplayLanguage;
 }) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<ExportStatus>("idle");
@@ -143,8 +146,8 @@ export function ExportModal({
                 <article key={panel.id} className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
                     <span className="font-medium">Khung {panel.orderIndex}</span>
-                    <span className="italic text-[10px] text-zinc-500 truncate max-w-[200px] md:max-w-[350px]" title={panel.scenePrompt}>
-                      {panel.scenePrompt}
+                    <span className="italic text-[10px] text-zinc-500 truncate max-w-[200px] md:max-w-[350px]" title={getPanelScenePromptDisplay(panel, outputLanguage)}>
+                      {getPanelScenePromptDisplay(panel, outputLanguage)}
                     </span>
                   </div>
                   <div

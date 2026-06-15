@@ -41,6 +41,7 @@ export function StoryboardWorkspace({
   onGoToComic,
   onGoToImport,
   onMovePanel,
+  outputLanguage = "en",
   onGenerateAll,
   onOpenExport,
   isGeneratingAll = false,
@@ -68,6 +69,7 @@ export function StoryboardWorkspace({
   onGoToComic: () => void;
   onGoToImport: () => void;
   onMovePanel: (panelId: string, direction: "up" | "down") => void;
+  outputLanguage?: "en" | "vi";
   onGenerateAll?: () => void;
   onOpenExport?: () => void;
   isGeneratingAll?: boolean;
@@ -88,6 +90,7 @@ export function StoryboardWorkspace({
         onAddCharacter={onAddCharacter}
         onUpdateCharacter={onUpdateCharacter}
         onDeleteCharacter={onDeleteCharacter}
+        outputLanguage={outputLanguage}
         className="hidden lg:block"
       />
 
@@ -123,6 +126,7 @@ export function StoryboardWorkspace({
                 key={panel.id}
                 panel={panel}
                 characters={characters}
+                outputLanguage={outputLanguage}
                 selected={panel.id === selectedPanelId}
                 disabled={isGeneratingAll}
                 canDelete={panels.length > 1}
@@ -174,6 +178,7 @@ export function StoryboardWorkspace({
                 onAddCharacter={onAddCharacter}
                 onUpdateCharacter={onUpdateCharacter}
                 onDeleteCharacter={onDeleteCharacter}
+                outputLanguage={outputLanguage}
                 className="border-none bg-transparent p-0"
               />
             </div>

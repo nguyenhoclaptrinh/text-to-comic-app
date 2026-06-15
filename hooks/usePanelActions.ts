@@ -17,7 +17,7 @@ import {
 } from "@/lib/studio/domain";
 import { getPublicKaggleEnabled } from "@/lib/studio/production-config";
 import { syncProjectPanelCounts } from "@/lib/studio/selectors";
-import { dialogueToBubble } from "@/lib/studio/utils";
+import { getPanelBubbleSeed, isSeedBubbleText } from "@/lib/studio/display";
 import type { Character, Page, Panel, Project } from "@/lib/studio/types";
 
 export function usePanelActions({
@@ -29,6 +29,7 @@ export function usePanelActions({
   setSelectedPanelId,
   setSelectedBubbleId,
   projectStyle,
+  displayLanguage,
 }: {
   pages: Page[];
   characters: Character[];
@@ -38,6 +39,7 @@ export function usePanelActions({
   setSelectedPanelId: (panelId: string) => void;
   setSelectedBubbleId: (bubbleId: string) => void;
   projectStyle: string;
+  displayLanguage: "en" | "vi";
 }) {
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
@@ -52,15 +54,18 @@ export function usePanelActions({
 
           const updatedPanel = { ...panel, ...patch };
 
-          if (
-            patch.dialogue !== undefined &&
-            patch.dialogue !== panel.dialogue
-          ) {
-            const previousSeedText = dialogueToBubble(panel.dialogue);
-            const nextSeedText = dialogueToBubble(patch.dialogue);
+          const shouldReseedBubble =
+            patch.dialogue !== undefined ||
+            patch.dialogueDisplayEn !== undefined ||
+            patch.dialogueDisplayVi !== undefined ||
+            patch.dialogueDisplay !== undefined;
+
+          if (shouldReseedBubble) {
+            const previousSeedText = getPanelBubbleSeed(panel, displayLanguage);
+            const nextSeedText = getPanelBubbleSeed(updatedPanel, displayLanguage);
             const canSyncSeedBubble =
               panel.bubbles.length === 1 &&
-              panel.bubbles[0]?.text === previousSeedText;
+              isSeedBubbleText(panel, panel.bubbles[0]?.text || "");
 
             if (canSyncSeedBubble) {
               updatedPanel.bubbles = nextSeedText
@@ -68,7 +73,7 @@ export function usePanelActions({
                     idx === 0 ? { ...bubble, text: nextSeedText } : bubble,
                   )
                 : [];
-            } else if (panel.bubbles.length === 0 && nextSeedText) {
+            } else if (panel.bubbles.length === 0 && nextSeedText && previousSeedText !== nextSeedText) {
               updatedPanel.bubbles = [
                 {
                   id: crypto.randomUUID(),

@@ -18,6 +18,7 @@ const ProjectSchema = z.object({
   status: z.enum(["draft", "storyboard", "generating", "done", "error"]),
   updatedAt: z.string().min(1),
   panelCount: z.number().int().nonnegative(),
+  outputLanguage: z.enum(["en", "vi"]).optional(),
   style: z.string().optional(),
 });
 
@@ -32,6 +33,7 @@ export const StudioSnapshotSchema = z.object({
   panels: z.array(PanelSchema).optional(),
   storyTitle: z.string(),
   storyText: z.string(),
+  storyOutputLanguage: z.enum(["en", "vi"]).optional(),
   selectedPanelId: z.string(),
   selectedBubbleId: z.string(),
 });

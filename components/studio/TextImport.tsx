@@ -34,7 +34,7 @@ export function TextImport({
   isAnalyzing: boolean;
   setTitle: (value: string) => void;
   setStoryText: (value: string) => void;
-  onAnalyze: (style: string) => void;
+  onAnalyze: (style: string, outputLanguage: "en" | "vi") => void;
 }) {
   const [showTechnicalPreview, setShowTechnicalPreview] = useState(false);
 
@@ -84,7 +84,7 @@ function StoryInputForm({
   isAnalyzing: boolean;
   setTitle: (value: string) => void;
   setStoryText: (value: string) => void;
-  onAnalyze: (style: string) => void;
+  onAnalyze: (style: string, outputLanguage: "en" | "vi") => void;
 }) {
   const [style, setStyle] = useState("webtoon");
   const templates = [
@@ -227,7 +227,7 @@ function StoryInputForm({
         </div>
         <button
           type="button"
-          onClick={() => onAnalyze(style)}
+          onClick={() => onAnalyze(style, "vi")}
           disabled={isAnalyzing}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-md shadow-violet-500/10 active:scale-95"
         >

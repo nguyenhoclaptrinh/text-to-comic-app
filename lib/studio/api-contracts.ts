@@ -25,6 +25,7 @@ export const StudioApiErrorSchema = z.object({
 export const StoryboardRequestSchema = z.object({
   storyTitle: z.string().trim().min(1).max(140),
   storyText: z.string().trim().min(1).max(12000),
+  outputLanguage: z.enum(["en", "vi"]).optional(),
 });
 
 export const StoryboardAiPanelSchema = z.object({
@@ -76,7 +77,13 @@ export const PanelSchema = z.object({
   id: z.string().min(1),
   orderIndex: z.number().int().positive(),
   scenePrompt: z.string().min(1),
+  scenePromptDisplayEn: z.string().optional(),
+  scenePromptDisplayVi: z.string().optional(),
+  scenePromptDisplay: z.string().optional(),
   dialogue: z.string(),
+  dialogueDisplayEn: z.string().optional(),
+  dialogueDisplayVi: z.string().optional(),
+  dialogueDisplay: z.string().optional(),
   characterIds: z.array(z.string().min(1)),
   status: z.enum(["draft", "queued", "generating", "success", "error"]),
   imageTone: z.string().min(1),
@@ -105,6 +112,9 @@ export const CharacterSchema = z.object({
   role: z.string().min(1),
   gender: z.enum(["Nam", "Nữ", "Khác"]).optional(),
   description: z.string().min(1),
+  descriptionDisplayEn: z.string().optional(),
+  descriptionDisplayVi: z.string().optional(),
+  descriptionDisplay: z.string().optional(),
   color: z.string().min(1),
   priority: z.number().int().positive().optional(),
 });

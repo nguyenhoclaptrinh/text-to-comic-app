@@ -123,9 +123,18 @@ async function translateToEnglish(text: string, apiKey: string): Promise<string>
   return text;
 }
 
-function extractGeminiTextLocal(data: any): string {
+function extractGeminiTextLocal(data: unknown): string {
   try {
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const obj = data as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{
+            text?: string;
+          }>;
+        };
+      }>;
+    };
+    return obj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
   } catch {
     return "";
   }
@@ -304,9 +313,9 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
     characterHeading,
     `Scene: ${compactPromptText(panel.scenePrompt, 34)}`,
     panel.dialogue
-      ? `Dialogue context: character is speaking with expression matching the scene. Do not draw any text or speech bubbles.`
+      ? `Dialogue context: character is speaking. Generate a speech bubble for the dialogue, but keep the speech bubble completely empty and blank inside with no text.`
       : "",
-    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color, no text, no words, no speech bubbles, no dialogue bubbles, no captions",
+    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color, no text, no words, no letters, no characters, keep all speech bubbles completely blank and empty inside",
     `Seed: ${panel.seed}`,
   ]
     .filter(Boolean)

@@ -7,6 +7,8 @@ import { useCallback, useMemo } from "react";
 
 import { useStudioPersistence } from "@/hooks/useStudioPersistence";
 import { createStudioSnapshot } from "@/lib/studio/persistence";
+import { getPanelBubbleSeed } from "@/lib/studio/display";
+
 import type {
   Character,
   Page,
@@ -24,6 +26,7 @@ type StudioHydrationSetters = {
   setActivePageId: (activePageId: string) => void;
   setStoryTitle: (title: string) => void;
   setStoryText: (text: string) => void;
+  setStoryOutputLanguage: (language: "en" | "vi") => void;
   setSelectedPanelId: (panelId: string) => void;
   setSelectedBubbleId: (bubbleId: string) => void;
 };
@@ -40,6 +43,7 @@ export function useComicStudioPersistence(
     activePageId,
     storyTitle,
     storyText,
+    storyOutputLanguage = "en",
     selectedPanelId,
     selectedBubbleId,
   } = state;
@@ -51,6 +55,7 @@ export function useComicStudioPersistence(
     setActivePageId,
     setStoryTitle,
     setStoryText,
+    setStoryOutputLanguage,
     setSelectedPanelId,
     setSelectedBubbleId,
   } = setters;
@@ -65,6 +70,7 @@ export function useComicStudioPersistence(
         activePageId,
         storyTitle,
         storyText,
+        storyOutputLanguage,
         selectedPanelId,
         selectedBubbleId,
       }),
@@ -76,6 +82,7 @@ export function useComicStudioPersistence(
       projects,
       selectedBubbleId,
       selectedPanelId,
+      storyOutputLanguage,
       storyText,
       storyTitle,
     ],
@@ -87,6 +94,13 @@ export function useComicStudioPersistence(
       setActiveProjectId(persistedSnapshot.activeProjectId);
       setCharacters(persistedSnapshot.characters);
 
+      const projectLanguageMap = new Map(
+        persistedSnapshot.projects.map((project) => [
+          project.id,
+          project.outputLanguage || "en",
+        ]),
+      );
+
       const healedPages = (persistedSnapshot.pages || []).map((page) => ({
         ...page,
         panels: (page.panels || []).map((panel) => {
@@ -95,8 +109,9 @@ export function useComicStudioPersistence(
             panel.dialogue.trim() &&
             (!panel.bubbles || panel.bubbles.length === 0)
           ) {
-            const [, text = panel.dialogue] = panel.dialogue.split(":");
-            const cleanText = text.trim().slice(0, 150);
+            const displayLanguage =
+              projectLanguageMap.get(page.projectId) === "vi" ? "vi" : "en";
+            const cleanText = getPanelBubbleSeed(panel, displayLanguage);
             if (cleanText) {
               return {
                 ...panel,
@@ -121,6 +136,7 @@ export function useComicStudioPersistence(
       setActivePageId(persistedSnapshot.activePageId);
       setStoryTitle(persistedSnapshot.storyTitle);
       setStoryText(persistedSnapshot.storyText);
+      setStoryOutputLanguage(persistedSnapshot.storyOutputLanguage || "en");
       setSelectedPanelId(persistedSnapshot.selectedPanelId);
       setSelectedBubbleId(persistedSnapshot.selectedBubbleId);
     },
@@ -132,6 +148,7 @@ export function useComicStudioPersistence(
       setProjects,
       setSelectedBubbleId,
       setSelectedPanelId,
+      setStoryOutputLanguage,
       setStoryText,
       setStoryTitle,
     ],

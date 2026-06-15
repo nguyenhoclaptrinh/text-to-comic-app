@@ -11,11 +11,13 @@ import {
   Settings,
   Sun,
   Moon,
+  Globe2,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import type { ReactNode } from "react";
 
 import type { View } from "@/lib/studio/types";
+import type { DisplayLanguage } from "@/lib/studio/display";
 
 type NavigationItem = {
   id: View;
@@ -34,10 +36,14 @@ export function SideNavigation({
   currentView,
   setView,
   onOpenSettings,
+  displayLanguage = "en",
+  onChangeDisplayLanguage,
 }: {
   currentView: View;
   setView: (view: View) => void;
   onOpenSettings?: () => void;
+  displayLanguage?: DisplayLanguage;
+  onChangeDisplayLanguage?: (language: DisplayLanguage) => void;
 }) {
   const { theme, toggleTheme } = useTheme();
   return (
@@ -72,6 +78,33 @@ export function SideNavigation({
 
       {/* Cột phải: Cấu hình hệ thống (căn phải) */}
       <div className="hidden md:flex md:flex-1 md:items-center md:justify-end md:gap-2">
+        {onChangeDisplayLanguage && (
+          <div className="inline-flex items-center rounded-xl border border-border-main bg-surface-elevated/50 p-1 text-xs font-medium text-text-secondary h-10 mr-1 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
+            <Globe2 size={14} className="ml-1.5 mr-1.5 text-text-secondary" />
+            <button
+              type="button"
+              onClick={() => onChangeDisplayLanguage("en")}
+              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${
+                displayLanguage === "en"
+                  ? "bg-primary text-white"
+                  : "text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeDisplayLanguage("vi")}
+              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${
+                displayLanguage === "vi"
+                  ? "bg-primary text-white"
+                  : "text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
+              }`}
+            >
+              VI
+            </button>
+          </div>
+        )}
         <button
           type="button"
           onClick={toggleTheme}
