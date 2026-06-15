@@ -50,6 +50,7 @@ export type Bubble = {
   y: number;
   width: number;
   height: number;
+  fontSize?: number;
 };
 
 export type Page = {
@@ -102,6 +103,7 @@ export type DragState = {
   offsetY: number;
   bubbleWidth: number;
   bubbleHeight: number;
+  mode?: "move" | "resize";
 };
 
 export type GenerationSummary = {

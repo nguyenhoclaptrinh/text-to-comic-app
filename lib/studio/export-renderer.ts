@@ -137,7 +137,7 @@ async function drawPanel(
     drawPanelBackground(context, panel, x, y);
     drawPanelFigures(context, x, y);
   }
-  drawPanelLabel(context, panel, x, y);
+  // drawPanelLabel(context, panel, x, y);
   drawPanelMissingState(context, panel, x, y);
   panel.bubbles.forEach((bubble) => drawBubble(context, panel, bubble, x, y));
 }
@@ -277,12 +277,13 @@ function drawBubble(
   const y = panelY + (bubble.y / 100) * EXPORT_PANEL_HEIGHT;
   const width = (bubble.width / 100) * EXPORT_PANEL_WIDTH;
 
-  // Cấu hình font trước khi đo text
-  context.font = "700 20px Arial";
+  const uiFontSize = bubble.fontSize || 14;
+  const canvasFontSize = Math.round(uiFontSize * 1.43);
+  context.font = `700 ${canvasFontSize}px Arial`;
 
-  const paddingX = 22;
-  const paddingY = 24;
-  const textLineHeight = 24;
+  const paddingX = Math.round(uiFontSize * 1.57);
+  const paddingY = Math.round(uiFontSize * 1.71);
+  const textLineHeight = Math.round(canvasFontSize * 1.2);
 
   const textHeight = calculateWrappedTextHeight(
     context,
@@ -324,7 +325,7 @@ function drawBubble(
     context,
     bubble.text,
     x + paddingX,
-    y + paddingY + 16, // Điều chỉnh baseline dòng đầu
+    y + paddingY + Math.round(canvasFontSize * 0.8), // Điều chỉnh baseline dòng đầu
     width - paddingX * 2,
     textLineHeight,
   );

@@ -289,13 +289,6 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
     )
     .filter(isDefined);
 
-  const characterContext = selectedCharacters
-    .map(
-      (character) =>
-        `${character.name}, ${compactPromptText(character.description, 18)}`,
-    )
-    .join(", ");
-
   const resolvedStyle =
     panel.style && panel.style !== "inherit" ? panel.style : "webtoon";
   const styleModifier =
@@ -305,17 +298,20 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
 
   const characterHeading =
     selectedCharacters.length > 0
-      ? `featuring character ${characterContext}`
+      ? `Characters appearing in this panel:\n` +
+        selectedCharacters
+          .map(
+            (character) =>
+              `- ${character.name}: ${compactPromptText(character.description, 80)}`,
+          )
+          .join("\n")
       : "";
 
   return [
     `Comic panel, ${styleModifier}`,
     characterHeading,
-    `Scene: ${compactPromptText(panel.scenePrompt, 34)}`,
-    panel.dialogue
-      ? `Dialogue context: character is speaking. Generate a speech bubble for the dialogue, but keep the speech bubble completely empty and blank inside with no text.`
-      : "",
-    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color, no text, no words, no letters, no characters, keep all speech bubbles completely blank and empty inside",
+    `Scene description: ${compactPromptText(panel.scenePrompt, 100)}`,
+    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color, no text, no words, no letters, no speech bubbles, no dialogue bubbles, no captions, strictly image only",
     `Seed: ${panel.seed}`,
   ]
     .filter(Boolean)

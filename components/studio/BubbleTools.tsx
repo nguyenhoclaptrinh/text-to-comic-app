@@ -83,6 +83,25 @@ function SelectedBubbleForm({
       <div className="mb-4 space-y-3">
         <div>
           <div className="mb-1 flex justify-between text-xs text-zinc-400">
+            <span>Cỡ chữ</span>
+            <span className="font-semibold text-zinc-200">
+              {selectedBubble.fontSize || 14}px
+            </span>
+          </div>
+          <input
+            type="range"
+            min="8"
+            max="30"
+            value={selectedBubble.fontSize || 14}
+            onChange={(e) =>
+              onUpdateBubble({ fontSize: parseInt(e.target.value) })
+            }
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-800 accent-violet-500"
+          />
+        </div>
+
+        <div>
+          <div className="mb-1 flex justify-between text-xs text-zinc-400">
             <span>Chiều rộng</span>
             <span className="font-semibold text-zinc-200">
               {selectedBubble.width}%

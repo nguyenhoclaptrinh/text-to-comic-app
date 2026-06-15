@@ -71,6 +71,7 @@ export const BubbleSchema = z.object({
   y: z.number(),
   width: z.number().positive(),
   height: z.number().positive(),
+  fontSize: z.number().optional(),
 });
 
 export const PanelSchema = z.object({
