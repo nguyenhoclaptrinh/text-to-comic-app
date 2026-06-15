@@ -73,7 +73,7 @@ function CharacterCard({
   onGenerateImage?: () => Promise<string | void>;
   outputLanguage?: DisplayLanguage;
 }) {
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(character.avatarUrl);
   const [loading, setLoading] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
 
@@ -86,14 +86,19 @@ function CharacterCard({
     getCharacterDescriptionDisplay(character, outputLanguage),
   );
 
-  // Sync internal state when character prop changes
-  useEffect(() => {
+  const [prevCharacter, setPrevCharacter] = useState(character);
+  const [prevOutputLanguage, setPrevOutputLanguage] = useState(outputLanguage);
+
+  if (character !== prevCharacter || outputLanguage !== prevOutputLanguage) {
+    setPrevCharacter(character);
+    setPrevOutputLanguage(outputLanguage);
     setName(character.name);
     setRole(character.role);
     setGender(character.gender ?? "");
     setPriority(character.priority ?? "");
     setDescription(getCharacterDescriptionDisplay(character, outputLanguage));
-  }, [character, outputLanguage]);
+    setAvatarUrl(character.avatarUrl);
+  }
 
   const isDirty =
     name !== character.name ||

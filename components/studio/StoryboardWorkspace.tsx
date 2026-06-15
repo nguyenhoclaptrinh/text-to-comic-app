@@ -52,6 +52,7 @@ export function StoryboardWorkspace({
   projectGenre,
   projectAspectRatio,
   onApplyPageStoryboard,
+  onGenerateCharacterImage,
 }: {
   characters: Character[];
   pages: Page[];
@@ -85,6 +86,7 @@ export function StoryboardWorkspace({
     panels: Panel[],
     characters?: Character[],
   ) => void;
+  onGenerateCharacterImage?: (characterId: string) => Promise<string | void>;
 }) {
   const [isCastingOpen, setIsCastingOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -191,6 +193,7 @@ export function StoryboardWorkspace({
         onAddCharacter={onAddCharacter}
         onUpdateCharacter={onUpdateCharacter}
         onDeleteCharacter={onDeleteCharacter}
+        onGenerateImage={onGenerateCharacterImage}
         outputLanguage={outputLanguage}
         className="hidden lg:block"
       />
@@ -517,6 +520,7 @@ export function StoryboardWorkspace({
                 onAddCharacter={onAddCharacter}
                 onUpdateCharacter={onUpdateCharacter}
                 onDeleteCharacter={onDeleteCharacter}
+                onGenerateImage={onGenerateCharacterImage}
                 outputLanguage={outputLanguage}
                 className="border-none bg-transparent p-0"
               />

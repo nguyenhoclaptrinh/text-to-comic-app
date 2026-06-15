@@ -31,12 +31,29 @@ const USER_ERROR_MESSAGES: Record<StudioApiErrorCode, string> = {
 };
 
 export function toUserFacingError(error: unknown): StudioUserFacingError {
+  if (error instanceof Error) {
+    const code = isRecord(error) ? error.code : undefined;
+    const message = error.message;
+    if (isStudioApiErrorCode(code)) {
+      return {
+        code,
+        message: message || USER_ERROR_MESSAGES[code],
+        retryable: true,
+      };
+    }
+    return {
+      code: "UNKNOWN",
+      message,
+      retryable: true,
+    };
+  }
+
   if (isRecord(error)) {
     const code = error.code;
     if (isStudioApiErrorCode(code)) {
       return {
         code,
-        message: USER_ERROR_MESSAGES[code],
+        message: typeof error.message === "string" ? error.message : USER_ERROR_MESSAGES[code],
         retryable:
           typeof error.retryable === "boolean" ? error.retryable : true,
       };

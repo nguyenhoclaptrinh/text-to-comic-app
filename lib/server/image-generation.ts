@@ -190,9 +190,13 @@ async function generateRawPanelImage(
     throw new Error("Image backend is offline.");
   }
 
+  const errors: string[] = [];
+  let attempted = false;
+
   // 1. Thử dùng Hugging Face trước vì user có thể chọn model comic tốt hơn.
   const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
   if (hfToken) {
+    attempted = true;
     try {
       const prompt = createImagePrompt(input);
       return await generateHuggingFaceImage({
@@ -202,13 +206,16 @@ async function generateRawPanelImage(
         seed: input.panel.seed,
       });
     } catch (err) {
-      console.warn("[Hugging Face] Inference failed, trying Imagen...", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[Hugging Face] Inference failed: ${errMsg}`);
+      errors.push(`Hugging Face: ${errMsg}`);
     }
   }
 
   // 2. Thử dùng Imagen 4 Generate cho ảnh panel.
   const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
   if (geminiApiKey) {
+    attempted = true;
     try {
       const prompt = createImagePrompt(input);
       const { base64, mimeType, usedModel } =
@@ -227,13 +234,16 @@ async function generateRawPanelImage(
         usedProvider: "imagen",
       };
     } catch (err) {
-      console.warn("[Imagen Image] Failed, trying fallback backends...", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[Imagen Image] Failed: ${errMsg}`);
+      errors.push(`Imagen: ${errMsg}`);
     }
   }
 
   // 3. Thử dùng IMAGE_BACKEND_URL
   const endpoint = process.env.IMAGE_BACKEND_URL;
   if (endpoint) {
+    attempted = true;
     try {
       const response = await fetchWithTimeout(
         endpoint,
@@ -260,15 +270,26 @@ async function generateRawPanelImage(
           };
         }
       }
+      const errText = await response.text().catch(() => "Unknown response body");
+      const errMsg = `Image backend responded with status ${response.status}: ${errText}`;
+      console.warn(`[Image Backend] Failed: ${errMsg}`);
+      errors.push(errMsg);
     } catch (err) {
-      console.warn("[Image Backend] Failed, trying HuggingFace...", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[Image Backend] Request failed: ${errMsg}`);
+      errors.push(`Image Backend: ${errMsg}`);
     }
   }
 
-  return createFallbackPanelImageResponse(
-    input,
-    "HuggingFace/Imagen/Image backend is not configured or failed.",
-  );
+  const combinedError = errors.length > 0
+    ? errors.join(" | ")
+    : "HuggingFace/Imagen/Image backend is not configured.";
+
+  if (attempted) {
+    throw new Error(combinedError);
+  }
+
+  return createFallbackPanelImageResponse(input, combinedError);
 }
 
 function createFallbackPanelImageResponse(

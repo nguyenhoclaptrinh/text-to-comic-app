@@ -139,6 +139,7 @@ export const CharacterSchema = z.object({
   descriptionDisplayVi: z.string().optional(),
   descriptionDisplay: z.string().optional(),
   color: z.string().min(1),
+  avatarUrl: z.string().optional(),
   priority: z.number().int().positive().optional(),
 });
 

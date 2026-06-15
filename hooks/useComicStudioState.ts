@@ -13,8 +13,11 @@ import { useBubbleDragState } from "@/hooks/useBubbleDragState";
 import { createDefaultBubble, createProject } from "@/lib/studio/factories";
 import {
   analyzeStoryToPages,
+  generatePanelImage,
+  generatePanelImageWithKaggleFallback,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
+import { getPublicKaggleEnabled } from "@/lib/studio/production-config";
 import {
   countMissingImages,
   countPanelsForProject,
@@ -557,6 +560,39 @@ export function useComicStudioState() {
   // 5. Phân rã Trạng thái Kéo thả Bong bóng thoại
   const drag = useBubbleDragState(updateBubble);
 
+  async function generateCharacterImage(characterId: string): Promise<string | void> {
+    const char = casting.characters.find((c) => c.id === characterId);
+    if (!char) return;
+
+    const pseudoPanel: Panel = {
+      id: char.id,
+      orderIndex: 1,
+      scenePrompt: `Portrait profile picture of character: ${char.name}. Description: ${char.descriptionDisplayVi || char.descriptionDisplayEn || char.description || ""}`,
+      dialogue: "",
+      characterIds: [char.id],
+      status: "generating" as const,
+      imageTone: "from-zinc-900 via-stone-800 to-slate-900",
+      bubbles: [],
+      seed: Math.floor(Math.random() * 1000000),
+      style: (activeProject?.style || "webtoon") as Panel["style"],
+    };
+
+    const kaggleEnabled = getPublicKaggleEnabled();
+    const generateImagePromise = kaggleEnabled
+      ? generatePanelImageWithKaggleFallback(
+          pseudoPanel,
+          [char],
+          kaggleEnabled,
+        )
+      : generatePanelImage(pseudoPanel, [char]);
+
+    const result = await generateImagePromise;
+    if (result.imageUrl) {
+      casting.updateCharacter(characterId, { avatarUrl: result.imageUrl });
+      return result.imageUrl;
+    }
+  }
+
   const allPanels = useMemo(
     () => activeProjectPagesWithGlobalIndices.flatMap((page) => page.panels),
     [activeProjectPagesWithGlobalIndices],
@@ -608,6 +644,7 @@ export function useComicStudioState() {
       addCharacter: () => casting.addCharacter(nav.activeProjectId),
       deleteCharacter: casting.deleteCharacter,
       updateCharacter: casting.updateCharacter,
+      generateCharacterImage,
       addPage,
       deletePage,
       deleteProject,

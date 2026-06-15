@@ -39,6 +39,7 @@ export type Character = {
   descriptionDisplayVi?: string;
   descriptionDisplay?: string;
   color: string;
+  avatarUrl?: string;
   // optional priority for ordering / importance (lower = higher priority)
   priority?: number;
 };

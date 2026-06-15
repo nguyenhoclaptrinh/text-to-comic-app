@@ -194,6 +194,7 @@ function ActiveView({
       onGoToComic={() => actions.setView("comic")}
       onGoToImport={() => actions.setView("projects")}
       onUpdateCharacter={actions.updateCharacter}
+      onGenerateCharacterImage={actions.generateCharacterImage}
       onMovePanel={actions.movePanel}
       onApplyPageStoryboard={actions.applyPageStoryboard}
       projectStyle={state.activeProject.style}
