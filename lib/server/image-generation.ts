@@ -28,6 +28,8 @@ export const GEMINI_IMAGE_MODELS_POOL = [
 ];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
+export const HF_MANGA_ANIME_MODEL_FALLBACK = "stabilityai/stable-diffusion-3-medium-diffusers";
+export const HF_COMIC_GENERAL_MODEL_FALLBACK = "stabilityai/stable-diffusion-3-medium-diffusers";
 export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
 export const DEFAULT_HF_IMAGE_SIZE = "1024x1024";
 export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
@@ -72,16 +74,46 @@ async function generateRawPanelImage(
   // 1. Thử dùng Hugging Face trước vì user có thể chọn model comic tốt hơn.
   const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
   if (hfToken) {
+    const defaultModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
+    const prompt = createImagePrompt(input);
     try {
-      const prompt = createImagePrompt(input);
+      console.log(`[Hugging Face] Attempting default image model: ${defaultModel}`);
       return await generateHuggingFaceImage({
         apiToken: hfToken,
         prompt,
         panelId: input.panel.id,
         seed: input.panel.seed,
+        modelName: defaultModel,
       });
     } catch (err) {
-      console.warn("[Hugging Face] Inference failed, trying Imagen...", err);
+      console.warn(`[Hugging Face] Default model ${defaultModel} failed. Checking fallback...`, err);
+
+      const resolvedStyle =
+        input.panel.style && input.panel.style !== "inherit"
+          ? input.panel.style
+          : "webtoon";
+      const fallbackModel =
+        resolvedStyle === "manga" || resolvedStyle === "webtoon"
+          ? HF_MANGA_ANIME_MODEL_FALLBACK
+          : HF_COMIC_GENERAL_MODEL_FALLBACK;
+
+      try {
+        console.log(
+          `[Hugging Face Fallback] Attempting fallback model: ${fallbackModel} (style: ${resolvedStyle})`,
+        );
+        return await generateHuggingFaceImage({
+          apiToken: hfToken,
+          prompt,
+          panelId: input.panel.id,
+          seed: input.panel.seed,
+          modelName: fallbackModel,
+        });
+      } catch (fallbackErr) {
+        console.warn(
+          `[Hugging Face Fallback] Model ${fallbackModel} also failed. Proceeding to other providers...`,
+          fallbackErr,
+        );
+      }
     }
   }
 
@@ -181,7 +213,7 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
   const characterContext = selectedCharacters
     .map(
       (character) =>
-        `${character.name}, ${compactPromptText(character.description, 18)}`,
+        `character ${character.name} (described as: ${compactPromptText(character.description, 40)})`,
     )
     .join(", ");
 
@@ -194,15 +226,15 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
 
   const characterHeading =
     selectedCharacters.length > 0
-      ? `featuring character ${characterContext}`
+      ? `featuring ${characterContext}`
       : "";
 
   return [
     `Comic panel, ${styleModifier}`,
     characterHeading,
-    `Scene: ${compactPromptText(panel.scenePrompt, 34)}`,
+    `Scene: ${compactPromptText(panel.scenePrompt, 100)}`,
     panel.dialogue
-      ? `Dialogue mood/context: ${compactPromptText(panel.dialogue, 14)}`
+      ? `Dialogue mood/context: ${compactPromptText(panel.dialogue, 40)}`
       : "",
     "Quality: clean line art, clear face, consistent outfit, expressive pose, polished color",
     `Seed: ${panel.seed}`,
@@ -222,13 +254,14 @@ async function generateHuggingFaceImage({
   prompt,
   panelId,
   seed,
+  modelName,
 }: {
   apiToken: string;
   prompt: string;
   panelId: string;
   seed: number;
+  modelName: string;
 }): Promise<GeneratePanelResponse> {
-  const hfModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
   const hfProvider =
     process.env.HF_INFERENCE_PROVIDER || DEFAULT_HF_INFERENCE_PROVIDER;
   const hfEndpoint =
@@ -245,7 +278,7 @@ async function generateHuggingFaceImage({
         Accept: "image/png",
       },
       body: JSON.stringify({
-        model: hfModel,
+        model: modelName,
         prompt,
         size: hfImageSize,
         n: 1,
@@ -280,7 +313,7 @@ async function generateHuggingFaceImage({
       panelId,
       imageUrl: `data:image/png;base64,${imageBase64}`,
       source: "image-backend",
-      usedModel: hfModel,
+      usedModel: modelName,
       usedProvider: "huggingface",
     };
   }
@@ -299,7 +332,7 @@ async function generateHuggingFaceImage({
     panelId,
     imageUrl: `data:${contentType};base64,${base64}`,
     source: "image-backend",
-    usedModel: hfModel,
+    usedModel: modelName,
     usedProvider: "huggingface",
   };
 }
