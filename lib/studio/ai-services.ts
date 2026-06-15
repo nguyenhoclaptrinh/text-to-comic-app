@@ -41,7 +41,7 @@ export async function analyzeStoryToPages({
 }: {
   storyTitle: string;
   storyText: string;
-}): Promise<Page[]> {
+}): Promise<{ pages: Page[]; characters?: Character[] }> {
   const parsedRequest = StoryboardRequestSchema.safeParse({
     storyTitle,
     storyText,
@@ -87,7 +87,10 @@ export async function analyzeStoryToPages({
         provider: parsedResponse.data.usedProvider,
         model: parsedResponse.data.usedModel,
       });
-      return parsedResponse.data.pages;
+      return {
+        pages: parsedResponse.data.pages,
+        characters: parsedResponse.data.characters,
+      };
     }
 
     throw new StudioAiError(
@@ -98,15 +101,17 @@ export async function analyzeStoryToPages({
 
   await sleep(420);
   const panels = createMockPanels(parsedRequest.data.storyText);
-  return [
-    {
-      id: `page-${Date.now()}-1`,
-      projectId: `project-${Date.now()}`,
-      orderIndex: 1,
-      title: "Page 1",
-      panels,
-    },
-  ];
+  return {
+    pages: [
+      {
+        id: `page-${Date.now()}-1`,
+        projectId: `project-${Date.now()}`,
+        orderIndex: 1,
+        title: "Page 1",
+        panels,
+      },
+    ],
+  };
 }
 
 export async function generatePanelImage(

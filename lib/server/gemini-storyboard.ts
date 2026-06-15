@@ -17,10 +17,13 @@ import {
   routeAiModels,
 } from "@/lib/server/ai-router";
 import { chunkStoryText } from "@/lib/server/chunking-engine";
-import { normalizeStoryboardAiResponse } from "@/lib/studio/storyboard";
+import {
+  normalizeStoryboardAiResponse,
+  slugifyCharacterName,
+} from "@/lib/studio/storyboard";
 import { createMockPanels } from "@/lib/studio/utils";
 import { isDemoFallbackEnabled } from "@/lib/server/runtime-config";
-import type { Page, Panel } from "@/lib/studio/types";
+import type { Page, Panel, Character } from "@/lib/studio/types";
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
@@ -52,9 +55,26 @@ const GEMINI_RESPONSE_SCHEMA = {
         ],
       },
     },
+    characters: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          name: { type: "STRING" },
+          gender: { type: "STRING", enum: ["Nam", "Nữ", "Khác"] },
+          role: {
+            type: "STRING",
+            enum: ["Vai chính", "Vai phụ", "Phản diện", "Quần chúng"],
+          },
+          description: { type: "STRING" },
+        },
+        required: ["name", "gender", "role", "description"],
+        propertyOrdering: ["name", "gender", "role", "description"],
+      },
+    },
   },
-  required: ["panels"],
-  propertyOrdering: ["panels"],
+  required: ["panels", "characters"],
+  propertyOrdering: ["panels", "characters"],
 };
 
 export const GEMINI_TEXT_MODELS_POOL = [
@@ -70,6 +90,7 @@ export async function generateMultiPageStoryboard(
   customApiKey?: string,
 ): Promise<{
   pages: Page[];
+  characters: Character[];
   source: "gemini" | "fallback";
   usedModel?: string;
   usedProvider?: "gemini" | "fallback";
@@ -79,8 +100,19 @@ export async function generateMultiPageStoryboard(
   const preferredModel = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 
   const pages: Page[] = [];
+  const charactersMap = new Map<string, Character>();
   const source: "gemini" | "fallback" = apiKey ? "gemini" : "fallback";
   let finalUsedModel: string | undefined = undefined;
+
+  let charColorIdx = 0;
+  const colors = [
+    "#8b5cf6",
+    "#ef4444",
+    "#10b981",
+    "#f59e0b",
+    "#3b82f6",
+    "#ec4899",
+  ];
 
   for (const [index, chunk] of chunks.entries()) {
     const pageId = crypto.randomUUID();
@@ -98,6 +130,24 @@ export async function generateMultiPageStoryboard(
         if (geminiResponse) {
           panels = normalizeStoryboardAiResponse(geminiResponse.storyboard);
           finalUsedModel = geminiResponse.usedModel;
+
+          if (geminiResponse.storyboard.characters) {
+            for (const c of geminiResponse.storyboard.characters) {
+              const id = slugifyCharacterName(c.name);
+              if (!charactersMap.has(id)) {
+                charactersMap.set(id, {
+                  id,
+                  projectId,
+                  name: c.name,
+                  role: c.role,
+                  gender: c.gender,
+                  description: c.description,
+                  color: colors[charColorIdx % colors.length],
+                });
+                charColorIdx++;
+              }
+            }
+          }
         }
       } catch (err) {
         console.warn(`[Gemini Sync] Error on page ${index + 1}:`, err);
@@ -125,6 +175,7 @@ export async function generateMultiPageStoryboard(
 
   return {
     pages,
+    characters: Array.from(charactersMap.values()),
     source,
     usedModel: finalUsedModel,
     usedProvider: finalUsedModel ? "gemini" : "fallback",
@@ -283,6 +334,13 @@ function createStoryboardPrompt({ storyTitle, storyText }: StoryboardRequest) {
     "Convert the story into 3 to 6 comic panels.",
     "Each panel must be visually actionable for image generation.",
     "Keep dialogue short enough for speech bubbles.",
+    "",
+    "Also analyze and extract the complete list of characters appearing in the story. For each character, provide:",
+    "- name: Their name",
+    "- gender: Gender, strictly one of: 'Nam', 'Nữ', 'Khác'",
+    "- role: Role, strictly one of: 'Vai chính', 'Vai phụ', 'Phản diện', 'Quần chúng'",
+    "- description: A detailed physical appearance description (e.g. hair style/color, clothing style, accessories, face features) that is suitable to keep visual consistency when generating images.",
+    "",
     `Title: ${storyTitle}`,
     `Story: ${storyText}`,
   ].join("\n\n");
@@ -291,7 +349,7 @@ function createStoryboardPrompt({ storyTitle, storyText }: StoryboardRequest) {
 function createRepairPrompt(rawText: string) {
   return [
     "Repair the following response into valid JSON that matches this shape:",
-    '{"panels":[{"orderIndex":1,"scenePrompt":"...","characters":["..."],"dialogue":"..."}]}',
+    '{"panels":[{"orderIndex":1,"scenePrompt":"...","characters":["..."],"dialogue":"..."}],"characters":[{"name":"...","gender":"Nam/Nữ/Khác","role":"Vai chính/Vai phụ/Phản diện/Quần chúng","description":"..."}]}',
     "Return JSON only.",
     rawText,
   ].join("\n\n");

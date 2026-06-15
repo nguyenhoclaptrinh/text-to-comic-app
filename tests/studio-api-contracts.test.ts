@@ -38,19 +38,59 @@ describe("studio API contracts", () => {
     ).toBe(false);
   });
 
-  it("should validate AI storyboard panel shape", () => {
-    expect(
-      StoryboardAiResponseSchema.parse({
-        panels: [
-          {
-            orderIndex: 1,
-            scenePrompt: "A snowy inn beside the mountain road.",
-            characters: ["Xiao Se"],
-            dialogue: "Xiao Se: No guests today.",
-          },
-        ],
-      }).panels[0].characters,
-    ).toEqual(["Xiao Se"]);
+  it("should validate AI storyboard panels and characters shape", () => {
+    const parsed = StoryboardAiResponseSchema.parse({
+      panels: [
+        {
+          orderIndex: 1,
+          scenePrompt: "A snowy inn beside the mountain road.",
+          characters: ["Xiao Se"],
+          dialogue: "Xiao Se: No guests today.",
+        },
+      ],
+      characters: [
+        {
+          name: "Xiao Se",
+          gender: "Nam",
+          role: "Vai chính",
+          description: "Mặc áo khoác lông xanh lá sang trọng.",
+        },
+      ],
+    });
+    expect(parsed.panels[0].characters).toEqual(["Xiao Se"]);
+    expect(parsed.characters?.[0].name).toBe("Xiao Se");
+    expect(parsed.characters?.[0].gender).toBe("Nam");
+  });
+
+  it("should normalize lowercase and English values for gender and role", () => {
+    const parsed = StoryboardAiResponseSchema.parse({
+      panels: [
+        {
+          orderIndex: 1,
+          scenePrompt: "A snowy inn beside the mountain road.",
+          characters: ["Xiao Se"],
+          dialogue: "Xiao Se: No guests today.",
+        },
+      ],
+      characters: [
+        {
+          name: "Xiao Se",
+          gender: "male",
+          role: "protagonist",
+          description: "Mặc áo khoác lông xanh lá sang trọng.",
+        },
+        {
+          name: "Sikong Qianluo",
+          gender: "female",
+          role: "supporting",
+          description: "Cầm thương bạc.",
+        },
+      ],
+    });
+    expect(parsed.characters?.[0].gender).toBe("Nam");
+    expect(parsed.characters?.[0].role).toBe("Vai chính");
+    expect(parsed.characters?.[1].gender).toBe("Nữ");
+    expect(parsed.characters?.[1].role).toBe("Vai phụ");
   });
 
   it("should normalize AI panels into app panel records", () => {
@@ -144,6 +184,16 @@ describe("studio API contracts", () => {
             orderIndex: 1,
             title: "Page 1",
             panels: PANELS_SEED,
+          },
+        ],
+        characters: [
+          {
+            id: "xiao-se",
+            name: "Xiao Se",
+            role: "Vai chính",
+            gender: "Nam",
+            description: "Mô tả",
+            color: "#8b5cf6",
           },
         ],
       }).success,

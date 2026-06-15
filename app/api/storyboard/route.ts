@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       StoryboardResponseSchema.parse({
         pages: result.pages,
+        characters: result.characters,
         source: result.source,
         usedModel: result.usedModel,
         usedProvider: result.usedProvider,

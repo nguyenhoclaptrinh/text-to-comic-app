@@ -195,7 +195,7 @@ export function useComicStudioState() {
 
     try {
       const projectId = crypto.randomUUID();
-      const generatedPages = await analyzeStoryToPages({
+      const { pages: generatedPages, characters: generatedCharacters } = await analyzeStoryToPages({
         storyTitle: finalTitle,
         storyText: finalText,
       });
@@ -241,66 +241,75 @@ export function useComicStudioState() {
         return [...pagesWithCorrectProjectId, ...current];
       });
 
-      // Trích xuất nhân vật tự động từ các panels
-      const detectedIds = new Set<string>();
-      pagesWithCorrectProjectId.forEach((page) => {
-        page.panels.forEach((panel) => {
-          panel.characterIds.forEach((id) => {
-            if (id && id !== "unknown-character") {
-              detectedIds.add(id);
-            }
-          });
-        });
-      });
-
-      const occurrences: Record<string, number> = {};
-      pagesWithCorrectProjectId.forEach((page) => {
-        page.panels.forEach((panel) => {
-          panel.characterIds.forEach((id) => {
-            if (id && id !== "unknown-character") {
-              occurrences[id] = (occurrences[id] || 0) + 1;
-            }
-          });
-        });
-      });
-
-      const sortedIds = Array.from(detectedIds).sort(
-        (a, b) => (occurrences[b] || 0) - (occurrences[a] || 0)
-      );
-
-      const colors = [
-        "#8b5cf6",
-        "#ef4444",
-        "#10b981",
-        "#f59e0b",
-        "#3b82f6",
-        "#ec4899",
-      ];
-      const newCharactersList = sortedIds.map((id, idx) => {
-        const name = prettifyCharacterId(id) || `Nhân vật ${idx + 1}`;
-        const count = occurrences[id] || 0;
-        const priority = idx + 1;
-        
-        let role = "Vai phụ";
-        if (idx === 0) {
-          role = "Vai chính";
-        } else if (count === 1) {
-          role = "Quần chúng";
-        }
-
-        const gender = detectGender(id, name, finalText);
-
-        return {
-          id,
+      let newCharactersList;
+      if (generatedCharacters && generatedCharacters.length > 0) {
+        newCharactersList = generatedCharacters.map((c, idx) => ({
+          ...c,
           projectId,
-          name,
-          role,
-          gender,
-          priority,
-          description: `Nhân vật ${name}. Xuất hiện trong ${count} khung hình.`,
-          color: colors[idx % colors.length],
-        };
-      });
+          priority: idx + 1,
+        }));
+      } else {
+        // Trích xuất nhân vật tự động từ các panels
+        const detectedIds = new Set<string>();
+        pagesWithCorrectProjectId.forEach((page) => {
+          page.panels.forEach((panel) => {
+            panel.characterIds.forEach((id) => {
+              if (id && id !== "unknown-character") {
+                detectedIds.add(id);
+              }
+            });
+          });
+        });
+
+        const occurrences: Record<string, number> = {};
+        pagesWithCorrectProjectId.forEach((page) => {
+          page.panels.forEach((panel) => {
+            panel.characterIds.forEach((id) => {
+              if (id && id !== "unknown-character") {
+                occurrences[id] = (occurrences[id] || 0) + 1;
+              }
+            });
+          });
+        });
+
+        const sortedIds = Array.from(detectedIds).sort(
+          (a, b) => (occurrences[b] || 0) - (occurrences[a] || 0)
+        );
+
+        const colors = [
+          "#8b5cf6",
+          "#ef4444",
+          "#10b981",
+          "#f59e0b",
+          "#3b82f6",
+          "#ec4899",
+        ];
+        newCharactersList = sortedIds.map((id, idx) => {
+          const name = prettifyCharacterId(id) || `Nhân vật ${idx + 1}`;
+          const count = occurrences[id] || 0;
+          const priority = idx + 1;
+          
+          let role = "Vai phụ";
+          if (idx === 0) {
+            role = "Vai chính";
+          } else if (count === 1) {
+            role = "Quần chúng";
+          }
+
+          const gender = detectGender(id, name, finalText);
+
+          return {
+            id,
+            projectId,
+            name,
+            role,
+            gender,
+            priority,
+            description: `Nhân vật ${name}. Xuất hiện trong ${count} khung hình.`,
+            color: colors[idx % colors.length],
+          };
+        });
+      }
 
       if (newCharactersList.length > 0) {
         casting.setCharacters((current) => [
@@ -580,12 +589,28 @@ function prettifyCharacterId(characterId: string) {
 function detectGender(id: string, name: string, storyText: string): "Nam" | "Nữ" | "Khác" {
   const lowerText = storyText.toLowerCase();
   const lowerName = name.toLowerCase();
-  const lowerId = id.toLowerCase();
   
-  if (/\b(cô|nàng|nữ|chị|bà|mẹ|vợ|am|hoa)\b/i.test(lowerName)) {
+  const femaleWords = ["cô", "nàng", "nữ", "chị", "bà", "mẹ", "vợ", "am", "hoa", "bé gái", "con gái", "mẫu thân", "bà ngoại", "chị gái", "em gái"];
+  const maleWords = ["anh", "chàng", "cậu", "nam", "ông", "bố", "chồng", "lão", "tể", "phu", "bác", "cha", "em trai", "con trai", "bé trai", "thợ săn", "thầy", "sư"];
+
+  const isAlpha = (char: string) => /[a-zA-Z0-9]/.test(char) || (char && char.charCodeAt(0) > 127);
+  
+  const containsWord = (text: string, word: string): boolean => {
+    let index = -1;
+    while ((index = text.indexOf(word, index + 1)) !== -1) {
+      const before = index > 0 ? text.charAt(index - 1) : " ";
+      const after = index + word.length < text.length ? text.charAt(index + word.length) : " ";
+      if (!isAlpha(before) && !isAlpha(after)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  if (femaleWords.some(w => containsWord(lowerName, w))) {
     return "Nữ";
   }
-  if (/\b(anh|chàng|cậu|nam|ông|bố|chồng|lão|tể|phu)\b/i.test(lowerName)) {
+  if (maleWords.some(w => containsWord(lowerName, w))) {
     return "Nam";
   }
   
@@ -593,12 +618,17 @@ function detectGender(id: string, name: string, storyText: string): "Nam" | "N�
   let femaleScore = 0;
   let maleScore = 0;
   
+  const lowerId = id.toLowerCase();
+  
   for (const sentence of sentences) {
-    if (sentence.includes(lowerName) || sentence.includes(lowerId)) {
-      if (/\b(cô ấy|nàng|chị ấy|thiếu nữ|nữ tử|nữ nhân|bà ấy|mẹ|vợ|cô|chị|em gái)\b/.test(sentence)) {
+    if (containsWord(sentence, lowerName) || containsWord(sentence, lowerId)) {
+      const femaleContext = ["cô ấy", "nàng", "chị ấy", "thiếu nữ", "nữ tử", "nữ nhân", "bà ấy", "mẹ", "vợ", "cô", "chị", "em gái", "bà ngoại", "mẫu thân"];
+      const maleContext = ["anh ấy", "chàng", "cậu ấy", "nam nhân", "ông ấy", "bố", "chồng", "anh", "cậu", "em trai", "gã", "hắn", "bác", "cha", "phu quân", "thợ săn"];
+      
+      if (femaleContext.some(w => containsWord(sentence, w))) {
         femaleScore++;
       }
-      if (/\b(anh ấy|chàng|cậu ấy|nam nhân|ông ấy|bố|chồng|anh|cậu|em trai|gã|hắn)\b/.test(sentence)) {
+      if (maleContext.some(w => containsWord(sentence, w))) {
         maleScore++;
       }
     }
@@ -612,10 +642,13 @@ function detectGender(id: string, name: string, storyText: string): "Nam" | "N�
   }
   
   // Endings check for common Vietnamese names
-  if (/\b(hùng|cường|minh|tuấn|kiên|hoàng|dũng|sơn|hải|phong|vũ|thành|đạt|nam|trung|khánh|lâm|thịnh|tèo|tí)\b/.test(lowerName)) {
+  const maleEndings = ["hùng", "cường", "minh", "tuấn", "kiên", "hoàng", "dũng", "sơn", "hải", "phong", "vũ", "thành", "đạt", "nam", "trung", "khánh", "lâm", "thịnh", "tèo", "tí"];
+  const femaleEndings = ["hoa", "lan", "mai", "cúc", "vy", "trang", "hương", "nhung", "phương", "thảo", "linh", "hà", "chi", "diệp", "anh", "tuyết", "ngọc", "nhi", "quỳnh", "thư"];
+  
+  if (maleEndings.some(w => containsWord(lowerName, w))) {
     return "Nam";
   }
-  if (/\b(hoa|lan|mai|cúc|vy|trang|hương|nhung|phương|thảo|linh|hà|chi|diệp|anh|tuyết|ngọc|nhi|quỳnh|thư)\b/.test(lowerName)) {
+  if (femaleEndings.some(w => containsWord(lowerName, w))) {
     return "Nữ";
   }
   

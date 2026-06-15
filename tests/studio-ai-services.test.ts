@@ -39,7 +39,7 @@ describe("studio AI services", () => {
 
     await vi.runAllTimersAsync();
 
-    const pages = await promise;
+    const { pages } = await promise;
     expect(pages).toHaveLength(1);
     expect(pages[0].panels).toHaveLength(3);
     vi.useRealTimers();
@@ -65,16 +65,28 @@ describe("studio AI services", () => {
               })),
             },
           ],
+          characters: [
+            {
+              id: "xiao-se",
+              name: "Xiao Se",
+              role: "Vai chính",
+              gender: "Nam",
+              description: "Mô tả",
+              color: "#8b5cf6",
+            },
+          ],
         }),
       }),
     );
 
-    const pages = await analyzeStoryToPages({
+    const { pages, characters } = await analyzeStoryToPages({
       storyTitle: "Snow Road Inn",
       storyText: SAMPLE_STORY,
     });
     expect(pages).toHaveLength(1);
     expect(pages[0].panels).toHaveLength(3);
+    expect(characters).toHaveLength(1);
+    expect(characters?.[0].name).toBe("Xiao Se");
   });
 
   it("should reject when the browser storyboard API returns an invalid body", async () => {

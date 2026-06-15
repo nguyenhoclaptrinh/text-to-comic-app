@@ -34,8 +34,33 @@ export const StoryboardAiPanelSchema = z.object({
   dialogue: z.string().trim().max(800),
 });
 
+export const StoryboardAiCharacterSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  gender: z.preprocess((val) => {
+    if (typeof val === "string") {
+      const lower = val.trim().toLowerCase();
+      if (lower === "nam" || lower === "male") return "Nam";
+      if (lower === "nữ" || lower === "female") return "Nữ";
+      if (lower === "khác" || lower === "other") return "Khác";
+    }
+    return val;
+  }, z.enum(["Nam", "Nữ", "Khác"])),
+  role: z.preprocess((val) => {
+    if (typeof val === "string") {
+      const lower = val.trim().toLowerCase();
+      if (lower === "vai chính" || lower === "main" || lower === "protagonist") return "Vai chính";
+      if (lower === "vai phụ" || lower === "supporting") return "Vai phụ";
+      if (lower === "phản diện" || lower === "antagonist" || lower === "villain") return "Phản diện";
+      if (lower === "quần chúng" || lower === "extra" || lower === "background" || lower === "npc") return "Quần chúng";
+    }
+    return val;
+  }, z.enum(["Vai chính", "Vai phụ", "Phản diện", "Quần chúng"])),
+  description: z.string().trim().min(1).max(1000),
+});
+
 export const StoryboardAiResponseSchema = z.object({
   panels: z.array(StoryboardAiPanelSchema).min(1).max(8),
+  characters: z.array(StoryboardAiCharacterSchema).optional(),
 });
 
 export const BubbleSchema = z.object({
@@ -73,6 +98,17 @@ export const PanelSchema = z.object({
     .optional(),
 });
 
+export const CharacterSchema = z.object({
+  id: z.string().min(1),
+  projectId: z.string().optional(),
+  name: z.string().min(1),
+  role: z.string().min(1),
+  gender: z.enum(["Nam", "Nữ", "Khác"]).optional(),
+  description: z.string().min(1),
+  color: z.string().min(1),
+  priority: z.number().int().positive().optional(),
+});
+
 export const PageSchema = z.object({
   id: z.string().min(1),
   projectId: z.string().min(1),
@@ -83,19 +119,11 @@ export const PageSchema = z.object({
 
 export const StoryboardResponseSchema = z.object({
   pages: z.array(PageSchema).min(1).max(24),
+  characters: z.array(CharacterSchema).optional(),
   source: z.enum(["gemini", "fallback"]),
   warning: z.string().optional(),
   usedModel: z.string().optional(),
   usedProvider: z.enum(["gemini", "fallback"]).optional(),
-});
-
-export const CharacterSchema = z.object({
-  id: z.string().min(1),
-  projectId: z.string().optional(),
-  name: z.string().min(1),
-  role: z.string().min(1),
-  description: z.string().min(1),
-  color: z.string().min(1),
 });
 
 export const GeneratePanelRequestSchema = z.object({
