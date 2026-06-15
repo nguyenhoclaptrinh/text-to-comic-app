@@ -11,7 +11,7 @@ import {
   type DisplayLanguage,
   getPanelScenePromptDisplay,
 } from "@/lib/studio/display";
-import { exportComicPng } from "@/lib/studio/export-renderer";
+import { exportComicPng, exportComicPagesPdf } from "@/lib/studio/export-renderer";
 import type { Panel, Page } from "@/lib/studio/types";
 
 type ExportStatus = "idle" | "rendering" | "done" | "error";
@@ -35,7 +35,7 @@ export function ExportModal({
 }) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<ExportStatus>("idle");
-  const [exportMode, setExportMode] = useState<"combined" | "per-page">("combined");
+  const [isImageDropdownOpen, setIsImageDropdownOpen] = useState(false);
 
   const generatedPanels = panels
     .filter((panel) => panel.status === "success")
@@ -43,8 +43,9 @@ export function ExportModal({
 
   const generatedCount = generatedPanels.length;
 
-  async function handleExport() {
+  async function triggerExport(mode: "pdf" | "png-combined" | "png-per-page") {
     if (generatedCount === 0) return;
+    setIsImageDropdownOpen(false);
     setStatus("rendering");
     setProgress(20);
 
@@ -52,14 +53,19 @@ export function ExportModal({
       await waitForPaint();
       setProgress(55);
 
-      if (exportMode === "combined") {
+      if (mode === "pdf") {
+        await exportComicPagesPdf({
+          projectTitle,
+          pages,
+          includeMissingPanels: false,
+        });
+      } else if (mode === "png-combined") {
         await exportComicPng({
           projectTitle,
           panels,
           includeMissingPanels: false,
         });
-      } else {
-        // Render each page as a separate vertical image
+      } else if (mode === "png-per-page") {
         let exportedCount = 0;
         const validPages = pages.filter(
           (page) => page.panels.some((p) => p.status === "success")
@@ -126,46 +132,53 @@ export function ExportModal({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Mode selection toggle */}
-            <div className="flex items-center gap-1 rounded-lg bg-zinc-950 p-1 border border-zinc-800">
+            {/* Dropdown for PNG Export */}
+            <div className="relative">
               <button
                 type="button"
-                onClick={() => setExportMode("combined")}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition duration-200 ${
-                  exportMode === "combined"
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-white"
-                }`}
+                onClick={() => setIsImageDropdownOpen(!isImageDropdownOpen)}
+                disabled={generatedCount === 0 || status === "rendering"}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-4 text-xs font-semibold text-white transition-all hover:bg-zinc-850 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Tất cả vào 1 ảnh
+                <ImageIcon size={14} />
+                Lưu ảnh PNG
               </button>
-              <button
-                type="button"
-                onClick={() => setExportMode("per-page")}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition duration-200 ${
-                  exportMode === "per-page"
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                Mỗi trang 1 ảnh
-              </button>
+
+              {isImageDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setIsImageDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 z-20 w-44 rounded-lg border border-zinc-800 bg-zinc-950 p-1 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
+                    <button
+                      type="button"
+                      onClick={() => void triggerExport("png-combined")}
+                      className="w-full text-left rounded-md px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white transition"
+                    >
+                      Tất cả vào 1 ảnh
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void triggerExport("png-per-page")}
+                      className="w-full text-left rounded-md px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white transition"
+                    >
+                      Mỗi trang 1 ảnh
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
+            {/* Direct button for PDF Export */}
             <button
               type="button"
-              onClick={handleExport}
+              onClick={() => void triggerExport("pdf")}
               disabled={generatedCount === 0 || status === "rendering"}
               className="inline-flex h-9 items-center gap-2 rounded-lg bg-violet-600 px-4 text-xs font-semibold text-white shadow-lg shadow-violet-600/20 transition-all hover:bg-violet-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {status === "done" ? (
-                "Đã xuất xong"
-              ) : (
-                <>
-                  <Download size={14} />
-                  Lưu file
-                </>
-              )}
+              <Download size={14} />
+              Tải PDF
             </button>
 
             <button

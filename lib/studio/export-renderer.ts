@@ -11,7 +11,7 @@ import {
   EXPORT_PANEL_HEIGHT,
   EXPORT_PANEL_WIDTH,
 } from "@/lib/studio/export-plan";
-import type { Bubble, Panel } from "@/lib/studio/types";
+import type { Bubble, Panel, Page } from "@/lib/studio/types";
 
 export async function exportComicPng({
   projectTitle,
@@ -123,6 +123,87 @@ export async function exportComicPdf({
   return {
     panelCount: plan.panels.length,
     missingImages: plan.missingImages,
+  };
+}
+
+export async function exportComicPagesPdf({
+  projectTitle,
+  pages,
+  includeMissingPanels = false,
+}: {
+  projectTitle: string;
+  pages: Page[];
+  includeMissingPanels?: boolean;
+}) {
+  let pdf: jsPDF | null = null;
+  let pageIndex = 0;
+
+  const validPages = pages.filter(
+    (page) =>
+      includeMissingPanels || page.panels.some((p) => p.status === "success")
+  );
+
+  for (const page of validPages) {
+    const panelsToRender = includeMissingPanels
+      ? page.panels
+      : page.panels.filter((p) => p.status === "success");
+
+    if (panelsToRender.length === 0) continue;
+
+    const pageWidth = EXPORT_PANEL_WIDTH + EXPORT_CANVAS_PADDING * 2;
+    const pageHeight =
+      EXPORT_CANVAS_PADDING * 2 +
+      panelsToRender.length * EXPORT_PANEL_HEIGHT +
+      (panelsToRender.length - 1) * EXPORT_PANEL_GAP;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = pageWidth;
+    canvas.height = pageHeight;
+    const context = canvas.getContext("2d");
+
+    if (context) {
+      context.fillStyle = "#09090b";
+      context.fillRect(0, 0, pageWidth, pageHeight);
+
+      for (const [idx, panel] of panelsToRender.entries()) {
+        const drawY =
+          EXPORT_CANVAS_PADDING +
+          idx * (EXPORT_PANEL_HEIGHT + EXPORT_PANEL_GAP);
+        await drawPanel(context, panel, EXPORT_CANVAS_PADDING, drawY);
+      }
+
+      const dataUrl = canvas.toDataURL("image/png");
+
+      if (pageIndex === 0) {
+        pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "px",
+          format: [pageWidth, pageHeight],
+        });
+      } else if (pdf) {
+        pdf.addPage([pageWidth, pageHeight], "portrait");
+      }
+
+      if (pdf) {
+        pdf.addImage(dataUrl, "PNG", 0, 0, pageWidth, pageHeight);
+      }
+      pageIndex++;
+    }
+  }
+
+  if (pdf) {
+    const slug = projectTitle
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48);
+    const date = new Date().toISOString().slice(0, 10);
+    pdf.save(`${slug || "comic-export"}-${date}.pdf`);
+  }
+
+  return {
+    pageCount: pageIndex,
   };
 }
 

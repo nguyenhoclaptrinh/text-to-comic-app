@@ -58,32 +58,11 @@ export function TopBar({
           <>
             <button
               type="button"
-              onClick={onOpenSettings}
-              aria-label="Cấu hình dịch vụ AI"
-              className="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-border-main bg-surface-elevated text-text-secondary transition hover:bg-surface hover:text-text-primary"
-            >
-              <Settings size={16} />
-            </button>
-            <button
-              type="button"
               onClick={onExport}
               className="inline-flex h-8.5 items-center gap-1.5 rounded-lg border border-border-main bg-surface-elevated px-2.5 text-sm font-medium text-text-primary transition hover:bg-surface"
             >
               <Download size={16} />
               <span className="hidden sm:inline">Xuất file</span>
-            </button>
-            <button
-              type="button"
-              onClick={onGenerateAll}
-              disabled={isGeneratingAll}
-              className="inline-flex h-8.5 items-center gap-1.5 rounded-lg bg-emerald-500 px-2.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isGeneratingAll ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : (
-                <Wand2 size={16} />
-              )}
-              <span className="hidden sm:inline">Vẽ tất cả</span>
             </button>
           </>
         ) : null}

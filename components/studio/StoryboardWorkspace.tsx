@@ -637,15 +637,6 @@ function StoryboardHeader({
         <div className="flex justify-end items-center gap-3">
           <button
             type="button"
-            onClick={onOpenExport}
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-3 text-sm font-medium text-text-primary transition hover:bg-surface"
-          >
-            <Download size={16} />
-            Xuất file
-          </button>
-
-          <button
-            type="button"
             onClick={onOpenAiModal}
             disabled={isGeneratingAll || isGeneratingPage}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
