@@ -270,9 +270,10 @@ export function Dashboard({
             role="dialog"
             aria-modal="true"
             aria-labelledby="new-project-title"
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border-main/80 bg-surface-elevated p-6 text-text-primary shadow-2xl transition-all"
+            className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-border-main/80 bg-surface-elevated text-text-primary shadow-2xl transition-all"
           >
-            <div className="mb-5 flex items-start justify-between gap-4">
+            {/* Sticky Header */}
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border-main/80 p-6 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/20 text-primary">
                   <FileText size={20} />
@@ -300,7 +301,8 @@ export function Dashboard({
               </button>
             </div>
 
-            <div className="space-y-4">
+            {/* Scrollable Form Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div>
                 <label
                   className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary"
@@ -437,7 +439,7 @@ export function Dashboard({
                   placeholder="Dán hoặc nhập câu chuyện chữ tại đây, hoặc chọn một thể loại ở trên để tải kịch bản mẫu nhanh..."
                   value={storyText}
                   onChange={(event) => setStoryText(event.target.value)}
-                  className="min-h-56 w-full resize-y rounded-lg border border-border-main bg-background/40 p-3 text-sm leading-6 text-text-primary focus:border-primary focus:outline-none placeholder:text-text-secondary/50"
+                  className="min-h-50 w-full resize-y rounded-lg border border-border-main bg-background/40 p-3 text-sm leading-6 text-text-primary focus:border-primary focus:outline-none placeholder:text-text-secondary/50"
                 />
                 {suggestError && (
                   <div className="mt-2 text-xs text-red-400 flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded">
@@ -446,20 +448,10 @@ export function Dashboard({
                   </div>
                 )}
               </div>
-
-              <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success/10 px-3 py-2.5 text-xs leading-5 text-text-secondary">
-                <CheckCircle2
-                  className="mt-0.5 shrink-0 text-success"
-                  size={14}
-                />
-                <span>
-                  Không có API key thì demo vẫn tạo storyboard và ảnh fallback
-                  có kiểm soát, nên phần đã nhập không bị mất khi AI offline.
-                </span>
-              </div>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-border-main/85 pt-4">
+            {/* Sticky Action Footer */}
+            <div className="flex shrink-0 flex-col gap-3 border-t border-border-main/80 p-6 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs text-text-secondary">
                 {storyText.length.toLocaleString()} ký tự đã nhập
               </div>
@@ -489,7 +481,7 @@ export function Dashboard({
 
             {importError ? (
               <div
-                className="mt-4 flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2.5 text-xs text-red-650 dark:text-red-200"
+                className="mx-6 mb-6 flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2.5 text-xs text-red-650 dark:text-red-200"
                 role="alert"
               >
                 <AlertTriangle size={14} className="shrink-0" />
