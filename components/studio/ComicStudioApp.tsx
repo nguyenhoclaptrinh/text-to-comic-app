@@ -22,9 +22,11 @@ export function ComicStudioApp() {
   const { state, actions } = useComicStudioState();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const showWorkspaceTopBar =
-    state.view === "storyboard" ||
-    state.view === "comic" ||
-    state.view === "export";
+    state.isProjectOpen && (
+      state.view === "storyboard" ||
+      state.view === "comic" ||
+      state.view === "export"
+    );
 
   return (
     <main className="flex min-h-dvh bg-background font-sans text-text-primary transition-colors duration-200">
@@ -32,7 +34,7 @@ export function ComicStudioApp() {
         currentView={state.view}
         setView={actions.setView}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        displayLanguage={state.activeProject.outputLanguage || "en"}
+        displayLanguage={state.activeProject?.outputLanguage || "en"}
         onChangeDisplayLanguage={
           state.view === "storyboard" ||
           state.view === "comic" ||
@@ -40,11 +42,13 @@ export function ComicStudioApp() {
             ? actions.setProjectOutputLanguage
             : undefined
         }
+        isProjectOpen={state.isProjectOpen}
+        hasProjects={state.projects.length > 0}
       />
       <section className="flex min-w-0 flex-1 flex-col pt-14 pb-16 md:pt-16 md:pb-0">
         {showWorkspaceTopBar ? (
           <TopBar
-            projectTitle={state.activeProject.title}
+            projectTitle={state.activeProject?.title || ""}
             generationSummary={state.generationSummary}
             isGeneratingAll={state.isGeneratingAll}
             onGenerateAll={() => void actions.generateAll()}

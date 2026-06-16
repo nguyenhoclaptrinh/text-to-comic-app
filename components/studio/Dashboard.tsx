@@ -209,34 +209,35 @@ export function Dashboard({
             mới từ văn bản.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-lg shadow-primary/10"
-        >
-          <Plus size={16} />
-          Tạo dự án mới
-        </button>
+        {projects.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-lg shadow-primary/10"
+          >
+            <Plus size={16} />
+            Tạo dự án mới
+          </button>
+        )}
       </div>
 
       {projects.length === 0 ? (
-        <div className="flex min-h-[450px] flex-col items-center justify-center rounded-2xl border border-dashed border-border-main bg-surface p-8 text-center shadow-inner">
+        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-dashed border-border-main bg-surface-elevated/40 p-8 text-center shadow-lg backdrop-blur-sm">
           <div className="relative mb-6 flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5">
             <Plus size={36} className="animate-pulse" />
           </div>
-          <h3 className="text-lg font-semibold text-text-primary">
-            Hành trình sáng tạo bắt đầu từ đây!
+          <h3 className="text-xl font-bold text-text-primary tracking-tight">
+            Chưa có dự án nào được tạo
           </h3>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-text-secondary">
-            Biến câu chuyện chữ của bạn thành những trang truyện tranh/webtoon
-            sống động với quy trình AI có thể chỉnh sửa từng bước.
+            Biến câu chuyện chữ của bạn thành những trang truyện tranh/webtoon sống động với quy trình AI thông minh.
           </p>
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-md shadow-primary/25 active:scale-95"
+            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-white transition hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 cursor-pointer"
           >
-            <Plus size={16} />
+            <Plus size={18} />
             Tạo dự án đầu tiên
           </button>
         </div>

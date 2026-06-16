@@ -16,10 +16,28 @@ export function useStudioNavigation(
   const [selectedPanelId, setSelectedPanelId] = useState("");
   const [selectedBubbleId, setSelectedBubbleId] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
+  const [isProjectOpen, setIsProjectOpen] = useState(false);
+
+  const handleSetView = (newView: View | ((prev: View) => View)) => {
+    if (typeof newView === "function") {
+      setView((prev) => {
+        const next = newView(prev);
+        if (next === "projects") {
+          setIsProjectOpen(false);
+        }
+        return next;
+      });
+    } else {
+      setView(newView);
+      if (newView === "projects") {
+        setIsProjectOpen(false);
+      }
+    }
+  };
 
   return {
     view,
-    setView,
+    setView: handleSetView,
     activeProjectId,
     setActiveProjectId,
     activePageId,
@@ -30,5 +48,7 @@ export function useStudioNavigation(
     setSelectedBubbleId,
     exportOpen,
     setExportOpen,
+    isProjectOpen,
+    setIsProjectOpen,
   };
 }

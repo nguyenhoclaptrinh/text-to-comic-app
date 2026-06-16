@@ -49,8 +49,8 @@ const INITIAL_PAGE: Page = {
 };
 
 export function useComicStudioState() {
-  const [projects, setProjects] = useState<Project[]>([INITIAL_PROJECT]);
-  const [pages, setPages] = useState<Page[]>([INITIAL_PAGE]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
   const [storyTitle, setStoryTitle] = useState("");
   const [storyText, setStoryText] = useState("");
   const [storyOutputLanguage, setStoryOutputLanguage] = useState<"en" | "vi">(
@@ -174,6 +174,7 @@ export function useComicStudioState() {
 
   function selectProject(projectId: string) {
     nav.setActiveProjectId(projectId);
+    nav.setIsProjectOpen(true);
 
     const projectPages = pages.filter((page) => page.projectId === projectId);
     if (projectPages.length > 0) {
@@ -323,6 +324,7 @@ export function useComicStudioState() {
       nav.setActivePageId(firstPage.id);
       nav.setSelectedPanelId(firstPage.panels[0].id);
       nav.setSelectedBubbleId(firstPage.panels[0].bubbles[0]?.id ?? "");
+      nav.setIsProjectOpen(true);
       nav.setView("storyboard");
     } catch (error) {
       setImportError(getStudioAiErrorMessage(error));
@@ -495,20 +497,18 @@ export function useComicStudioState() {
 
   function deleteProject(projectId: string) {
     const remainingProjects = projects.filter((p) => p.id !== projectId);
-    const nextProject = remainingProjects[0] || INITIAL_PROJECT;
+    const nextProject = remainingProjects[0];
 
     let newActivePageId = "";
     let newActivePanelId = "";
 
-    if (nav.activeProjectId === projectId) {
+    if (nav.activeProjectId === projectId && nextProject) {
       const nextProjectPages = pages.filter(
         (page) => page.projectId === nextProject.id,
       );
       if (nextProjectPages.length > 0) {
         newActivePageId = nextProjectPages[0].id;
         newActivePanelId = nextProjectPages[0].panels[0]?.id ?? "";
-      } else if (nextProject.id === INITIAL_PROJECT_ID) {
-        newActivePageId = crypto.randomUUID();
       }
     }
 
@@ -517,39 +517,29 @@ export function useComicStudioState() {
     );
 
     setProjects((current) => {
-      const updated = current.filter((p) => p.id !== projectId);
-      return updated.length > 0 ? updated : [INITIAL_PROJECT];
+      return current.filter((p) => p.id !== projectId);
     });
 
     setPages((currentPages) => {
-      const updated = currentPages.filter(
-        (page) => page.projectId !== projectId,
-      );
-      if (
-        nav.activeProjectId === projectId &&
-        nextProject.id === INITIAL_PROJECT_ID
-      ) {
-        const nextProjectPages = updated.filter(
-          (page) => page.projectId === INITIAL_PROJECT_ID,
-        );
-        if (nextProjectPages.length === 0) {
-          const defaultPage = {
-            ...INITIAL_PAGE,
-            id: newActivePageId || crypto.randomUUID(),
-          };
-          return [defaultPage, ...updated];
-        }
-      }
-      return updated;
+      return currentPages.filter((page) => page.projectId !== projectId);
     });
 
     if (nav.activeProjectId === projectId) {
-      nav.setActiveProjectId(nextProject.id);
-      if (newActivePageId) {
-        nav.setActivePageId(newActivePageId);
-        nav.setSelectedPanelId(newActivePanelId);
-        nav.setSelectedBubbleId("");
+      nav.setIsProjectOpen(false);
+      nav.setView("projects");
+      if (nextProject) {
+        nav.setActiveProjectId(nextProject.id);
+        if (newActivePageId) {
+          nav.setActivePageId(newActivePageId);
+          nav.setSelectedPanelId(newActivePanelId);
+          nav.setSelectedBubbleId("");
+        } else {
+          nav.setActivePageId("");
+          nav.setSelectedPanelId("");
+          nav.setSelectedBubbleId("");
+        }
       } else {
+        nav.setActiveProjectId("");
         nav.setActivePageId("");
         nav.setSelectedPanelId("");
         nav.setSelectedBubbleId("");
@@ -622,9 +612,11 @@ export function useComicStudioState() {
       isGeneratingAll: panelActions.isGeneratingAll,
       missingImages,
       generationSummary,
+      isProjectOpen: nav.isProjectOpen,
     },
     actions: {
       setView: nav.setView,
+      setIsProjectOpen: nav.setIsProjectOpen,
       setStoryTitle,
       setStoryText,
       setStoryOutputLanguage,
