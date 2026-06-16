@@ -55,6 +55,16 @@ npm run start
 
 Chi tiết vận hành: `docs/060-delivery/Production-Runbook.md`.
 
+## Docker
+
+Build và push image lên Docker Hub bằng một script duy nhất:
+
+```bash
+./scripts/docker-push.sh
+```
+
+Script sẽ hỏi file `.env`, Docker Hub username, image name và tag, sau đó tự `docker build`, `docker login`, `docker tag` và `docker push`.
+
 ## Cấu Hình Môi Trường
 
 Khi muốn dùng dịch vụ AI thật, tạo file `.env.local` từ `.env.example`:
