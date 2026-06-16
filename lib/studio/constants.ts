@@ -34,11 +34,11 @@ export const STATUS_COPY: Record<PanelStatus, string> = {
 };
 
 export const STATUS_CLASS: Record<PanelStatus, string> = {
-  draft: "border-zinc-700 bg-zinc-900 text-zinc-300",
-  queued: "border-sky-400/40 bg-sky-500/15 text-sky-200",
-  generating: "border-violet-400/40 bg-violet-500/15 text-violet-200",
-  success: "border-emerald-400/40 bg-emerald-500/15 text-emerald-200",
-  error: "border-red-400/40 bg-red-500/15 text-red-200",
+  draft: "border-border-main bg-surface-elevated text-text-secondary",
+  queued: "border-sky-400/30 bg-sky-500/10 text-sky-700 dark:text-sky-200",
+  generating: "border-violet-400/30 bg-violet-500/10 text-violet-700 dark:text-violet-200",
+  success: "border-emerald-400/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200",
+  error: "border-red-400/30 bg-red-500/10 text-red-650 dark:text-red-200",
 };
 
 export const COMIC_STYLES = {

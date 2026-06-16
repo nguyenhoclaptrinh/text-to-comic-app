@@ -21,8 +21,8 @@ export function BubbleTools({
   className?: string;
 }) {
   return (
-    <aside className={`border-r border-zinc-800 bg-[#111114] p-4 ${className}`}>
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-400">
+    <aside className={`border-r border-border-main bg-surface p-4 transition-colors duration-200 ${className}`}>
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-text-secondary">
         Công cụ Bong bóng
       </h2>
       <button
@@ -34,8 +34,8 @@ export function BubbleTools({
         Thêm Bong bóng thoại
       </button>
 
-      <div className="rounded-xl border border-zinc-800 bg-[#18181b] p-4">
-        <div className="mb-3 text-sm font-semibold text-zinc-200">
+      <div className="rounded-xl border border-border-main bg-surface-elevated/40 p-4">
+        <div className="mb-3 text-sm font-semibold text-text-primary">
           Bong bóng được chọn
         </div>
         {selectedBubble ? (
@@ -45,7 +45,7 @@ export function BubbleTools({
             onDeleteBubble={onDeleteBubble}
           />
         ) : (
-          <p className="text-sm leading-6 text-zinc-400">
+          <p className="text-sm leading-6 text-text-secondary">
             Chọn một bong bóng trên hình preview hoặc thêm mới một bong bóng
             thoại.
           </p>
@@ -67,7 +67,7 @@ function SelectedBubbleForm({
   return (
     <>
       <label
-        className="mb-2 block text-xs font-medium text-zinc-400"
+        className="mb-2 block text-xs font-medium text-text-secondary"
         htmlFor="bubble-text"
       >
         Nội dung hội thoại
@@ -76,15 +76,15 @@ function SelectedBubbleForm({
         id="bubble-text"
         value={selectedBubble.text}
         onChange={(event) => onUpdateBubble({ text: event.target.value })}
-        className="mb-4 min-h-24 w-full resize-none rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm text-zinc-100 focus:border-violet-500 focus:outline-none"
+        className="mb-4 min-h-24 w-full resize-none rounded-lg border border-border-main bg-background p-2 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         placeholder="Nhập lời thoại nhân vật..."
       />
 
       <div className="mb-4 space-y-3">
         <div>
-          <div className="mb-1 flex justify-between text-xs text-zinc-400">
+          <div className="mb-1 flex justify-between text-xs text-text-secondary">
             <span>Cỡ chữ</span>
-            <span className="font-semibold text-zinc-200">
+            <span className="font-semibold text-text-primary">
               {selectedBubble.fontSize || 14}px
             </span>
           </div>
@@ -96,14 +96,14 @@ function SelectedBubbleForm({
             onChange={(e) =>
               onUpdateBubble({ fontSize: parseInt(e.target.value) })
             }
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-800 accent-violet-500"
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-surface-elevated accent-primary"
           />
         </div>
 
         <div>
-          <div className="mb-1 flex justify-between text-xs text-zinc-400">
+          <div className="mb-1 flex justify-between text-xs text-text-secondary">
             <span>Chiều rộng</span>
-            <span className="font-semibold text-zinc-200">
+            <span className="font-semibold text-text-primary">
               {selectedBubble.width}%
             </span>
           </div>
@@ -115,14 +115,14 @@ function SelectedBubbleForm({
             onChange={(e) =>
               onUpdateBubble({ width: parseInt(e.target.value) })
             }
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-800 accent-violet-500"
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-surface-elevated accent-primary"
           />
         </div>
 
         <div>
-          <div className="mb-1 flex justify-between text-xs text-zinc-400">
+          <div className="mb-1 flex justify-between text-xs text-text-secondary">
             <span>Chiều cao</span>
-            <span className="font-semibold text-zinc-200">
+            <span className="font-semibold text-text-primary">
               {selectedBubble.height}%
             </span>
           </div>
@@ -134,16 +134,16 @@ function SelectedBubbleForm({
             onChange={(e) =>
               onUpdateBubble({ height: parseInt(e.target.value) })
             }
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-800 accent-violet-500"
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-surface-elevated accent-primary"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400">
-        <div className="rounded-md bg-zinc-950 p-2 text-center">
+      <div className="grid grid-cols-2 gap-2 text-xs text-text-secondary">
+        <div className="rounded-md bg-background border border-border-main p-2 text-center">
           Tọa độ X: {selectedBubble.x}%
         </div>
-        <div className="rounded-md bg-zinc-950 p-2 text-center">
+        <div className="rounded-md bg-background border border-border-main p-2 text-center">
           Tọa độ Y: {selectedBubble.y}%
         </div>
       </div>
@@ -151,7 +151,7 @@ function SelectedBubbleForm({
       <button
         type="button"
         onClick={onDeleteBubble}
-        className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 text-sm text-red-200 hover:bg-red-500/10 transition-colors"
+        className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 text-sm text-red-650 dark:text-red-200 hover:bg-red-500/20 transition-colors"
       >
         <Trash2 size={14} />
         Xóa Bong bóng thoại

@@ -401,7 +401,7 @@ export function StoryboardWorkspace({
                                   : null,
                               );
                             }}
-                            className="w-full bg-zinc-900 border border-zinc-700/60 rounded p-1.5 text-xs text-text-primary focus:border-primary focus:outline-none resize-y"
+                            className="w-full bg-background border border-border-main rounded p-1.5 text-xs text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y"
                             rows={2}
                           />
                         </div>
@@ -431,7 +431,7 @@ export function StoryboardWorkspace({
                                   : null,
                               );
                             }}
-                            className="w-full bg-zinc-900 border border-zinc-700/60 rounded p-1.5 text-xs text-violet-300 focus:border-primary focus:outline-none resize-y"
+                            className="w-full bg-background border border-border-main rounded p-1.5 text-xs text-violet-700 dark:text-violet-300 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y"
                             rows={1}
                           />
                         </div>
@@ -643,12 +643,12 @@ function StoryboardHeader({
             type="button"
             onClick={onOpenAiModal}
             disabled={isGeneratingAll || isGeneratingPage}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 text-sm font-semibold text-violet-700 dark:text-violet-200 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isGeneratingPage ? (
               <Loader2 className="animate-spin" size={16} />
             ) : (
-              <Wand2 size={16} className="text-violet-400" />
+              <Wand2 size={16} className="text-violet-600 dark:text-violet-400" />
             )}
             Phân cảnh AI
           </button>

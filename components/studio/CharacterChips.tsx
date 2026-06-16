@@ -29,7 +29,7 @@ export function CharacterChips({
         return (
           <span
             key={characterId}
-            className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300"
+            className="rounded-full border border-border-main bg-surface-elevated px-3 py-1 text-xs text-text-secondary"
           >
             {label}
           </span>
