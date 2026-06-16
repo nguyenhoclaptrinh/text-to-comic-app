@@ -16,7 +16,7 @@
   <rect class="bg" width="1440" height="900"/>
   <rect class="surface" x="0" y="0" width="1440" height="68"/>
   <circle cx="42" cy="34" r="17" fill="#8b5cf6"/>
-  <text class="text" x="74" y="41">ComicAI Studio</text>
+  <text class="text" x="74" y="41">ComicCraft Studio</text>
   <rect class="primary" x="1156" y="18" width="100" height="32" rx="8"/>
   <text class="small" x="1186" y="38">SAVE</text>
   <rect class="success" x="1270" y="18" width="112" height="32" rx="8"/>

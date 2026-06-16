@@ -13,6 +13,7 @@ import {
   Moon,
   Globe2,
 } from "lucide-react";
+import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
 import type { ReactNode } from "react";
 
@@ -76,11 +77,10 @@ export function SideNavigation({
               type="button"
               aria-label={item.label}
               onClick={() => setView(item.id)}
-              className={`flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs md:text-sm transition-all duration-200 active:scale-95 ${
-                currentView === item.id
+              className={`flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs md:text-sm transition-all duration-200 active:scale-95 ${currentView === item.id
                   ? "border-primary/30 bg-primary/10 text-primary dark:text-violet-200 dark:bg-primary/20 shadow-[0_0_12px_rgba(139,92,246,0.12)] font-semibold"
                   : "border-transparent text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
-              }`}
+                }`}
             >
               {item.icon}
               <span className="font-medium">{item.label}</span>
@@ -99,22 +99,20 @@ export function SideNavigation({
             <button
               type="button"
               onClick={() => onChangeDisplayLanguage("en")}
-              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${
-                displayLanguage === "en"
+              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${displayLanguage === "en"
                   ? "bg-primary text-white"
                   : "text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
-              }`}
+                }`}
             >
               EN
             </button>
             <button
               type="button"
               onClick={() => onChangeDisplayLanguage("vi")}
-              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${
-                displayLanguage === "vi"
+              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${displayLanguage === "vi"
                   ? "bg-primary text-white"
                   : "text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
-              }`}
+                }`}
             >
               VI
             </button>
@@ -147,18 +145,18 @@ export function SideNavigation({
 
 function BrandMark() {
   return (
-    <div className="flex items-center gap-3">
+    <Link href="/" className="flex items-center gap-3 hover:opacity-85 transition-opacity">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white shadow-md shadow-primary/20">
         <Sparkles size={18} />
       </div>
       <div>
         <div className="text-sm font-semibold tracking-wide text-text-primary">
-          ComicAI Studio
+          ComicCraft Studio
         </div>
         <div className="text-xs text-text-secondary leading-none mt-0.5">
           Xưởng tạo truyện
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
