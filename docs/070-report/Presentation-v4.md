@@ -168,11 +168,11 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[<b>UI Workspace</b><br/>Dashboard<br/>Text Import<br/>Storyboard<br/>Comic Editor<br/>Export]
-    B[<b>State Manager</b><br/>useComicStudioState]
-    C[<b>Server APIs</b><br/>Storyboard API<br/>Generate Panel API<br/>Kaggle Jobs API]
-    D[<b>AI Services</b><br/>Gemini<br/>Image Backend<br/>Hugging Face<br/>Fallback]
-    E[<b>Persistence</b><br/>localStorage<br/>IndexedDB<br/>Supabase optional]
+    A["<b>UI Workspace</b><br/>Dashboard<br/>Text Import<br/>Storyboard<br/>Comic Editor<br/>Export"]
+    B["<b>State Manager</b><br/>useComicStudioState"]
+    C["<b>Server APIs</b><br/>Storyboard API<br/>Generate Panel API<br/>Kaggle Jobs API"]
+    D["<b>AI Services</b><br/>Gemini (text);<br/>Hugging Face (image);<br/>Image Backend,<br/>Cached SVG (fallback)"]
+    E["<b>Persistence</b><br/>localStorage<br/>IndexedDB<br/>Supabase optional"]
 
     A --> B
     B --> C
@@ -502,7 +502,7 @@ flowchart TB
 
     A --> B[Better image backend]
     A --> C[Reference image support]
-    A --> D[Cloud project saving<br/>and multi-device access]
+    A --> D["Cloud project saving<br/>and multi-device access"]
     A --> E[Image-to-comic extension]
 
     classDef current fill:#e5e7eb,stroke:#4b5563,color:#111827;
