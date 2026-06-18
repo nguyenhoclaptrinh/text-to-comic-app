@@ -41,14 +41,15 @@ GEMINI_TEXT_MODELS=gemini-3.5-flash,gemini-3.1-flash-lite,gemini-2.5-flash,gemin
 AI_MODEL_TIMEOUT_MS=20000
 IMAGE_BACKEND_URL=
 HUGGINGFACE_API_TOKEN=
-GEMINI_IMAGE_MODELS=gemini-3.1-flash-image,gemini-2.5-flash-image,gemini-2.5-flash
-HF_IMAGE_MODEL=black-forest-labs/FLUX.1-dev:fastest
+GEMINI_IMAGE_MODELS=gemini-3.1-flash-image,gemini-2.5-flash-image
+HF_IMAGE_MODEL=black-forest-labs/FLUX.1-schnell
 ```
 
 AI routing:
 
 - `/api/storyboard` dùng pool `GEMINI_TEXT_MODELS`, xoay vòng khi gặp quota, timeout hoặc lỗi provider tạm thời.
 - `/api/generate-panel` thử Gemini image, `IMAGE_BACKEND_URL`, Hugging Face, rồi cached fallback.
+- Nếu chạy `docker compose up --build`, service `image-service` dùng `stabilityai/sd-turbo` local và expose health check tại `http://localhost:8000/health`.
 - Lỗi `400/401/403` dừng xoay vòng để tránh spam provider khi payload hoặc key sai.
 - Response API có thêm `usedProvider` và `usedModel` để Settings hiển thị lần gọi gần nhất.
 - Khi không có key, app vẫn tạo storyboard/ảnh fallback để buổi demo không bị chặn.

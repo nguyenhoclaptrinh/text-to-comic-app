@@ -84,6 +84,12 @@ describe("server image generation", () => {
         text: async () => '{"error":"model loading"}',
       })
       .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        headers: new Headers({ "content-type": "application/json" }),
+        text: async () => '{"error":"fallback model loading"}',
+      })
+      .mockResolvedValueOnce({
         ok: true,
         headers: new Headers({ "content-type": "application/json" }),
         json: async () => ({
@@ -114,17 +120,133 @@ describe("server image generation", () => {
       usedProvider: "imagen",
       usedModel: "imagen-4.0-generate-001",
     });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       "https://router.huggingface.co/nscale/v1/images/generations",
-      expect.any(Object),
+      expect.objectContaining({
+        body: expect.stringContaining('"model":"black-forest-labs/FLUX.1-schnell"'),
+      }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
+      "https://router.huggingface.co/nscale/v1/images/generations",
+      expect.objectContaining({
+        body: expect.stringContaining('"model":"stabilityai/stable-diffusion-3-medium-diffusers"'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
       "https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=gemini-api-key",
       expect.objectContaining({
         method: "POST",
         body: expect.stringContaining('"aspectRatio":"3:4"'),
+      }),
+    );
+  });
+
+  it("should fall back to HF manga/anime model when default HF model fails for manga style", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        headers: new Headers({ "content-type": "application/json" }),
+        text: async () => '{"error":"rate limit"}',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => ({
+          data: [{ b64_json: "bWFuZ2EtZmFsbGJhY2s=" }],
+        }),
+        text: async () => "",
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await generatePanelImageFromProvider(
+      {
+        panel: { ...PANELS_SEED[0], style: "manga" },
+        characters: [],
+      },
+      "hf-token",
+      undefined,
+    );
+
+    expect(result).toMatchObject({
+      imageUrl: "data:image/png;base64,bWFuZ2EtZmFsbGJhY2s=",
+      source: "image-backend",
+      usedProvider: "huggingface",
+      usedModel: "stabilityai/stable-diffusion-3-medium-diffusers",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://router.huggingface.co/nscale/v1/images/generations",
+      expect.objectContaining({
+        body: expect.stringContaining('"model":"black-forest-labs/FLUX.1-schnell"'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://router.huggingface.co/nscale/v1/images/generations",
+      expect.objectContaining({
+        body: expect.stringContaining('"model":"stabilityai/stable-diffusion-3-medium-diffusers"'),
+      }),
+    );
+  });
+
+  it("should fall back to HF comic/general model when default HF model fails for western style", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        headers: new Headers({ "content-type": "application/json" }),
+        text: async () => '{"error":"rate limit"}',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => ({
+          data: [{ b64_json: "Y29taWMtZmFsbGJhY2s=" }],
+        }),
+        text: async () => "",
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await generatePanelImageFromProvider(
+      {
+        panel: { ...PANELS_SEED[0], style: "western" },
+        characters: [],
+      },
+      "hf-token",
+      undefined,
+    );
+
+    expect(result).toMatchObject({
+      imageUrl: "data:image/png;base64,Y29taWMtZmFsbGJhY2s=",
+      source: "image-backend",
+      usedProvider: "huggingface",
+      usedModel: "stabilityai/stable-diffusion-3-medium-diffusers",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://router.huggingface.co/nscale/v1/images/generations",
+      expect.objectContaining({
+        body: expect.stringContaining('"model":"black-forest-labs/FLUX.1-schnell"'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://router.huggingface.co/nscale/v1/images/generations",
+      expect.objectContaining({
+        body: expect.stringContaining('"model":"stabilityai/stable-diffusion-3-medium-diffusers"'),
       }),
     );
   });

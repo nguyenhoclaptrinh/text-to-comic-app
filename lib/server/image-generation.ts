@@ -26,6 +26,8 @@ import type {
 export const GEMINI_IMAGE_MODELS_POOL = ["imagen-4.0-generate-001"];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
+export const HF_MANGA_ANIME_MODEL_FALLBACK = "stabilityai/stable-diffusion-3-medium-diffusers";
+export const HF_COMIC_GENERAL_MODEL_FALLBACK = "stabilityai/stable-diffusion-3-medium-diffusers";
 export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
 export const DEFAULT_HF_IMAGE_SIZE = "1024x1024";
 export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
@@ -191,31 +193,63 @@ async function generateRawPanelImage(
   }
 
   const errors: string[] = [];
-  let attempted = false;
 
   // 1. Thử dùng Hugging Face trước vì user có thể chọn model comic tốt hơn.
   const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
   if (hfToken) {
-    attempted = true;
+    const defaultModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
+    const prompt = createImagePrompt(input);
     try {
-      const prompt = createImagePrompt(input);
+      console.log(`[Hugging Face] Attempting default image model: ${defaultModel}`);
       return await generateHuggingFaceImage({
         apiToken: hfToken,
         prompt,
         panelId: input.panel.id,
         seed: input.panel.seed,
+        modelName: defaultModel,
       });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      console.warn(`[Hugging Face] Inference failed: ${errMsg}`);
+      console.warn(
+        `[Hugging Face] Default model ${defaultModel} failed. Checking fallback... ${errMsg}`,
+      );
       errors.push(`Hugging Face: ${errMsg}`);
+
+      const resolvedStyle =
+        input.panel.style && input.panel.style !== "inherit"
+          ? input.panel.style
+          : "webtoon";
+      const fallbackModel =
+        resolvedStyle === "manga" || resolvedStyle === "webtoon"
+          ? HF_MANGA_ANIME_MODEL_FALLBACK
+          : HF_COMIC_GENERAL_MODEL_FALLBACK;
+
+      try {
+        console.log(
+          `[Hugging Face Fallback] Attempting fallback model: ${fallbackModel} (style: ${resolvedStyle})`,
+        );
+        return await generateHuggingFaceImage({
+          apiToken: hfToken,
+          prompt,
+          panelId: input.panel.id,
+          seed: input.panel.seed,
+          modelName: fallbackModel,
+        });
+      } catch (fallbackErr) {
+        const fallbackErrMsg =
+          fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+        console.warn(
+          `[Hugging Face Fallback] Model ${fallbackModel} also failed. Proceeding to other providers...`,
+          fallbackErr,
+        );
+        errors.push(`Hugging Face fallback: ${fallbackErrMsg}`);
+      }
     }
   }
 
   // 2. Thử dùng Imagen 4 Generate cho ảnh panel.
   const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
   if (geminiApiKey) {
-    attempted = true;
     try {
       const prompt = createImagePrompt(input);
       const { base64, mimeType, usedModel } =
@@ -243,7 +277,6 @@ async function generateRawPanelImage(
   // 3. Thử dùng IMAGE_BACKEND_URL
   const endpoint = process.env.IMAGE_BACKEND_URL;
   if (endpoint) {
-    attempted = true;
     try {
       const response = await fetchWithTimeout(
         endpoint,
@@ -281,13 +314,10 @@ async function generateRawPanelImage(
     }
   }
 
-  const combinedError = errors.length > 0
-    ? errors.join(" | ")
-    : "HuggingFace/Imagen/Image backend is not configured.";
-
-  if (attempted) {
-    throw new Error(combinedError);
-  }
+  const combinedError =
+    errors.length > 0
+      ? errors.join(" | ")
+      : "HuggingFace/Imagen/Image backend is not configured or failed.";
 
   return createFallbackPanelImageResponse(input, combinedError);
 }
@@ -363,13 +393,14 @@ async function generateHuggingFaceImage({
   prompt,
   panelId,
   seed,
+  modelName,
 }: {
   apiToken: string;
   prompt: string;
   panelId: string;
   seed: number;
+  modelName: string;
 }): Promise<GeneratePanelResponse> {
-  const hfModel = process.env.HF_IMAGE_MODEL || DEFAULT_HF_IMAGE_MODEL;
   const hfProvider =
     process.env.HF_INFERENCE_PROVIDER || DEFAULT_HF_INFERENCE_PROVIDER;
   const hfEndpoint =
@@ -386,7 +417,7 @@ async function generateHuggingFaceImage({
         Accept: "image/png",
       },
       body: JSON.stringify({
-        model: hfModel,
+        model: modelName,
         prompt,
         size: hfImageSize,
         n: 1,
@@ -421,7 +452,7 @@ async function generateHuggingFaceImage({
       panelId,
       imageUrl: `data:image/png;base64,${imageBase64}`,
       source: "image-backend",
-      usedModel: hfModel,
+      usedModel: modelName,
       usedProvider: "huggingface",
     };
   }
@@ -440,7 +471,7 @@ async function generateHuggingFaceImage({
     panelId,
     imageUrl: `data:${contentType};base64,${base64}`,
     source: "image-backend",
-    usedModel: hfModel,
+    usedModel: modelName,
     usedProvider: "huggingface",
   };
 }
