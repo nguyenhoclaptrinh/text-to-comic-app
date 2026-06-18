@@ -85,7 +85,7 @@ describe("studio factories", () => {
 
     const bubble = createGeneratedBubble(panel);
     expect(bubble).toMatchObject({
-      text: "This will cost you.",
+      text: "Xiao Se: This will cost you.",
       x: GENERATED_BUBBLE_X,
       y: GENERATED_BUBBLE_Y,
       width: GENERATED_BUBBLE_WIDTH,

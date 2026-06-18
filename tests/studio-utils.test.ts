@@ -27,16 +27,16 @@ describe("studio utils", () => {
     expect(clamp(50, 0, 10)).toBe(10);
   });
 
-  it("should extract dialogue text after the speaker delimiter", () => {
+  it("should preserve dialogue text exactly for bubble seeding", () => {
     expect(
       dialogueToBubble("Xiao Se: Weather like this will not bring guests."),
-    ).toBe("Weather like this will not bring guests.");
+    ).toBe("Xiao Se: Weather like this will not bring guests.");
   });
 
-  it("should preserve speakerless dialogue and enforce bubble length limit", () => {
+  it("should preserve speakerless dialogue without rewriting content", () => {
     const longDialogue = "A".repeat(BUBBLE_TEXT_MAX_LENGTH + 10);
 
-    expect(dialogueToBubble(longDialogue)).toHaveLength(BUBBLE_TEXT_MAX_LENGTH);
+    expect(dialogueToBubble(longDialogue)).toBe(longDialogue);
   });
 
   it("should create three draft panels from story text with deterministic ids", () => {
@@ -67,7 +67,8 @@ describe("studio utils", () => {
       'He sighed. "This is going to be a very long day, my friend, so let us make the best out of it." The wind blew.';
     const panelsQuote = createMockPanels(longTextWithQuotes);
     expect(panelsQuote).toHaveLength(3);
-    expect(panelsQuote[1].dialogue).toContain("Speaker: This is going to be");
+    expect(panelsQuote[1].dialogue).toContain("This is going to be");
+    expect(panelsQuote[1].dialogue.startsWith("Speaker:")).toBe(false);
     expect(panelsQuote[1].dialogue.length).toBeLessThanOrEqual(
       BUBBLE_TEXT_MAX_LENGTH,
     );

@@ -11,7 +11,6 @@ const SVG_HEIGHT = 520;
 export function createCachedPanelImage(panel: Panel) {
   const [start, middle, end] = getPanelColors(panel);
   const title = escapeSvgText(`Khung ${panel.orderIndex}`);
-  const dialogue = escapeSvgText(panel.dialogue.slice(0, 96));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SVG_WIDTH}" height="${SVG_HEIGHT}" viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}">
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -26,7 +25,6 @@ export function createCachedPanelImage(panel: Panel) {
 <ellipse cx="660" cy="268" rx="115" ry="184" fill="rgba(248,113,113,0.20)"/>
 <rect x="28" y="28" width="134" height="38" rx="10" fill="rgba(255,255,255,0.14)"/>
 <text x="46" y="53" fill="rgba(255,255,255,0.82)" font-family="Arial, sans-serif" font-size="19" font-weight="700">${title}</text>
-<text x="46" y="470" fill="rgba(255,255,255,0.72)" font-family="Arial, sans-serif" font-size="20" font-weight="600">${dialogue}</text>
 </svg>`;
 
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;

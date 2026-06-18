@@ -18,8 +18,7 @@ export function clamp(value: number, min: number, max: number) {
 }
 
 export function dialogueToBubble(dialogue: string) {
-  const [, text = dialogue] = dialogue.split(":");
-  return text.trim().slice(0, BUBBLE_TEXT_MAX_LENGTH);
+  return dialogue.trim();
 }
 
 export function nextBubbleCoordinate(
@@ -74,8 +73,12 @@ export function createMockPanels(storyText: string): Panel[] {
     .map((s) => s.trim())
     .filter((s) => s.length > 5);
 
+  if (sentences.length === 0 && cleanText) {
+    sentences.push(cleanText);
+  }
+
   if (sentences.length === 0) {
-    sentences.push("A quiet scene unfolds.");
+    return [];
   }
 
   // Chia panel động: tối thiểu 3 panel, tối đa 8 panel tùy theo độ dài câu
@@ -92,10 +95,31 @@ export function createMockPanels(storyText: string): Panel[] {
     "from-red-950 via-zinc-800 to-amber-950",
     "from-zinc-900 via-stone-800 to-slate-900",
     "from-cyan-950 via-zinc-800 to-emerald-950",
+    "from-purple-950 via-zinc-800 to-violet-950",
+    "from-blue-950 via-zinc-800 to-sky-950",
+  ];
+
+  const fallbackStyles = [
+    {
+      en: "Close up shot, intense action pose, high contrast shading.",
+      vi: "Cận cảnh, tư thế hành động kịch tính, đổ bóng tương phản cao.",
+    },
+    {
+      en: "Wide angle view, cinematic composition, soft atmospheric lighting.",
+      vi: "Góc rộng, bố cục điện ảnh, ánh sáng môi trường dịu nhẹ.",
+    },
+    {
+      en: "Character focal point, detailed background, rich graphic novel ink.",
+      vi: "Nhân vật làm trọng tâm, bối cảnh chi tiết, nét mực tiểu thuyết đồ họa sắc nét.",
+    },
+    {
+      en: "Medium shot, dynamic perspective, vibrant colors.",
+      vi: "Góc trung cảnh, góc nhìn động, màu sắc rực rỡ.",
+    },
   ];
 
   return chunks.map((chunkSentences, index) => {
-    const textFragment = chunkSentences.join(" ") || "The story continues.";
+    const textFragment = chunkSentences.join(" ").trim() || cleanText;
     let dialogue = "";
     let characterIds: string[] = [];
 
@@ -116,9 +140,15 @@ export function createMockPanels(storyText: string): Panel[] {
         const speechIndicator = textFragment.match(
           /([A-ZÀ-Ỹa-zà-ỹ\s]+)\s+(nói|hỏi|trả lời|thầm nghĩ|cười)/iu,
         );
-        const speaker = speechIndicator ? speechIndicator[1].trim() : "Speaker";
-        dialogue = `${speaker}: ${quoteMatch[1].trim()}`;
-        characterIds = [speaker.toLowerCase().replace(/[^a-z0-9à-ỹ]+/gi, "-")];
+        if (speechIndicator) {
+          const speaker = speechIndicator[1].trim();
+          dialogue = speaker + ": " + quoteMatch[1].trim();
+          characterIds = [
+            speaker.toLowerCase().replace(/[^a-z0-9à-ỹ]+/gi, "-"),
+          ];
+        } else {
+          dialogue = quoteMatch[1].trim();
+        }
       }
     }
 
@@ -126,28 +156,41 @@ export function createMockPanels(storyText: string): Panel[] {
       dialogue = dialogue.slice(0, BUBBLE_TEXT_MAX_LENGTH - 3) + "...";
     }
 
-    const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 300)}. Highly detailed, comic book style.`;
+    const styleIdx = index % fallbackStyles.length;
+    const styleEn = fallbackStyles[styleIdx].en;
+    const styleVi = fallbackStyles[styleIdx].vi;
+
+    const scenePrompt = `An illustrative comic panel depicting: ${textFragment.slice(0, 300)}. ${styleEn} Highly detailed, comic book style.`;
+    const scenePromptVi = `Một khung truyện tranh minh họa: ${textFragment.slice(0, 300)}. ${styleVi} Phong cách chi tiết, đậm chất truyện tranh.`;
+    const dialogueVi = dialogue ? `[VI] ${dialogue}` : "";
 
     return {
       id: crypto.randomUUID(),
       orderIndex: index + 1,
       scenePrompt,
+      scenePromptDisplayEn: scenePrompt,
+      scenePromptDisplayVi: scenePromptVi,
+      scenePromptDisplay: scenePrompt,
       dialogue,
+      dialogueDisplayEn: dialogue,
+      dialogueDisplayVi: dialogueVi,
+      dialogueDisplay: dialogue,
       characterIds,
       status: "draft",
       imageTone: defaultTones[index % defaultTones.length],
-      bubbles: dialogue && dialogue.trim()
-        ? [
-            {
-              id: crypto.randomUUID(),
-              text: dialogueToBubble(dialogue),
-              x: 35,
-              y: 15,
-              width: 30,
-              height: 12,
-            },
-          ]
-        : [],
+      bubbles:
+        dialogue && dialogue.trim()
+          ? [
+              {
+                id: crypto.randomUUID(),
+                text: dialogueToBubble(dialogue),
+                x: 35,
+                y: 15,
+                width: 30,
+                height: 12,
+              },
+            ]
+          : [],
       seed: Math.floor(Math.random() * 1000000),
       style: "inherit",
     };

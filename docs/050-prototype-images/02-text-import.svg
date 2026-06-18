@@ -16,7 +16,7 @@
   <rect class="bg" width="1440" height="900"/>
   <rect class="surface" x="0" y="0" width="1440" height="72"/>
   <circle cx="48" cy="36" r="18" fill="#8b5cf6"/>
-  <text class="h2" x="82" y="43">ComicAI Studio</text>
+  <text class="h2" x="82" y="43">ComicCraft Studio</text>
 
   <text class="text" x="120" y="150">Create New Comic</text>
   <text class="body" x="120" y="182">Paste a short story chapter. AI will create an editable storyboard before any image rendering.</text>

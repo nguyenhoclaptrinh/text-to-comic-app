@@ -6,7 +6,7 @@ created: 2026-06-06
 updated: 2026-06-06
 ---
 
-# BÁO CÁO NGHIÊN CỨU & SO SÁNH DỰ ÁN AICOMICFLOW.COM (COMICAI STUDIO)
+# BÁO CÁO NGHIÊN CỨU & SO SÁNH DỰ ÁN AICOMICFLOW.COM (ComicCraft Studio)
 
 *Người thực hiện: Antigravity AI (Phân vai: Solution Architect, Solution Engineer, Tech Lead)*
 
@@ -14,7 +14,7 @@ updated: 2026-06-06
 
 ## EXECUTIVE SUMMARY (TÓM TẮT DỰ ÁN)
 
-**AIComicFlow** (được triển khai tại [aicomicflow.com](https://aicomicflow.com/)) là một ứng dụng web dạng **Single Page Application (SPA)** hoàn chỉnh cho phép chuyển đổi văn bản câu chuyện thô thành kịch bản truyện tranh (storyboard) và tạo hình ảnh minh họa tương ứng thông qua AI. Với tên thương hiệu hiển thị là **ComicAI Studio**, dự án này đại diện cho mô hình ứng dụng AI thế hệ mới (2026) chạy hoàn toàn/chủ yếu ở phía **Client-Side**, tận dụng trực tiếp SDK AI tiên tiến trên trình duyệt.
+**AIComicFlow** (được triển khai tại [aicomicflow.com](https://aicomicflow.com/)) là một ứng dụng web dạng **Single Page Application (SPA)** hoàn chỉnh cho phép chuyển đổi văn bản câu chuyện thô thành kịch bản truyện tranh (storyboard) và tạo hình ảnh minh họa tương ứng thông qua AI. Với tên thương hiệu hiển thị là **ComicCraft Studio**, dự án này đại diện cho mô hình ứng dụng AI thế hệ mới (2026) chạy hoàn toàn/chủ yếu ở phía **Client-Side**, tận dụng trực tiếp SDK AI tiên tiến trên trình duyệt.
 
 Báo cáo này tập trung vào:
 1. Giải mã cấu trúc kiến trúc và công nghệ của `aicomicflow.com`.
@@ -25,7 +25,7 @@ Báo cáo này tập trung vào:
 
 ## DETAILED ANALYSIS (PHÂN TÍCH CHI TIẾT)
 
-### 1. Kiến Trúc Kỹ Thuật Của aicomicflow.com (ComicAI Studio)
+### 1. Kiến Trúc Kỹ Thuật Của aicomicflow.com (ComicCraft Studio)
 
 Qua việc phân tích mã nguồn HTML và các bundle asset trực tiếp từ website `https://aicomicflow.com/`, chúng tôi xác định các đặc điểm kiến trúc cốt lõi sau:
 

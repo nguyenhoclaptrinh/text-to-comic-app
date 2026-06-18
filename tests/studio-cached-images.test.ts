@@ -42,5 +42,6 @@ describe("cached-images", () => {
       imageTone: "from-slate-900 via-zinc-800 to-indigo-950",
     });
     expect(svgDefault).toContain("data:image/svg+xml");
+    expect(decodeURIComponent(svgDefault)).not.toContain("Innkeeper: Welcome");
   });
 });

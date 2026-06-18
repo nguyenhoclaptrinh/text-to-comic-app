@@ -35,11 +35,16 @@ export function createProject(
 }
 
 export function createCharacter(nextIndex: number): Character {
+  const description = "Add a short visual description before image generation.";
+  const descriptionVi = "Thêm mô tả ngoại hình ngắn trước khi tạo ảnh.";
   return {
     id: crypto.randomUUID(),
     name: `Character ${nextIndex}`,
     role: "Supporting role",
-    description: "Add a short visual description before image generation.",
+    description,
+    descriptionDisplayEn: description,
+    descriptionDisplayVi: descriptionVi,
+    descriptionDisplay: description,
     color: "#06b6d4",
   };
 }

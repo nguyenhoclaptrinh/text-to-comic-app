@@ -55,18 +55,19 @@ export function normalizeStoryboardAiResponse(
       characterIds: panel.characters.map(slugifyCharacterName),
       status: "draft",
       imageTone: PANEL_IMAGE_TONES[index % PANEL_IMAGE_TONES.length],
-      bubbles: panel.dialogue && panel.dialogue.trim()
-        ? [
-            {
-              id: crypto.randomUUID(),
-              text: dialogueToBubble(panel.dialogue),
-              x: 35,
-              y: 15,
-              width: 30,
-              height: 12,
-            },
-          ]
-        : [],
+      bubbles:
+        panel.dialogue && panel.dialogue.trim()
+          ? [
+              {
+                id: crypto.randomUUID(),
+                text: dialogueToBubble(panel.dialogue),
+                x: 35,
+                y: 15,
+                width: 30,
+                height: 12,
+              },
+            ]
+          : [],
       seed: Math.floor(Math.random() * 1000000),
       style: "inherit",
     }));

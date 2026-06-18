@@ -29,13 +29,13 @@ export function PanelImageControls({
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   return (
-    <div className="flex min-h-72 flex-col border-t border-zinc-800 bg-zinc-950 p-4 lg:border-l lg:border-t-0">
+    <div className="flex min-h-72 flex-col border-t border-border-main bg-surface-elevated/40 p-4 lg:border-l lg:border-t-0">
       <PanelPreview panel={panel} />
-      <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/30">
+      <div className="mt-3 rounded-lg border border-border-main bg-background/50">
         <button
           type="button"
           onClick={() => setAdvancedOpen((open) => !open)}
-          className="flex h-9 w-full items-center justify-between px-3 text-xs font-semibold text-zinc-300"
+          className="flex h-9 w-full items-center justify-between px-3 text-xs font-semibold text-text-secondary"
         >
           Tùy chọn nâng cao
           <ChevronDown
@@ -44,10 +44,10 @@ export function PanelImageControls({
           />
         </button>
         {advancedOpen ? (
-          <div className="border-t border-zinc-800 p-3">
+          <div className="border-t border-border-main p-3">
             <label
               htmlFor={`panel-style-${panel.id}`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+              className="text-[11px] font-semibold uppercase tracking-wider text-text-muted"
             >
               Phong cách vẽ
             </label>
@@ -63,7 +63,7 @@ export function PanelImageControls({
                     | "western",
                 })
               }
-              className="mt-1 h-8 w-full rounded-md border border-zinc-800 bg-zinc-900 px-2 text-xs text-zinc-200 focus:border-violet-500 focus:outline-none"
+              className="mt-1 h-8 w-full rounded-md border border-border-main bg-background px-2 text-xs text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="inherit">Theo phong cách của truyện</option>
               <option value="webtoon">Webtoon màu</option>
@@ -145,14 +145,14 @@ function PanelImageMessage({
   if (panel.status === "error" || panel.errorMessage) {
     return (
       <div className="flex flex-col gap-1.5 min-w-0">
-        <div className="min-w-0 text-xs text-red-300 font-medium break-words leading-tight">
+        <div className="min-w-0 text-xs text-red-600 dark:text-red-300 font-medium break-words leading-tight">
           {panel.errorMessage || "Chưa vẽ được ảnh. Bạn có thể thử lại."}
         </div>
         <button
           type="button"
           onClick={onGenerate}
           disabled={disabled || panel.status === "generating"}
-          className="inline-flex h-7 items-center justify-center gap-1 rounded bg-red-500/10 border border-red-500/30 px-2.5 text-[11px] font-semibold text-red-200 transition hover:bg-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-fit"
+          className="inline-flex h-7 items-center justify-center gap-1 rounded bg-red-500/10 border border-red-500/30 px-2.5 text-[11px] font-semibold text-red-650 dark:text-red-200 transition hover:bg-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-fit"
         >
           <RotateCw
             size={11}
@@ -165,10 +165,10 @@ function PanelImageMessage({
   }
 
   return (
-    <div className="min-w-0 text-xs text-zinc-500">
+    <div className="min-w-0 text-xs text-text-secondary">
       <div>Trạng thái ảnh: {STATUS_COPY[panel.status]}</div>
       {panel.usedProvider || panel.usedModel ? (
-        <div className="mt-1 truncate text-[11px] text-zinc-600">
+        <div className="mt-1 truncate text-[11px] text-text-muted">
           {formatAiRoute(panel)}
         </div>
       ) : null}

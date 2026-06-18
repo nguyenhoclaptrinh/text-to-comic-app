@@ -267,13 +267,6 @@ function ComicEditorHeader() {
           khi xuất.
         </p>
       </div>
-      <button
-        type="button"
-        className="inline-flex h-9 items-center gap-2 rounded-lg border border-border-main bg-surface-elevated px-3 text-sm text-text-primary hover:bg-surface transition-colors"
-      >
-        <Save size={15} />
-        Đã tự lưu
-      </button>
     </div>
   );
 }

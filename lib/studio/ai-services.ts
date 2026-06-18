@@ -4,7 +4,6 @@
  */
 
 import { GENERATION_DELAY_MS } from "@/lib/studio/constants";
-import { createGeneratedBubble } from "@/lib/studio/factories";
 import {
   GeneratePanelResponseSchema,
   KaggleImageJobResponseSchema,
@@ -38,13 +37,16 @@ export class StudioAiError extends Error {
 export async function analyzeStoryToPages({
   storyTitle,
   storyText,
+  outputLanguage = "en",
 }: {
   storyTitle: string;
   storyText: string;
-}): Promise<Page[]> {
+  outputLanguage?: "en" | "vi";
+}): Promise<{ pages: Page[]; characters?: Character[] }> {
   const parsedRequest = StoryboardRequestSchema.safeParse({
     storyTitle,
     storyText,
+    outputLanguage,
   });
 
   if (!parsedRequest.success) {
@@ -74,9 +76,24 @@ export async function analyzeStoryToPages({
 
     const body: unknown = await response.json().catch(() => null);
     if (!response.ok) {
+      console.error(
+        `[AI Request Failed] Status: ${response.status} - ${response.statusText}`,
+        body,
+      );
+      let userFriendlyMessage =
+        "Không thể phân tích cốt truyện lúc này. Vui lòng thử lại sau.";
+      if (response.status === 429) {
+        userFriendlyMessage =
+          "Hệ thống AI đang quá tải (Lỗi 429: Quá nhiều yêu cầu). Vui lòng đợi một lát rồi thử lại.";
+      } else if (response.status >= 500) {
+        userFriendlyMessage =
+          "Hệ thống gặp sự cố kỹ thuật (Lỗi 500: Lỗi máy chủ). Vui lòng liên hệ quản trị viên hoặc thử lại sau.";
+      } else if (isRecord(body) && typeof body.message === "string") {
+        userFriendlyMessage = body.message;
+      }
       throw new StudioAiError(
         StudioAiErrorCode.AI_TEXT_UNAVAILABLE,
-        getApiErrorMessage(body, "Storyboard generation failed."),
+        userFriendlyMessage,
       );
     }
 
@@ -87,7 +104,10 @@ export async function analyzeStoryToPages({
         provider: parsedResponse.data.usedProvider,
         model: parsedResponse.data.usedModel,
       });
-      return parsedResponse.data.pages;
+      return {
+        pages: parsedResponse.data.pages,
+        characters: parsedResponse.data.characters,
+      };
     }
 
     throw new StudioAiError(
@@ -98,15 +118,17 @@ export async function analyzeStoryToPages({
 
   await sleep(420);
   const panels = createMockPanels(parsedRequest.data.storyText);
-  return [
-    {
-      id: `page-${Date.now()}-1`,
-      projectId: `project-${Date.now()}`,
-      orderIndex: 1,
-      title: "Page 1",
-      panels,
-    },
-  ];
+  return {
+    pages: [
+      {
+        id: `page-${Date.now()}-1`,
+        projectId: `project-${Date.now()}`,
+        orderIndex: 1,
+        title: "Page 1",
+        panels,
+      },
+    ],
+  };
 }
 
 export async function generatePanelImage(
@@ -147,9 +169,24 @@ export async function generatePanelImage(
     const body: unknown = await response.json().catch(() => null);
 
     if (!response.ok) {
+      console.error(
+        `[AI Image Generation Failed] Status: ${response.status} - ${response.statusText}`,
+        body,
+      );
+      let userFriendlyMessage =
+        "Không thể vẽ ảnh lúc này. Vui lòng thử lại sau.";
+      if (response.status === 429) {
+        userFriendlyMessage =
+          "Hệ thống vẽ ảnh đang quá tải (Lỗi 429: Quá nhiều yêu cầu). Vui lòng đợi một lát rồi thử lại.";
+      } else if (response.status >= 500) {
+        userFriendlyMessage =
+          "Hệ thống vẽ ảnh gặp sự cố kỹ thuật (Lỗi 500: Lỗi máy chủ). Vui lòng liên hệ quản trị viên.";
+      } else if (isRecord(body) && typeof body.message === "string") {
+        userFriendlyMessage = body.message;
+      }
       throw new StudioAiError(
         StudioAiErrorCode.AI_IMAGE_OFFLINE,
-        getApiErrorMessage(body, "Image backend offline. Retry later."),
+        userFriendlyMessage,
       );
     }
 
@@ -173,12 +210,7 @@ export async function generatePanelImage(
       errorMessage: parsedResponse.data.warning,
       usedModel: parsedResponse.data.usedModel,
       usedProvider: parsedResponse.data.usedProvider,
-      bubbles:
-        panel.bubbles.length > 0
-          ? panel.bubbles
-          : panel.dialogue.trim()
-            ? [createGeneratedBubble(panel)]
-            : [],
+      bubbles: panel.bubbles,
     };
   }
 
@@ -187,12 +219,7 @@ export async function generatePanelImage(
   return {
     status: "success",
     errorMessage: undefined,
-    bubbles:
-      panel.bubbles.length > 0
-        ? panel.bubbles
-        : panel.dialogue.trim()
-          ? [createGeneratedBubble(panel)]
-          : [],
+    bubbles: panel.bubbles,
   };
 }
 
@@ -222,10 +249,7 @@ export async function generatePanelImageViaKaggleJob(
   });
 
   const completedJob = await pollKagglePanelImageJob(job.jobId, onStatus);
-  if (
-    completedJob.status !== "succeeded" ||
-    !completedJob.imageUrl
-  ) {
+  if (completedJob.status !== "succeeded" || !completedJob.imageUrl) {
     throw new StudioAiError(
       StudioAiErrorCode.AI_IMAGE_OFFLINE,
       completedJob.errorMessage || "Kaggle image job failed.",
@@ -244,12 +268,7 @@ export async function generatePanelImageViaKaggleJob(
     errorMessage: undefined,
     usedModel: completedJob.usedModel,
     usedProvider: completedJob.usedProvider,
-    bubbles:
-      panel.bubbles.length > 0
-        ? panel.bubbles
-        : panel.dialogue.trim()
-          ? [createGeneratedBubble(panel)]
-          : [],
+    bubbles: panel.bubbles,
   };
 }
 
@@ -276,10 +295,7 @@ export async function generatePanelImageWithKaggleFallback(
   return generatePanelImageViaKaggleJob(panel, characters, onStatus);
 }
 
-async function startKagglePanelImageJob(
-  panel: Panel,
-  characters: Character[],
-) {
+async function startKagglePanelImageJob(panel: Panel, characters: Character[]) {
   const response = await fetch("/api/kaggle-panel-jobs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -288,9 +304,23 @@ async function startKagglePanelImageJob(
   const body: unknown = await response.json().catch(() => null);
 
   if (!response.ok) {
+    console.error(
+      `[Kaggle Job Initiation Failed] Status: ${response.status} - ${response.statusText}`,
+      body,
+    );
+    let userFriendlyMessage =
+      "Tiến trình vẽ ảnh qua Kaggle không khả dụng lúc này.";
+    if (response.status === 429) {
+      userFriendlyMessage =
+        "Yêu cầu vẽ ảnh Kaggle bị giới hạn tần suất (Lỗi 429).";
+    } else if (response.status >= 500) {
+      userFriendlyMessage = "Máy chủ Kaggle gặp sự cố kỹ thuật (Lỗi 500).";
+    } else if (isRecord(body) && typeof body.message === "string") {
+      userFriendlyMessage = body.message;
+    }
     throw new StudioAiError(
       StudioAiErrorCode.AI_IMAGE_OFFLINE,
-      getApiErrorMessage(body, "Kaggle image jobs are unavailable."),
+      userFriendlyMessage,
     );
   }
 
@@ -320,9 +350,24 @@ async function pollKagglePanelImageJob(
     const body: unknown = await response.json().catch(() => null);
 
     if (!response.ok) {
+      console.error(
+        `[Kaggle Job Polling Failed] Status: ${response.status} - ${response.statusText}`,
+        body,
+      );
+      let userFriendlyMessage =
+        "Không thể lấy trạng thái tiến trình Kaggle lúc này.";
+      if (response.status === 429) {
+        userFriendlyMessage =
+          "Yêu cầu kiểm tra trạng thái bị giới hạn tần suất (Lỗi 429).";
+      } else if (response.status >= 500) {
+        userFriendlyMessage =
+          "Lỗi kết nối máy chủ khi kiểm tra trạng thái (Lỗi 500).";
+      } else if (isRecord(body) && typeof body.message === "string") {
+        userFriendlyMessage = body.message;
+      }
       throw new StudioAiError(
         StudioAiErrorCode.AI_IMAGE_OFFLINE,
-        getApiErrorMessage(body, "Kaggle image job status is unavailable."),
+        userFriendlyMessage,
       );
     }
 

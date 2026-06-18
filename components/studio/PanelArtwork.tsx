@@ -17,7 +17,7 @@ export function PanelPreview({
 }) {
   return (
     <div
-      className={`relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-zinc-700 bg-gradient-to-br ${panel.imageTone} ${
+      className={`relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-border-main bg-gradient-to-br ${panel.imageTone} ${
         compact ? "min-h-40" : "min-h-52"
       }`}
       aria-label={`Trạng thái ảnh khung ${panel.orderIndex}: ${STATUS_COPY[panel.status]}`}

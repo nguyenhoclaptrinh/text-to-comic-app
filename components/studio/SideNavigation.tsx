@@ -11,11 +11,14 @@ import {
   Settings,
   Sun,
   Moon,
+  Globe2,
 } from "lucide-react";
+import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
 import type { ReactNode } from "react";
 
 import type { View } from "@/lib/studio/types";
+import type { DisplayLanguage } from "@/lib/studio/display";
 
 type NavigationItem = {
   id: View;
@@ -34,12 +37,27 @@ export function SideNavigation({
   currentView,
   setView,
   onOpenSettings,
+  displayLanguage = "en",
+  onChangeDisplayLanguage,
+  isProjectOpen,
+  hasProjects,
 }: {
   currentView: View;
   setView: (view: View) => void;
   onOpenSettings?: () => void;
+  displayLanguage?: DisplayLanguage;
+  onChangeDisplayLanguage?: (language: DisplayLanguage) => void;
+  isProjectOpen?: boolean;
+  hasProjects?: boolean;
 }) {
   const { theme, toggleTheme } = useTheme();
+
+  const visibleItems = isProjectOpen
+    ? NAVIGATION_ITEMS
+    : hasProjects
+      ? NAVIGATION_ITEMS.filter((item) => item.id === "projects")
+      : [];
+
   return (
     <aside className="fixed inset-x-0 bottom-0 z-40 flex h-16 shrink-0 items-center border-t border-border-main/60 bg-surface/90 px-4 backdrop-blur-md transition-colors duration-200 md:top-0 md:bottom-auto md:border-t-0 md:border-b md:h-16 md:w-full md:px-6">
       {/* Cột trái: Brand logo (căn trái) */}
@@ -48,34 +66,66 @@ export function SideNavigation({
       </div>
 
       {/* Cột giữa: Thanh điều hướng chuyển màn hình (căn giữa màn hình) */}
-      <nav
-        className="flex flex-1 items-center justify-center gap-3 md:flex-initial md:gap-5 lg:gap-6"
-        aria-label="Luồng tạo truyện"
-      >
-        {NAVIGATION_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-label={item.label}
-            onClick={() => setView(item.id)}
-            className={`flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs md:text-sm transition-all duration-200 active:scale-95 ${
-              currentView === item.id
-                ? "border-primary/30 bg-primary/10 text-primary dark:text-violet-200 dark:bg-primary/20 shadow-[0_0_12px_rgba(139,92,246,0.12)] font-semibold"
-                : "border-transparent text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
-            }`}
-          >
-            {item.icon}
-            <span className="font-medium">{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      {visibleItems.length > 0 ? (
+        <nav
+          className="flex flex-1 items-center justify-center gap-3 md:flex-initial md:gap-5 lg:gap-6"
+          aria-label="Luồng tạo truyện"
+        >
+          {visibleItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-label={item.label}
+              onClick={() => setView(item.id)}
+              className={`flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs md:text-sm transition-all duration-200 active:scale-95 ${currentView === item.id
+                  ? "border-primary/30 bg-primary/10 text-primary dark:text-violet-200 dark:bg-primary/20 shadow-[0_0_12px_rgba(139,92,246,0.12)] font-semibold"
+                  : "border-transparent text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
+                }`}
+            >
+              {item.icon}
+              <span className="font-medium">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      ) : (
+        <div className="flex flex-1 md:flex-initial" />
+      )}
 
       {/* Cột phải: Cấu hình hệ thống (căn phải) */}
       <div className="hidden md:flex md:flex-1 md:items-center md:justify-end md:gap-2">
+        {onChangeDisplayLanguage && (
+          <div className="inline-flex items-center rounded-xl border border-border-main bg-surface-elevated/50 p-1 text-xs font-medium text-text-secondary h-10 mr-1 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
+            <Globe2 size={14} className="ml-1.5 mr-1.5 text-text-secondary" />
+            <button
+              type="button"
+              onClick={() => onChangeDisplayLanguage("en")}
+              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${displayLanguage === "en"
+                  ? "bg-primary text-white"
+                  : "text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
+                }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeDisplayLanguage("vi")}
+              className={`rounded-lg px-2.5 h-8 transition-all duration-200 active:scale-95 font-semibold ${displayLanguage === "vi"
+                  ? "bg-primary text-white"
+                  : "text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
+                }`}
+            >
+              VI
+            </button>
+          </div>
+        )}
         <button
           type="button"
           onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+          aria-label={
+            theme === "dark"
+              ? "Chuyển sang giao diện sáng"
+              : "Chuyển sang giao diện tối"
+          }
           className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border-main bg-surface-elevated/50 text-text-secondary transition-all hover:bg-surface-elevated hover:text-text-primary active:scale-95"
         >
           {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
@@ -95,14 +145,18 @@ export function SideNavigation({
 
 function BrandMark() {
   return (
-    <div className="flex items-center gap-3">
+    <Link href="/" className="flex items-center gap-3 hover:opacity-85 transition-opacity">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white shadow-md shadow-primary/20">
         <Sparkles size={18} />
       </div>
       <div>
-        <div className="text-sm font-semibold tracking-wide text-text-primary">ComicAI Studio</div>
-        <div className="text-xs text-text-secondary leading-none mt-0.5">Xưởng tạo truyện</div>
+        <div className="text-sm font-semibold tracking-wide text-text-primary">
+          ComicCraft Studio
+        </div>
+        <div className="text-xs text-text-secondary leading-none mt-0.5">
+          Xưởng tạo truyện
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }

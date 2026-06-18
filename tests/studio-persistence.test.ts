@@ -94,6 +94,29 @@ describe("LocalStorageStudioRepository", () => {
     expect(savedRaw).toContain("indexeddb://panel-image-");
   });
 
+  it("should extract base64 character avatars and save to IndexedDB when window is defined", async () => {
+    vi.stubGlobal("window", {});
+    mockWriteImage.mockResolvedValue(undefined);
+
+    const storage = new MemoryStorage();
+    const repository = new LocalStorageStudioRepository(storage, "test-key");
+
+    const snapshot = createTestSnapshot();
+    snapshot.characters = [
+      {
+        ...snapshot.characters[0],
+        avatarUrl: "data:image/png;base64,char_avatar_data",
+      },
+    ];
+
+    await repository.saveSnapshot(snapshot);
+
+    expect(mockWriteImage).toHaveBeenCalledTimes(1);
+
+    const savedRaw = storage.getItem("test-key");
+    expect(savedRaw).toContain("indexeddb://char-avatar-");
+  });
+
   it("should clear a saved snapshot", async () => {
     const repository = new LocalStorageStudioRepository(
       new MemoryStorage(),

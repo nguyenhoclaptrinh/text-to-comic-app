@@ -98,10 +98,31 @@ async function resolveIndexedDbImages(
       )
     : undefined;
 
+  const resolvedCharacters = await Promise.all(
+    (snapshot.characters || []).map(async (char) => {
+      if (char.avatarUrl && char.avatarUrl.startsWith("indexeddb://")) {
+        const key = char.avatarUrl.replace("indexeddb://", "");
+        try {
+          const base64 = await readImage(key);
+          if (base64) {
+            return {
+              ...char,
+              avatarUrl: base64,
+            };
+          }
+        } catch (err) {
+          console.warn("[IndexedDB] Error resolving character avatar:", err);
+        }
+      }
+      return char;
+    }),
+  );
+
   return {
     ...snapshot,
     pages: resolvedPages,
     panels: resolvedPanels,
+    characters: resolvedCharacters,
   };
 }
 

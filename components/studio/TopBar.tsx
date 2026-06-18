@@ -1,5 +1,4 @@
-import { Download, Loader2, Wand2, Settings, Sun, Moon } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
+import { Download, Loader2, Settings, Wand2 } from "lucide-react";
 
 import type { GenerationSummary } from "@/lib/studio/types";
 
@@ -22,10 +21,8 @@ export function TopBar({
   showActions?: boolean;
   showProjectInfo?: boolean;
 }) {
-  const { theme, toggleTheme } = useTheme();
-
   return (
-    <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-border-main bg-surface/95 px-3 py-1.5 transition-colors duration-200 md:px-4 lg:px-5">
+    <header className="sticky top-0 z-20 flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-border-main bg-surface/95 px-3 py-2 backdrop-blur-md transition-colors duration-200 md:px-4 lg:px-5">
       {showProjectInfo ? (
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -42,7 +39,8 @@ export function TopBar({
             aria-live="polite"
           >
             <span>
-              Đã vẽ {generationSummary.done}/{generationSummary.total} khung hình
+              Đã vẽ {generationSummary.done}/{generationSummary.total} khung
+              hình
             </span>
             {generationSummary.errors > 0 ? (
               <span className="font-medium text-red-500 dark:text-red-300">
@@ -55,51 +53,20 @@ export function TopBar({
         <div className="min-w-0 flex-1" />
       )}
 
-      {showActions ? (
-        <div className="flex shrink-0 items-center gap-1.5">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={
-            theme === "dark"
-              ? "Chuyển sang giao diện sáng"
-              : "Chuyển sang giao diện tối"
-          }
-          className="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-border-main bg-surface-elevated text-text-secondary transition hover:bg-surface hover:text-text-primary"
-        >
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          aria-label="Cấu hình dịch vụ AI"
-          className="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-border-main bg-surface-elevated text-text-secondary transition hover:bg-surface hover:text-text-primary"
-        >
-          <Settings size={16} />
-        </button>
-        <button
-          type="button"
-          onClick={onExport}
-          className="inline-flex h-8.5 items-center gap-1.5 rounded-lg border border-border-main bg-surface-elevated px-2.5 text-sm font-medium text-text-primary transition hover:bg-surface"
-        >
-          <Download size={16} />
-          <span className="hidden sm:inline">Xuất file</span>
-        </button>
-        <button
-          type="button"
-          onClick={onGenerateAll}
-          disabled={isGeneratingAll}
-          className="inline-flex h-8.5 items-center gap-1.5 rounded-lg bg-emerald-500 px-2.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isGeneratingAll ? (
-            <Loader2 className="animate-spin" size={16} />
-          ) : (
-            <Wand2 size={16} />
-          )}
-          <span className="hidden sm:inline">Vẽ tất cả</span>
-        </button>
-        </div>
-      ) : null}
+      <div className="flex shrink-0 items-center gap-1.5">
+        {showActions ? (
+          <>
+            <button
+              type="button"
+              onClick={onExport}
+              className="inline-flex h-8.5 items-center gap-1.5 rounded-lg border border-border-main bg-surface-elevated px-2.5 text-sm font-medium text-text-primary transition hover:bg-surface"
+            >
+              <Download size={16} />
+              <span className="hidden sm:inline">Xuất file</span>
+            </button>
+          </>
+        ) : null}
+      </div>
     </header>
   );
 }

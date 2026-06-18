@@ -13,17 +13,20 @@ import { useBubbleDragState } from "@/hooks/useBubbleDragState";
 import { createDefaultBubble, createProject } from "@/lib/studio/factories";
 import {
   analyzeStoryToPages,
+  generatePanelImage,
+  generatePanelImageWithKaggleFallback,
   getStudioAiErrorMessage,
 } from "@/lib/studio/ai-services";
+import { getPublicKaggleEnabled } from "@/lib/studio/production-config";
 import {
   countMissingImages,
   countPanelsForProject,
-  getPanelsForProject,
   summarizeGeneration,
   syncProjectPanelCounts,
 } from "@/lib/studio/selectors";
+import { getPanelBubbleSeed, isSeedBubbleText } from "@/lib/studio/display";
 import { updatePanelBubble } from "@/lib/studio/utils";
-import type { Bubble, Page, Project } from "@/lib/studio/types";
+import type { Bubble, Page, Project, Panel, Character } from "@/lib/studio/types";
 
 const INITIAL_PROJECT_ID = "workspace-project";
 const INITIAL_PAGE_ID = "workspace-page";
@@ -46,10 +49,13 @@ const INITIAL_PAGE: Page = {
 };
 
 export function useComicStudioState() {
-  const [projects, setProjects] = useState<Project[]>([INITIAL_PROJECT]);
-  const [pages, setPages] = useState<Page[]>([INITIAL_PAGE]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
   const [storyTitle, setStoryTitle] = useState("");
   const [storyText, setStoryText] = useState("");
+  const [storyOutputLanguage, setStoryOutputLanguage] = useState<"en" | "vi">(
+    "en",
+  );
   const [importError, setImportError] = useState("");
   const [isAnalyzingStory, setIsAnalyzingStory] = useState(false);
 
@@ -79,7 +85,9 @@ export function useComicStudioState() {
 
   const activeProjectPagesWithGlobalIndices = useMemo(() => {
     let globalIndex = 0;
-    const sortedPages = [...activeProjectPages].sort((a, b) => a.orderIndex - b.orderIndex);
+    const sortedPages = [...activeProjectPages].sort(
+      (a, b) => a.orderIndex - b.orderIndex,
+    );
     return sortedPages.map((page) => ({
       ...page,
       panels: page.panels.map((panel) => {
@@ -93,7 +101,9 @@ export function useComicStudioState() {
   }, [activeProjectPages]);
 
   const activePage =
-    activeProjectPagesWithGlobalIndices.find((page) => page.id === nav.activePageId) ??
+    activeProjectPagesWithGlobalIndices.find(
+      (page) => page.id === nav.activePageId,
+    ) ??
     activeProjectPagesWithGlobalIndices[0] ??
     pages[0];
 
@@ -131,6 +141,7 @@ export function useComicStudioState() {
       activePageId: nav.activePageId,
       storyTitle,
       storyText,
+      storyOutputLanguage,
       selectedPanelId,
       selectedBubbleId,
     },
@@ -142,6 +153,7 @@ export function useComicStudioState() {
       setActivePageId: nav.setActivePageId,
       setStoryTitle,
       setStoryText,
+      setStoryOutputLanguage,
       setSelectedPanelId: nav.setSelectedPanelId,
       setSelectedBubbleId: nav.setSelectedBubbleId,
     },
@@ -157,10 +169,12 @@ export function useComicStudioState() {
     setSelectedPanelId: nav.setSelectedPanelId,
     setSelectedBubbleId: nav.setSelectedBubbleId,
     projectStyle: activeProject?.style || "webtoon",
+    displayLanguage: activeProject?.outputLanguage || "en",
   });
 
   function selectProject(projectId: string) {
     nav.setActiveProjectId(projectId);
+    nav.setIsProjectOpen(true);
 
     const projectPages = pages.filter((page) => page.projectId === projectId);
     if (projectPages.length > 0) {
@@ -178,27 +192,73 @@ export function useComicStudioState() {
     );
   }
 
+  function setProjectOutputLanguage(language: "en" | "vi") {
+    const targetProjectId = nav.activeProjectId;
+
+    setProjects((current) =>
+      current.map((project) =>
+        project.id === targetProjectId
+          ? { ...project, outputLanguage: language }
+          : project,
+      ),
+    );
+
+    setPages((currentPages) =>
+      currentPages.map((page) => {
+        if (page.projectId !== targetProjectId) {
+          return page;
+        }
+
+        return {
+          ...page,
+          panels: page.panels.map((panel) => {
+            if (panel.bubbles.length !== 1) {
+              return panel;
+            }
+
+            const bubble = panel.bubbles[0];
+            if (!bubble || !isSeedBubbleText(panel, bubble.text)) {
+              return panel;
+            }
+
+            const nextBubbleText = getPanelBubbleSeed(panel, language);
+            return {
+              ...panel,
+              bubbles: nextBubbleText
+                ? [{ ...bubble, text: nextBubbleText }]
+                : [],
+            };
+          }),
+        };
+      }),
+    );
+  }
+
   async function analyzeStory(
     style: string = "webtoon",
     overrideTitle?: string,
     overrideText?: string,
     genre?: string,
     aspectRatio?: string,
+    overrideOutputLanguage?: "en" | "vi",
   ) {
     setIsAnalyzingStory(true);
 
     const finalTitle = overrideTitle !== undefined ? overrideTitle : storyTitle;
     const finalText = overrideText !== undefined ? overrideText : storyText;
+    const finalOutputLanguage = overrideOutputLanguage ?? storyOutputLanguage;
 
     if (overrideTitle !== undefined) setStoryTitle(overrideTitle);
     if (overrideText !== undefined) setStoryText(overrideText);
 
     try {
       const projectId = crypto.randomUUID();
-      const generatedPages = await analyzeStoryToPages({
-        storyTitle: finalTitle,
-        storyText: finalText,
-      });
+      const { pages: generatedPages, characters: generatedCharacters } =
+        await analyzeStoryToPages({
+          storyTitle: finalTitle,
+          storyText: finalText,
+          outputLanguage: finalOutputLanguage,
+        });
 
       setImportError("");
       const pagesWithCorrectProjectId = generatedPages.map((page) => ({
@@ -218,10 +278,13 @@ export function useComicStudioState() {
               aspectRatio,
             ),
             style,
+            outputLanguage: finalOutputLanguage,
           },
           ...current,
         ];
-        return current.length === 1 && current[0].id === INITIAL_PROJECT_ID && current[0].panelCount === 0
+        return current.length === 1 &&
+          current[0].id === INITIAL_PROJECT_ID &&
+          current[0].panelCount === 0
           ? next.filter((p) => p.id !== INITIAL_PROJECT_ID)
           : next;
       });
@@ -234,73 +297,21 @@ export function useComicStudioState() {
           (current[0].panels.length === 0 ||
             (current[0].panels.length === 1 &&
               current[0].panels[0].scenePrompt.startsWith("Blank panel")));
-        
+
         if (isInitialEmpty) {
           return pagesWithCorrectProjectId;
         }
         return [...pagesWithCorrectProjectId, ...current];
       });
 
-      // Trích xuất nhân vật tự động từ các panels
-      const detectedIds = new Set<string>();
-      pagesWithCorrectProjectId.forEach((page) => {
-        page.panels.forEach((panel) => {
-          panel.characterIds.forEach((id) => {
-            if (id && id !== "unknown-character") {
-              detectedIds.add(id);
-            }
-          });
-        });
-      });
-
-      const occurrences: Record<string, number> = {};
-      pagesWithCorrectProjectId.forEach((page) => {
-        page.panels.forEach((panel) => {
-          panel.characterIds.forEach((id) => {
-            if (id && id !== "unknown-character") {
-              occurrences[id] = (occurrences[id] || 0) + 1;
-            }
-          });
-        });
-      });
-
-      const sortedIds = Array.from(detectedIds).sort(
-        (a, b) => (occurrences[b] || 0) - (occurrences[a] || 0)
-      );
-
-      const colors = [
-        "#8b5cf6",
-        "#ef4444",
-        "#10b981",
-        "#f59e0b",
-        "#3b82f6",
-        "#ec4899",
-      ];
-      const newCharactersList = sortedIds.map((id, idx) => {
-        const name = prettifyCharacterId(id) || `Nhân vật ${idx + 1}`;
-        const count = occurrences[id] || 0;
-        const priority = idx + 1;
-        
-        let role = "Vai phụ";
-        if (idx === 0) {
-          role = "Vai chính";
-        } else if (count === 1) {
-          role = "Quần chúng";
-        }
-
-        const gender = detectGender(id, name, finalText);
-
-        return {
-          id,
-          projectId,
-          name,
-          role,
-          gender,
-          priority,
-          description: `Nhân vật ${name}. Xuất hiện trong ${count} khung hình.`,
-          color: colors[idx % colors.length],
-        };
-      });
+      const newCharactersList =
+        generatedCharacters && generatedCharacters.length > 0
+          ? generatedCharacters.map((c, idx) => ({
+              ...c,
+              projectId,
+              priority: idx + 1,
+            }))
+          : [];
 
       if (newCharactersList.length > 0) {
         casting.setCharacters((current) => [
@@ -313,6 +324,7 @@ export function useComicStudioState() {
       nav.setActivePageId(firstPage.id);
       nav.setSelectedPanelId(firstPage.panels[0].id);
       nav.setSelectedBubbleId(firstPage.panels[0].bubbles[0]?.id ?? "");
+      nav.setIsProjectOpen(true);
       nav.setView("storyboard");
     } catch (error) {
       setImportError(getStudioAiErrorMessage(error));
@@ -357,6 +369,35 @@ export function useComicStudioState() {
     nav.setSelectedBubbleId("");
   }
 
+  function applyPageStoryboard(
+    pageId: string,
+    newPanels: Panel[],
+    generatedCharacters?: Character[],
+  ) {
+    setPages((current) => {
+      const nextPages = current.map((page) =>
+        page.id === pageId ? { ...page, panels: newPanels } : page,
+      );
+      setProjects((currentProjects) =>
+        syncProjectPanelCounts(currentProjects, nextPages),
+      );
+      return nextPages;
+    });
+
+    if (generatedCharacters && generatedCharacters.length > 0) {
+      const newCharactersList = generatedCharacters.map((c, idx) => ({
+        ...c,
+        projectId: nav.activeProjectId,
+        priority: idx + 1,
+      }));
+
+      casting.setCharacters((current) => [
+        ...newCharactersList,
+        ...current.filter((c) => c.projectId !== nav.activeProjectId),
+      ]);
+    }
+  }
+
   function deletePage(pageId: string) {
     const pageToDelete = pages.find((p) => p.id === pageId);
     if (!pageToDelete) return;
@@ -392,10 +433,11 @@ export function useComicStudioState() {
     );
 
     if (nav.activePageId === pageId) {
-      const fallbackPage = reorderedPages.find((page) => {
-        const pId = page.projectId || INITIAL_PROJECT_ID;
-        return pId === projectId;
-      }) || reorderedPages[0];
+      const fallbackPage =
+        reorderedPages.find((page) => {
+          const pId = page.projectId || INITIAL_PROJECT_ID;
+          return pId === projectId;
+        }) || reorderedPages[0];
 
       nav.setActivePageId(fallbackPage.id);
       nav.setSelectedPanelId(fallbackPage.panels[0]?.id ?? "");
@@ -455,50 +497,49 @@ export function useComicStudioState() {
 
   function deleteProject(projectId: string) {
     const remainingProjects = projects.filter((p) => p.id !== projectId);
-    const nextProject = remainingProjects[0] || INITIAL_PROJECT;
+    const nextProject = remainingProjects[0];
 
     let newActivePageId = "";
     let newActivePanelId = "";
 
-    if (nav.activeProjectId === projectId) {
-      const nextProjectPages = pages.filter((page) => page.projectId === nextProject.id);
+    if (nav.activeProjectId === projectId && nextProject) {
+      const nextProjectPages = pages.filter(
+        (page) => page.projectId === nextProject.id,
+      );
       if (nextProjectPages.length > 0) {
         newActivePageId = nextProjectPages[0].id;
         newActivePanelId = nextProjectPages[0].panels[0]?.id ?? "";
-      } else if (nextProject.id === INITIAL_PROJECT_ID) {
-        newActivePageId = crypto.randomUUID();
       }
     }
 
-    casting.setCharacters((current) => current.filter((c) => c.projectId !== projectId));
+    casting.setCharacters((current) =>
+      current.filter((c) => c.projectId !== projectId),
+    );
 
     setProjects((current) => {
-      const updated = current.filter((p) => p.id !== projectId);
-      return updated.length > 0 ? updated : [INITIAL_PROJECT];
+      return current.filter((p) => p.id !== projectId);
     });
 
     setPages((currentPages) => {
-      const updated = currentPages.filter((page) => page.projectId !== projectId);
-      if (nav.activeProjectId === projectId && nextProject.id === INITIAL_PROJECT_ID) {
-        const nextProjectPages = updated.filter((page) => page.projectId === INITIAL_PROJECT_ID);
-        if (nextProjectPages.length === 0) {
-          const defaultPage = {
-            ...INITIAL_PAGE,
-            id: newActivePageId || crypto.randomUUID(),
-          };
-          return [defaultPage, ...updated];
-        }
-      }
-      return updated;
+      return currentPages.filter((page) => page.projectId !== projectId);
     });
 
     if (nav.activeProjectId === projectId) {
-      nav.setActiveProjectId(nextProject.id);
-      if (newActivePageId) {
-        nav.setActivePageId(newActivePageId);
-        nav.setSelectedPanelId(newActivePanelId);
-        nav.setSelectedBubbleId("");
+      nav.setIsProjectOpen(false);
+      nav.setView("projects");
+      if (nextProject) {
+        nav.setActiveProjectId(nextProject.id);
+        if (newActivePageId) {
+          nav.setActivePageId(newActivePageId);
+          nav.setSelectedPanelId(newActivePanelId);
+          nav.setSelectedBubbleId("");
+        } else {
+          nav.setActivePageId("");
+          nav.setSelectedPanelId("");
+          nav.setSelectedBubbleId("");
+        }
       } else {
+        nav.setActiveProjectId("");
         nav.setActivePageId("");
         nav.setSelectedPanelId("");
         nav.setSelectedBubbleId("");
@@ -508,6 +549,39 @@ export function useComicStudioState() {
 
   // 5. Phân rã Trạng thái Kéo thả Bong bóng thoại
   const drag = useBubbleDragState(updateBubble);
+
+  async function generateCharacterImage(characterId: string): Promise<string | void> {
+    const char = casting.characters.find((c) => c.id === characterId);
+    if (!char) return;
+
+    const pseudoPanel: Panel = {
+      id: char.id,
+      orderIndex: 1,
+      scenePrompt: `Portrait profile picture of character: ${char.name}. Description: ${char.descriptionDisplayVi || char.descriptionDisplayEn || char.description || ""}`,
+      dialogue: "",
+      characterIds: [char.id],
+      status: "generating" as const,
+      imageTone: "from-zinc-900 via-stone-800 to-slate-900",
+      bubbles: [],
+      seed: Math.floor(Math.random() * 1000000),
+      style: (activeProject?.style || "webtoon") as Panel["style"],
+    };
+
+    const kaggleEnabled = getPublicKaggleEnabled();
+    const generateImagePromise = kaggleEnabled
+      ? generatePanelImageWithKaggleFallback(
+          pseudoPanel,
+          [char],
+          kaggleEnabled,
+        )
+      : generatePanelImage(pseudoPanel, [char]);
+
+    const result = await generateImagePromise;
+    if (result.imageUrl) {
+      casting.updateCharacter(characterId, { avatarUrl: result.imageUrl });
+      return result.imageUrl;
+    }
+  }
 
   const allPanels = useMemo(
     () => activeProjectPagesWithGlobalIndices.flatMap((page) => page.panels),
@@ -527,6 +601,7 @@ export function useComicStudioState() {
       allPanels,
       storyTitle,
       storyText,
+      storyOutputLanguage,
       importError,
       isAnalyzingStory,
       selectedPanelId,
@@ -537,11 +612,14 @@ export function useComicStudioState() {
       isGeneratingAll: panelActions.isGeneratingAll,
       missingImages,
       generationSummary,
+      isProjectOpen: nav.isProjectOpen,
     },
     actions: {
       setView: nav.setView,
+      setIsProjectOpen: nav.setIsProjectOpen,
       setStoryTitle,
       setStoryText,
+      setStoryOutputLanguage,
       setSelectedPanelId: nav.setSelectedPanelId,
       setSelectedBubbleId: nav.setSelectedBubbleId,
       setDragging: drag.setDragging,
@@ -549,6 +627,7 @@ export function useComicStudioState() {
       selectProject,
       analyzeStory,
       updateProjectStyle,
+      setProjectOutputLanguage,
       updatePanel: panelActions.updatePanel,
       deletePanel: panelActions.deletePanel,
       generatePanel: panelActions.generatePanel,
@@ -557,6 +636,7 @@ export function useComicStudioState() {
       addCharacter: () => casting.addCharacter(nav.activeProjectId),
       deleteCharacter: casting.deleteCharacter,
       updateCharacter: casting.updateCharacter,
+      generateCharacterImage,
       addPage,
       deletePage,
       deleteProject,
@@ -565,59 +645,7 @@ export function useComicStudioState() {
       updateBubble,
       deleteBubble,
       handleBubbleMove: drag.handleBubbleMove,
+      applyPageStoryboard,
     },
   };
-}
-
-function prettifyCharacterId(characterId: string) {
-  return characterId
-    .split("-")
-    .filter((word) => word.length > 1)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function detectGender(id: string, name: string, storyText: string): "Nam" | "Nữ" | "Khác" {
-  const lowerText = storyText.toLowerCase();
-  const lowerName = name.toLowerCase();
-  const lowerId = id.toLowerCase();
-  
-  if (/\b(cô|nàng|nữ|chị|bà|mẹ|vợ|am|hoa)\b/i.test(lowerName)) {
-    return "Nữ";
-  }
-  if (/\b(anh|chàng|cậu|nam|ông|bố|chồng|lão|tể|phu)\b/i.test(lowerName)) {
-    return "Nam";
-  }
-  
-  const sentences = lowerText.split(/[.!?\n]+/);
-  let femaleScore = 0;
-  let maleScore = 0;
-  
-  for (const sentence of sentences) {
-    if (sentence.includes(lowerName) || sentence.includes(lowerId)) {
-      if (/\b(cô ấy|nàng|chị ấy|thiếu nữ|nữ tử|nữ nhân|bà ấy|mẹ|vợ|cô|chị|em gái)\b/.test(sentence)) {
-        femaleScore++;
-      }
-      if (/\b(anh ấy|chàng|cậu ấy|nam nhân|ông ấy|bố|chồng|anh|cậu|em trai|gã|hắn)\b/.test(sentence)) {
-        maleScore++;
-      }
-    }
-  }
-  
-  if (femaleScore > maleScore) {
-    return "Nữ";
-  }
-  if (maleScore > femaleScore) {
-    return "Nam";
-  }
-  
-  // Endings check for common Vietnamese names
-  if (/\b(hùng|cường|minh|tuấn|kiên|hoàng|dũng|sơn|hải|phong|vũ|thành|đạt|nam|trung|khánh|lâm|thịnh|tèo|tí)\b/.test(lowerName)) {
-    return "Nam";
-  }
-  if (/\b(hoa|lan|mai|cúc|vy|trang|hương|nhung|phương|thảo|linh|hà|chi|diệp|anh|tuyết|ngọc|nhi|quỳnh|thư)\b/.test(lowerName)) {
-    return "Nữ";
-  }
-  
-  return "Khác";
 }

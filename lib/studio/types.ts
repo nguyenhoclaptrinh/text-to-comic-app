@@ -35,7 +35,11 @@ export type Character = {
   /** Giới tính: Nam, Nữ, Khác */
   gender?: "Nam" | "Nữ" | "Khác";
   description: string;
+  descriptionDisplayEn?: string;
+  descriptionDisplayVi?: string;
+  descriptionDisplay?: string;
   color: string;
+  avatarUrl?: string;
   // optional priority for ordering / importance (lower = higher priority)
   priority?: number;
 };
@@ -47,6 +51,7 @@ export type Bubble = {
   y: number;
   width: number;
   height: number;
+  fontSize?: number;
 };
 
 export type Page = {
@@ -61,7 +66,13 @@ export type Panel = {
   id: string;
   orderIndex: number;
   scenePrompt: string;
+  scenePromptDisplayEn?: string;
+  scenePromptDisplayVi?: string;
+  scenePromptDisplay?: string;
   dialogue: string;
+  dialogueDisplayEn?: string;
+  dialogueDisplayVi?: string;
+  dialogueDisplay?: string;
   characterIds: string[];
   status: PanelStatus;
   imageTone: string;
@@ -80,6 +91,7 @@ export type Project = {
   status: ProjectStatus;
   updatedAt: string;
   panelCount: number;
+  outputLanguage?: "en" | "vi";
   style?: string;
   genre?: string;
   aspectRatio?: string;
@@ -92,6 +104,7 @@ export type DragState = {
   offsetY: number;
   bubbleWidth: number;
   bubbleHeight: number;
+  mode?: "move" | "resize";
 };
 
 export type GenerationSummary = {
@@ -111,6 +124,7 @@ export type StudioSnapshot = {
   panels?: Panel[]; // Tương thích ngược với định dạng cũ
   storyTitle: string;
   storyText: string;
+  storyOutputLanguage?: "en" | "vi";
   selectedPanelId: string;
   selectedBubbleId: string;
 };

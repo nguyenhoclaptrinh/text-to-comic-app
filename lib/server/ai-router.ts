@@ -43,6 +43,7 @@ export type AiRouteFailure = {
   ok: false;
   durationMs: number;
   warning: string;
+  error?: unknown;
   provider?: AiProvider;
   model?: string;
   source?: AiProvider;
@@ -162,6 +163,7 @@ export async function routeAiModels<T>({
     durationMs: Date.now() - startedAt,
     source: lastCandidate?.provider,
     warning: getAiErrorMessage(lastError),
+    error: lastError,
   };
 }
 

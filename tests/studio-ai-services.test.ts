@@ -39,7 +39,7 @@ describe("studio AI services", () => {
 
     await vi.runAllTimersAsync();
 
-    const pages = await promise;
+    const { pages } = await promise;
     expect(pages).toHaveLength(1);
     expect(pages[0].panels).toHaveLength(3);
     vi.useRealTimers();
@@ -65,16 +65,28 @@ describe("studio AI services", () => {
               })),
             },
           ],
+          characters: [
+            {
+              id: "xiao-se",
+              name: "Xiao Se",
+              role: "Vai chính",
+              gender: "Nam",
+              description: "Mô tả",
+              color: "#8b5cf6",
+            },
+          ],
         }),
       }),
     );
 
-    const pages = await analyzeStoryToPages({
+    const { pages, characters } = await analyzeStoryToPages({
       storyTitle: "Snow Road Inn",
       storyText: SAMPLE_STORY,
     });
     expect(pages).toHaveLength(1);
     expect(pages[0].panels).toHaveLength(3);
+    expect(characters).toHaveLength(1);
+    expect(characters?.[0].name).toBe("Xiao Se");
   });
 
   it("should reject when the browser storyboard API returns an invalid body", async () => {
@@ -119,7 +131,7 @@ describe("studio AI services", () => {
     });
   });
 
-  it("should create a successful panel generation patch with a bubble fallback", async () => {
+  it("should preserve existing bubbles without auto-generating new ones", async () => {
     vi.useFakeTimers();
     const promise = generatePanelImage({ ...PANELS_SEED[1], bubbles: [] });
 
@@ -127,7 +139,7 @@ describe("studio AI services", () => {
     const patch = await promise;
 
     expect(patch).toMatchObject({ status: "success" });
-    expect(patch.bubbles).toHaveLength(1);
+    expect(patch.bubbles).toHaveLength(0);
     expect(patch.imageUrl).toBeUndefined();
     vi.useRealTimers();
   });
@@ -345,8 +357,10 @@ describe("studio AI services", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const promise = generatePanelImageViaKaggleJob(PANELS_SEED[0], [], (status) =>
-      statuses.push(status),
+    const promise = generatePanelImageViaKaggleJob(
+      PANELS_SEED[0],
+      [],
+      (status) => statuses.push(status),
     );
     await vi.advanceTimersByTimeAsync(7000);
 
@@ -360,12 +374,10 @@ describe("studio AI services", () => {
   });
 
   it("should surface Kaggle startup failures without silent fallback", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({
-        ok: false,
-        json: async () => ({ message: "Kaggle disabled." }),
-      });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({ message: "Kaggle disabled." }),
+    });
 
     vi.stubGlobal("window", {});
     vi.stubGlobal("fetch", fetchMock);

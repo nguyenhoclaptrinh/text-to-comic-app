@@ -1,6 +1,10 @@
 import { Plus, Trash, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 
+import {
+  type DisplayLanguage,
+  getCharacterDescriptionDisplay,
+} from "@/lib/studio/display";
 import type { Character } from "@/lib/studio/types";
 
 export function CharacterCastingPanel({
@@ -9,6 +13,7 @@ export function CharacterCastingPanel({
   onUpdateCharacter,
   onDeleteCharacter,
   onGenerateImage,
+  outputLanguage = "en",
   className = "",
 }: {
   characters: Character[];
@@ -16,6 +21,7 @@ export function CharacterCastingPanel({
   onUpdateCharacter: (characterId: string, patch: Partial<Character>) => void;
   onDeleteCharacter?: (characterId: string) => void;
   onGenerateImage?: (characterId: string) => Promise<string | void>;
+  outputLanguage?: DisplayLanguage;
   className?: string;
 }) {
   return (
@@ -46,6 +52,7 @@ export function CharacterCastingPanel({
             onGenerateImage={
               onGenerateImage ? () => onGenerateImage(character.id) : undefined
             }
+            outputLanguage={outputLanguage}
           />
         ))}
       </div>
@@ -58,13 +65,15 @@ function CharacterCard({
   onUpdate,
   onDelete,
   onGenerateImage,
+  outputLanguage = "en",
 }: {
   character: Character;
   onUpdate: (patch: Partial<Character>) => void;
   onDelete?: () => void;
   onGenerateImage?: () => Promise<string | void>;
+  outputLanguage?: DisplayLanguage;
 }) {
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(character.avatarUrl);
   const [loading, setLoading] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
 
@@ -73,23 +82,30 @@ function CharacterCard({
   const [role, setRole] = useState(character.role);
   const [gender, setGender] = useState(character.gender ?? "");
   const [priority, setPriority] = useState(character.priority ?? "");
-  const [description, setDescription] = useState(character.description);
+  const [description, setDescription] = useState(
+    getCharacterDescriptionDisplay(character, outputLanguage),
+  );
 
-  // Sync internal state when character prop changes
-  useEffect(() => {
+  const [prevCharacter, setPrevCharacter] = useState(character);
+  const [prevOutputLanguage, setPrevOutputLanguage] = useState(outputLanguage);
+
+  if (character !== prevCharacter || outputLanguage !== prevOutputLanguage) {
+    setPrevCharacter(character);
+    setPrevOutputLanguage(outputLanguage);
     setName(character.name);
     setRole(character.role);
     setGender(character.gender ?? "");
     setPriority(character.priority ?? "");
-    setDescription(character.description);
-  }, [character]);
+    setDescription(getCharacterDescriptionDisplay(character, outputLanguage));
+    setAvatarUrl(character.avatarUrl);
+  }
 
   const isDirty =
     name !== character.name ||
     role !== character.role ||
     gender !== (character.gender ?? "") ||
     String(priority) !== String(character.priority ?? "") ||
-    description !== character.description;
+    description !== getCharacterDescriptionDisplay(character, outputLanguage);
 
   const handleSave = () => {
     onUpdate({
@@ -97,7 +113,9 @@ function CharacterCard({
       role,
       gender: isCharacterGender(gender) ? gender : undefined,
       priority: priority !== "" ? Number(priority) : undefined,
-      description,
+      ...(outputLanguage === "vi"
+        ? { descriptionDisplayVi: description, descriptionDisplay: description }
+        : { description, descriptionDisplayEn: description }),
     });
   };
 
@@ -210,7 +228,7 @@ function CharacterCard({
             ) : null}
           </div>
         ) : null}
-        
+
         {/* Save and Delete actions */}
         <div className="mt-3 flex items-center gap-2 border-t border-border-main/50 pt-2.5">
           <button
@@ -223,7 +241,7 @@ function CharacterCard({
             <Trash size={13} />
             Xóa
           </button>
-          
+
           <button
             type="button"
             onClick={handleSave}

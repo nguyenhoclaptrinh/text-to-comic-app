@@ -23,9 +23,7 @@ import type {
   GeneratePanelResponse,
 } from "@/lib/studio/api-contracts";
 
-export const GEMINI_IMAGE_MODELS_POOL = [
-  "imagen-4.0-generate-001",
-];
+export const GEMINI_IMAGE_MODELS_POOL = ["imagen-4.0-generate-001"];
 
 export const DEFAULT_HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
 export const HF_MANGA_ANIME_MODEL_FALLBACK = "stabilityai/stable-diffusion-3-medium-diffusers";
@@ -34,13 +32,136 @@ export const DEFAULT_HF_INFERENCE_PROVIDER = "nscale";
 export const DEFAULT_HF_IMAGE_SIZE = "1024x1024";
 export const DEFAULT_IMAGEN_IMAGE_MODEL = "imagen-4.0-generate-001";
 
+export async function translateRequestToEnglish(
+  input: GeneratePanelRequest,
+  apiKey?: string,
+): Promise<GeneratePanelRequest> {
+  if (!apiKey) {
+    return input;
+  }
+
+  try {
+    const translatedScenePrompt = await translateToEnglish(
+      input.panel.scenePrompt,
+      apiKey,
+    );
+    const translatedCharacters = await Promise.all(
+      input.characters.map(async (char) => ({
+        ...char,
+        description: await translateToEnglish(char.description, apiKey),
+      })),
+    );
+
+    return {
+      ...input,
+      panel: {
+        ...input.panel,
+        scenePrompt: translatedScenePrompt,
+      },
+      characters: translatedCharacters,
+    };
+  } catch (err) {
+    console.warn("[Translate Request] Failed to translate inputs:", err);
+    return input;
+  }
+}
+
+async function translateToEnglish(
+  text: string,
+  apiKey: string,
+): Promise<string> {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return text;
+  }
+
+  // Skip translation if the text is already strictly English (ASCII alphanumeric and punctuation)
+  if (/^[a-zA-Z0-9\s,.:;?!"'()_/\-\\#$£€%&*+=|<>~`@]*$/.test(trimmed)) {
+    return text;
+  }
+
+  const modelsPool = [
+    process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
+  ];
+
+  const uniqueModels = Array.from(new Set(modelsPool));
+
+  for (const model of uniqueModels) {
+    try {
+      const response = await fetchWithTimeout(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `Translate the following character appearance description or visual comic scene description into descriptive English suitable for an AI image generator. Do not translate proper names unless necessary. Return ONLY the English translation. Do not include any explanations, introduction, quotes or other text:\n\n${trimmed}`,
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+        8000,
+      );
+
+      if (response.ok) {
+        const data: unknown = await response.json();
+        const translated = extractGeminiTextLocal(data).trim();
+        if (translated) {
+          return translated;
+        }
+      } else {
+        const statusText = await response.text().catch(() => "");
+        console.warn(
+          `[Translate to English] Model ${model} returned status ${response.status}: ${statusText}`,
+        );
+      }
+    } catch (err) {
+      console.warn(`[Translate to English] Model ${model} failed:`, err);
+    }
+  }
+
+  return text;
+}
+
+function extractGeminiTextLocal(data: unknown): string {
+  try {
+    const obj = data as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{
+            text?: string;
+          }>;
+        };
+      }>;
+    };
+    return obj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  } catch {
+    return "";
+  }
+}
+
 export async function generatePanelImageFromProvider(
   input: GeneratePanelRequest,
   customHfToken?: string,
   customGeminiApiKey?: string,
 ): Promise<GeneratePanelResponse> {
+  const geminiApiKey = customGeminiApiKey || process.env.GEMINI_API_KEY;
+  const translatedInput = await translateRequestToEnglish(input, geminiApiKey);
+
   const response = await generateRawPanelImage(
-    input,
+    translatedInput,
     customHfToken,
     customGeminiApiKey,
   );
@@ -71,6 +192,8 @@ async function generateRawPanelImage(
     throw new Error("Image backend is offline.");
   }
 
+  const errors: string[] = [];
+
   // 1. Thử dùng Hugging Face trước vì user có thể chọn model comic tốt hơn.
   const hfToken = customHfToken || process.env.HUGGINGFACE_API_TOKEN;
   if (hfToken) {
@@ -86,7 +209,11 @@ async function generateRawPanelImage(
         modelName: defaultModel,
       });
     } catch (err) {
-      console.warn(`[Hugging Face] Default model ${defaultModel} failed. Checking fallback...`, err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[Hugging Face] Default model ${defaultModel} failed. Checking fallback... ${errMsg}`,
+      );
+      errors.push(`Hugging Face: ${errMsg}`);
 
       const resolvedStyle =
         input.panel.style && input.panel.style !== "inherit"
@@ -109,10 +236,13 @@ async function generateRawPanelImage(
           modelName: fallbackModel,
         });
       } catch (fallbackErr) {
+        const fallbackErrMsg =
+          fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
         console.warn(
           `[Hugging Face Fallback] Model ${fallbackModel} also failed. Proceeding to other providers...`,
           fallbackErr,
         );
+        errors.push(`Hugging Face fallback: ${fallbackErrMsg}`);
       }
     }
   }
@@ -138,7 +268,9 @@ async function generateRawPanelImage(
         usedProvider: "imagen",
       };
     } catch (err) {
-      console.warn("[Imagen Image] Failed, trying fallback backends...", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[Imagen Image] Failed: ${errMsg}`);
+      errors.push(`Imagen: ${errMsg}`);
     }
   }
 
@@ -171,15 +303,23 @@ async function generateRawPanelImage(
           };
         }
       }
+      const errText = await response.text().catch(() => "Unknown response body");
+      const errMsg = `Image backend responded with status ${response.status}: ${errText}`;
+      console.warn(`[Image Backend] Failed: ${errMsg}`);
+      errors.push(errMsg);
     } catch (err) {
-      console.warn("[Image Backend] Failed, trying HuggingFace...", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[Image Backend] Request failed: ${errMsg}`);
+      errors.push(`Image Backend: ${errMsg}`);
     }
   }
 
-  return createFallbackPanelImageResponse(
-    input,
-    "HuggingFace/Imagen/Image backend is not configured or failed.",
-  );
+  const combinedError =
+    errors.length > 0
+      ? errors.join(" | ")
+      : "HuggingFace/Imagen/Image backend is not configured or failed.";
+
+  return createFallbackPanelImageResponse(input, combinedError);
 }
 
 function createFallbackPanelImageResponse(
@@ -210,13 +350,6 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
     )
     .filter(isDefined);
 
-  const characterContext = selectedCharacters
-    .map(
-      (character) =>
-        `character ${character.name} (described as: ${compactPromptText(character.description, 40)})`,
-    )
-    .join(", ");
-
   const resolvedStyle =
     panel.style && panel.style !== "inherit" ? panel.style : "webtoon";
   const styleModifier =
@@ -226,17 +359,20 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
 
   const characterHeading =
     selectedCharacters.length > 0
-      ? `featuring ${characterContext}`
+      ? `Characters appearing in this panel:\n` +
+        selectedCharacters
+          .map(
+            (character) =>
+              `- ${character.name}: ${compactPromptText(character.description, 80)}`,
+          )
+          .join("\n")
       : "";
 
   return [
     `Comic panel, ${styleModifier}`,
     characterHeading,
-    `Scene: ${compactPromptText(panel.scenePrompt, 100)}`,
-    panel.dialogue
-      ? `Dialogue context: character is speaking with expression matching the scene. Do not draw any text or speech bubbles.`
-      : "",
-    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color, no text, no words, no speech bubbles, no dialogue bubbles, no captions",
+    `Scene description: ${compactPromptText(panel.scenePrompt, 100)}`,
+    "Quality: clean line art, clear face, same face shape and facial features for each character across panels, consistent character identity, change only hair style, clothing, makeup, expressions, and poses as needed, polished color, no text, no words, no letters, no speech bubbles, no dialogue bubbles, no captions, strictly image only",
     `Seed: ${panel.seed}`,
   ]
     .filter(Boolean)
@@ -244,9 +380,12 @@ export function createImagePrompt({ panel, characters }: GeneratePanelRequest) {
 }
 
 function compactPromptText(value: string, maxWords: number) {
-  return value.replace(/\s+/g, " ").trim().split(" ").slice(0, maxWords).join(
-    " ",
-  );
+  return value
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .slice(0, maxWords)
+    .join(" ");
 }
 
 async function generateHuggingFaceImage({

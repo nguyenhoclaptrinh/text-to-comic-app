@@ -14,6 +14,7 @@ import type { Character, Panel } from "@/lib/studio/types";
 export function StoryboardPanelCard({
   panel,
   characters,
+  outputLanguage = "en",
   selected,
   disabled,
   canDelete,
@@ -27,6 +28,7 @@ export function StoryboardPanelCard({
 }: {
   panel: Panel;
   characters: Character[];
+  outputLanguage?: "en" | "vi";
   selected: boolean;
   disabled: boolean;
   canDelete: boolean;
@@ -47,6 +49,7 @@ export function StoryboardPanelCard({
       <PanelTextEditor
         panel={panel}
         characters={characters}
+        outputLanguage={outputLanguage}
         canDelete={canDelete}
         canMoveUp={canMoveUp}
         canMoveDown={canMoveDown}
@@ -68,6 +71,7 @@ export function StoryboardPanelCard({
 function PanelTextEditor({
   panel,
   characters,
+  outputLanguage = "en",
   canDelete,
   canMoveUp,
   canMoveDown,
@@ -78,6 +82,7 @@ function PanelTextEditor({
 }: {
   panel: Panel;
   characters: Character[];
+  outputLanguage?: "en" | "vi";
   canDelete: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -130,7 +135,11 @@ function PanelTextEditor({
         </div>
       </div>
 
-      <EditablePanelText panel={panel} onUpdate={onUpdate} />
+      <EditablePanelText
+        panel={panel}
+        outputLanguage={outputLanguage}
+        onUpdate={onUpdate}
+      />
       <CharacterChips panel={panel} characters={characters} />
     </div>
   );

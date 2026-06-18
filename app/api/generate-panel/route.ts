@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         code: "AI_IMAGE_OFFLINE",
-        message: "Image backend is offline. Please retry later.",
+        message: error instanceof Error ? error.message : "Image generation failed. Please retry later.",
         retryable: true,
       },
       { status: 503 },

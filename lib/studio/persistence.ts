@@ -264,9 +264,28 @@ async function extractAndSaveBase64Images(
       )
     : undefined;
 
+  const cleanCharacters = await Promise.all(
+    (snapshot.characters || []).map(async (char) => {
+      if (char.avatarUrl && char.avatarUrl.startsWith("data:image/")) {
+        const key = `char-avatar-${char.id}`;
+        try {
+          await writeImage(key, char.avatarUrl);
+          return {
+            ...char,
+            avatarUrl: `indexeddb://${key}`,
+          };
+        } catch (err) {
+          console.warn("[IndexedDB] Error saving character avatar:", err);
+        }
+      }
+      return char;
+    }),
+  );
+
   return {
     ...snapshot,
     pages: cleanPages,
     panels: cleanPanels,
+    characters: cleanCharacters,
   };
 }

@@ -3,47 +3,70 @@
  * @description Editable text fields for storyboard prompt and dialogue.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  type DisplayLanguage,
+  getPanelDialogueDisplay,
+  getPanelScenePromptDisplay,
+} from "@/lib/studio/display";
 import type { Panel } from "@/lib/studio/types";
 
 export function EditablePanelText({
   panel,
+  outputLanguage = "en",
   onUpdate,
 }: {
   panel: Panel;
+  outputLanguage?: DisplayLanguage;
   onUpdate: (patch: Partial<Panel>) => void;
 }) {
-  const [prevPanelId, setPrevPanelId] = useState(panel.id);
-  const [localPrompt, setLocalPrompt] = useState(panel.scenePrompt);
-  const [localDialogue, setLocalDialogue] = useState(panel.dialogue);
+  const [prevPanel, setPrevPanel] = useState(panel);
+  const [prevOutputLang, setPrevOutputLang] = useState(outputLanguage);
+
+  const [localPrompt, setLocalPrompt] = useState(
+    getPanelScenePromptDisplay(panel, outputLanguage),
+  );
+  const [localDialogue, setLocalDialogue] = useState(
+    getPanelDialogueDisplay(panel, outputLanguage),
+  );
+
+  if (panel !== prevPanel || outputLanguage !== prevOutputLang) {
+    setPrevPanel(panel);
+    setPrevOutputLang(outputLanguage);
+    setLocalPrompt(getPanelScenePromptDisplay(panel, outputLanguage));
+    setLocalDialogue(getPanelDialogueDisplay(panel, outputLanguage));
+  }
 
   const promptTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dialogueTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Adjust state during rendering when panel changes
-  if (panel.id !== prevPanelId) {
-    setPrevPanelId(panel.id);
-    setLocalPrompt(panel.scenePrompt);
-    setLocalDialogue(panel.dialogue);
-  }
-
-  // Clean up timers on unmount or when panel changes
   useEffect(() => {
     return () => {
       if (promptTimerRef.current) clearTimeout(promptTimerRef.current);
       if (dialogueTimerRef.current) clearTimeout(dialogueTimerRef.current);
     };
-  }, [panel.id]);
+  }, []);
 
   const updatePrompt = (val: string) => {
-    if (val !== panel.scenePrompt) {
-      onUpdate({ scenePrompt: val });
+    const sourceValue = getPanelScenePromptDisplay(panel, outputLanguage);
+    if (val !== sourceValue) {
+      onUpdate(
+        outputLanguage === "vi"
+          ? { scenePromptDisplayVi: val, scenePromptDisplay: val }
+          : { scenePrompt: val, scenePromptDisplayEn: val },
+      );
     }
   };
 
   const updateDialogue = (val: string) => {
-    if (val !== panel.dialogue) {
-      onUpdate({ dialogue: val });
+    const sourceValue = getPanelDialogueDisplay(panel, outputLanguage);
+    if (val !== sourceValue) {
+      onUpdate(
+        outputLanguage === "vi"
+          ? { dialogueDisplayVi: val, dialogueDisplay: val }
+          : { dialogue: val, dialogueDisplayEn: val },
+      );
     }
   };
 
@@ -83,7 +106,7 @@ export function EditablePanelText({
         value={localPrompt}
         onChange={(event) => handlePromptChange(event.target.value)}
         onBlur={handlePromptBlur}
-        className="mb-4 min-h-24 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-950 p-3 text-sm leading-6 text-zinc-100"
+        className="mb-4 min-h-24 w-full resize-y rounded-lg border border-border-main bg-background p-3 text-sm leading-6 text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
       />
 
       <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -94,7 +117,7 @@ export function EditablePanelText({
         value={localDialogue}
         onChange={(event) => handleDialogueChange(event.target.value)}
         onBlur={handleDialogueBlur}
-        className="mb-4 min-h-16 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-950 p-3 text-sm leading-6 text-zinc-100"
+        className="mb-4 min-h-16 w-full resize-y rounded-lg border border-border-main bg-background p-3 text-sm leading-6 text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
       />
     </>
   );

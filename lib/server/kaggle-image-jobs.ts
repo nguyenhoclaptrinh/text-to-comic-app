@@ -18,6 +18,7 @@ import { promisify } from "node:util";
 
 import {
   createImagePrompt,
+  translateRequestToEnglish,
   uploadToSupabaseStorage,
 } from "@/lib/server/image-generation";
 import { isSupabaseRuntimeConfigured } from "@/lib/server/runtime-config";
@@ -86,14 +87,24 @@ export async function createKagglePanelJob(
 ): Promise<KaggleImageJobResponse> {
   const kaggle = getKaggleConfig();
   const jobStore = getJobStoreConfig();
-  const prompt = createImagePrompt(input);
+
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const translatedInput = await translateRequestToEnglish(input, geminiApiKey);
+
+  const prompt = createImagePrompt(translatedInput);
   const job = await insertJob(jobStore, {
     panelId: input.panel.id,
     prompt,
     model: kaggle.diffusionModel,
   });
 
-  void runKagglePanelJob({ jobId: job.id, input, prompt, kaggle, jobStore });
+  void runKagglePanelJob({
+    jobId: job.id,
+    input: translatedInput,
+    prompt,
+    kaggle,
+    jobStore,
+  });
 
   return toJobResponse(job, DEFAULT_POLL_MS);
 }
@@ -528,7 +539,7 @@ async function execKaggle(args: string[], cwd: string) {
     cwd,
     env: {
       ...process.env,
-      ...(kaggleEnvFromProcess()),
+      ...kaggleEnvFromProcess(),
       KAGGLE_CONFIG_DIR: cwd,
       PYTHONIOENCODING: "utf-8",
       PYTHONUTF8: "1",
@@ -559,10 +570,7 @@ function getKaggleConfig(): KaggleConfig {
   }
 
   if ((!apiToken && (!username || !key)) || !kernelRef || !inputDatasetRef) {
-    throw new KaggleImageJobError(
-      "Kaggle image jobs are not configured.",
-      503,
-    );
+    throw new KaggleImageJobError("Kaggle image jobs are not configured.", 503);
   }
 
   return {
@@ -573,10 +581,10 @@ function getKaggleConfig(): KaggleConfig {
     kernelRef,
     inputDatasetRef,
     outputFile: process.env.KAGGLE_OUTPUT_FILE || DEFAULT_OUTPUT_FILE,
-    maxPollAttempts: Number(process.env.KAGGLE_MAX_POLL_ATTEMPTS) ||
-      DEFAULT_MAX_POLL_ATTEMPTS,
-    diffusionModel: process.env.KAGGLE_DIFFUSION_MODEL ||
-      DEFAULT_DIFFUSION_MODEL,
+    maxPollAttempts:
+      Number(process.env.KAGGLE_MAX_POLL_ATTEMPTS) || DEFAULT_MAX_POLL_ATTEMPTS,
+    diffusionModel:
+      process.env.KAGGLE_DIFFUSION_MODEL || DEFAULT_DIFFUSION_MODEL,
   };
 }
 

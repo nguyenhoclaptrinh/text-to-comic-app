@@ -17,7 +17,7 @@ import {
 } from "@/lib/studio/domain";
 import { getPublicKaggleEnabled } from "@/lib/studio/production-config";
 import { syncProjectPanelCounts } from "@/lib/studio/selectors";
-import { dialogueToBubble } from "@/lib/studio/utils";
+import { getPanelBubbleSeed, isSeedBubbleText } from "@/lib/studio/display";
 import type { Character, Page, Panel, Project } from "@/lib/studio/types";
 
 export function usePanelActions({
@@ -29,6 +29,7 @@ export function usePanelActions({
   setSelectedPanelId,
   setSelectedBubbleId,
   projectStyle,
+  displayLanguage,
 }: {
   pages: Page[];
   characters: Character[];
@@ -38,6 +39,7 @@ export function usePanelActions({
   setSelectedPanelId: (panelId: string) => void;
   setSelectedBubbleId: (bubbleId: string) => void;
   projectStyle: string;
+  displayLanguage: "en" | "vi";
 }) {
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
@@ -52,28 +54,43 @@ export function usePanelActions({
 
           const updatedPanel = { ...panel, ...patch };
 
-          if (
-            patch.dialogue !== undefined &&
-            patch.dialogue !== panel.dialogue
-          ) {
-            const cleanText = dialogueToBubble(patch.dialogue);
-            if (cleanText.trim()) {
-              if (panel.bubbles.length > 0) {
-                updatedPanel.bubbles = panel.bubbles.map((bubble, idx) =>
-                  idx === 0 ? { ...bubble, text: cleanText } : bubble,
-                );
-              } else {
-                updatedPanel.bubbles = [
-                  {
-                    id: crypto.randomUUID(),
-                    text: cleanText,
-                    x: 35,
-                    y: 15,
-                    width: 30,
-                    height: 12,
-                  },
-                ];
-              }
+          const shouldReseedBubble =
+            patch.dialogue !== undefined ||
+            patch.dialogueDisplayEn !== undefined ||
+            patch.dialogueDisplayVi !== undefined ||
+            patch.dialogueDisplay !== undefined;
+
+          if (shouldReseedBubble) {
+            const previousSeedText = getPanelBubbleSeed(panel, displayLanguage);
+            const nextSeedText = getPanelBubbleSeed(
+              updatedPanel,
+              displayLanguage,
+            );
+            const canSyncSeedBubble =
+              panel.bubbles.length === 1 &&
+              isSeedBubbleText(panel, panel.bubbles[0]?.text || "");
+
+            if (canSyncSeedBubble) {
+              updatedPanel.bubbles = nextSeedText
+                ? panel.bubbles.map((bubble, idx) =>
+                    idx === 0 ? { ...bubble, text: nextSeedText } : bubble,
+                  )
+                : [];
+            } else if (
+              panel.bubbles.length === 0 &&
+              nextSeedText &&
+              previousSeedText !== nextSeedText
+            ) {
+              updatedPanel.bubbles = [
+                {
+                  id: crypto.randomUUID(),
+                  text: nextSeedText,
+                  x: 35,
+                  y: 15,
+                  width: 30,
+                  height: 12,
+                },
+              ];
             }
           }
 
@@ -146,15 +163,12 @@ export function usePanelActions({
             characters,
             kaggleEnabled,
             (status, route) => {
-              updatePanel(
-                panelId,
-                {
-                  ...(status === "queued"
-                    ? markPanelQueued(panelWithResolvedStyle)
-                    : markPanelGenerating(panelWithResolvedStyle)),
-                  ...route,
-                },
-              );
+              updatePanel(panelId, {
+                ...(status === "queued"
+                  ? markPanelQueued(panelWithResolvedStyle)
+                  : markPanelGenerating(panelWithResolvedStyle)),
+                ...route,
+              });
             },
           )
         : generatePanelImage(panelWithResolvedStyle, characters);
@@ -173,9 +187,7 @@ export function usePanelActions({
     const panelsToGenerate: string[] = [];
     pages.forEach((page) => {
       page.panels.forEach((panel) => {
-        if (panel.status !== "success") {
-          panelsToGenerate.push(panel.id);
-        }
+        panelsToGenerate.push(panel.id);
       });
     });
 
