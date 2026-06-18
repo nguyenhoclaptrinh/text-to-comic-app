@@ -29,6 +29,7 @@ import type { Page, Panel, Character } from "@/lib/studio/types";
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
+const DEFAULT_STORY_SUGGEST_TIMEOUT_MS = 45_000;
 
 const GEMINI_RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -430,6 +431,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function getStorySuggestTimeoutMs(
+  rawValue = process.env.AI_STORY_SUGGEST_TIMEOUT_MS,
+) {
+  const parsed = Number(rawValue);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return parsed;
+  }
+  return Math.max(getAiTimeoutMs(), DEFAULT_STORY_SUGGEST_TIMEOUT_MS);
+}
+
 export async function generateStorySuggestion({
   title,
   style,
@@ -448,6 +459,7 @@ export async function generateStorySuggestion({
     throw new Error("Missing Gemini API Key.");
   }
   const preferredModel = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+  const timeoutMs = getStorySuggestTimeoutMs();
 
   const prompt = `Bạn là một biên kịch truyện tranh chuyên nghiệp. Hãy viết một cốt truyện chữ chi tiết dùng để phân cảnh làm truyện tranh (webtoon/manga/comic).
 Thông tin đầu vào:
@@ -466,38 +478,66 @@ Yêu cầu kịch bản truyện chữ:
 }
 Chú ý: Chỉ trả về JSON hợp lệ, không kèm giải thích hay Markdown codeblock.`;
 
-  const response = await fetchWithTimeout(
-    `${GEMINI_ENDPOINT}/models/${preferredModel}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              storyText: { type: "STRING" },
-            },
-            required: ["storyText"],
-          },
-        },
-      }),
-    },
-    getAiTimeoutMs(),
-  );
+  const models = parseModelList(process.env.GEMINI_TEXT_MODELS, [
+    preferredModel,
+    ...GEMINI_TEXT_MODELS_POOL.filter((m) => m !== preferredModel),
+  ]);
+  const candidates = createModelCandidates({
+    provider: "gemini",
+    capability: "storyboard",
+    models,
+  });
 
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw createAiProviderErrorFromResponse(response, detail);
+  const routed = await routeAiModels({
+    candidates,
+    policy: { maxAttempts: Math.min(models.length, 2), timeoutMs },
+    run: async (candidate) => {
+      console.log(
+        `[Gemini Rotation] Attempting story suggestion with model: ${candidate.model}`,
+      );
+      const response = await fetchWithTimeout(
+        `${GEMINI_ENDPOINT}/models/${candidate.model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  storyText: { type: "STRING" },
+                },
+                required: ["storyText"],
+              },
+            },
+          }),
+        },
+        timeoutMs,
+      );
+
+      if (!response.ok) {
+        const detail = await response.text().catch(() => "");
+        throw createAiProviderErrorFromResponse(response, detail);
+      }
+
+      const data: unknown = await response.json();
+      return extractGeminiText(data);
+    },
+  });
+
+  if (!routed.ok) {
+    if (routed.error instanceof Error) {
+      throw routed.error;
+    }
+    throw new Error(routed.warning);
   }
 
-  const data: unknown = await response.json();
-  const text = extractGeminiText(data);
+  const text = routed.value;
   try {
     const parsed = JSON.parse(stripJsonFence(text));
     if (parsed && typeof parsed.storyText === "string") {

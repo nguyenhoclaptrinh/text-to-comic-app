@@ -5,6 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { generateStorySuggestion } from "@/lib/server/gemini-storyboard";
+import { AiProviderError } from "@/lib/server/ai-router";
 
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null);
@@ -45,13 +46,26 @@ export async function POST(request: Request) {
       "[API /api/suggest-story] Failed to generate story suggestion:",
       error,
     );
+    if (error instanceof AiProviderError) {
+      const status = error.status ?? 503;
+      const code = status === 429 ? "AI_TEXT_QUOTA" : "AI_TEXT_UNAVAILABLE";
+      return NextResponse.json(
+        {
+          code,
+          message: error.message,
+          retryable: status !== 400 && status !== 401 && status !== 403,
+        },
+        { status },
+      );
+    }
     return NextResponse.json(
       {
-        code: "AI_ERROR",
+        code: "AI_TEXT_UNAVAILABLE",
         message:
           error instanceof Error
             ? error.message
             : "Lỗi khi gọi AI đề xuất kịch bản.",
+        retryable: true,
       },
       { status: 500 },
     );
